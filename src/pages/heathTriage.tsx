@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  FormEvent,
+  KeyboardEvent,
+  ChangeEvent,
+} from "react";
 import {
   Send,
   Bot,
@@ -8,755 +15,1012 @@ import {
   Clock,
   CheckCircle,
   Mic,
-  MicOff,
   Volume2,
   VolumeX,
   MessageSquare,
   Stethoscope,
   RotateCcw,
+  Wifi,
+  WifiOff,
+  FileText,
+  Download,
+  X,
+  Activity,
+  UserRound,
 } from "lucide-react";
 
+// Types
+interface Message {
+  id: number;
+  sender: "bot" | "user";
+  text: string;
+  timestamp: Date;
+}
 
+interface UserData {
+  name?: string;
+  age?: number;
+  gender?: string;
+}
 
-   
-const mockSymptoms = [
-  "fever","headache","cough","fatigue","nausea","chest_pain",
-  "shortness_of_breath","abdominal_pain","diarrhea","vomiting",
-  "muscle_aches","sore_throat","runny_nose","dizziness","joint_pain",
-  "back_pain","skin_rash","itching"
+interface Diagnosis {
+  prediction: string;
+  severity: string;
+  days: number;
+  precautions?: string[];
+  confidence?: number;
+}
+
+interface ApiResponse {
+  success: boolean;
+  primary_prediction?: {
+    disease: string;
+    confidence: number;
+    info: {
+      precautions: string[];
+    };
+  };
+  severity?: {
+    level: string;
+    score: number;
+    recommendation: string;
+  };
+}
+
+interface HealthResponse {
+  success: boolean;
+  model_loaded: boolean;
+  model_info?: any;
+  error?: string;
+}
+
+interface RoboDocChatbotProps {
+  onNavigateToDoctor?: () => void;
+}
+
+// API Configuration
+const API_BASE_URL = "http://localhost:5000/api/nlp";
+
+// API Service Functions
+const predictDiseaseAPI = async (
+  symptoms: string[],
+  durationDays: number
+): Promise<ApiResponse> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/predict`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        symptoms: symptoms,
+        duration: durationDays,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error predicting disease:", error);
+    throw error;
+  }
+};
+
+const getAllSymptoms = async (): Promise<string[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/symptoms`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.symptoms || [];
+  } catch (error) {
+    console.error("Error fetching symptoms:", error);
+    return [];
+  }
+};
+
+const getSymptomWeights = async (): Promise<Record<string, any>> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/symptom-weights`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.symptoms || {};
+  } catch (error) {
+    console.error("Error fetching symptom weights:", error);
+    return {};
+  }
+};
+
+const checkBackendHealth = async (): Promise<HealthResponse> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/health`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data;
+  } catch (error: any) {
+    console.error("Backend health check failed:", error);
+    return { success: false, model_loaded: false, error: error.message };
+  }
+};
+
+const mockSymptoms: string[] = [
+  "fever",
+  "headache",
+  "cough",
+  "fatigue",
+  "nausea",
+  "chest_pain",
+  "shortness_of_breath",
+  "abdominal_pain",
+  "diarrhea",
+  "vomiting",
+  "muscle_aches",
+  "sore_throat",
+  "runny_nose",
+  "dizziness",
+  "joint_pain",
+  "back_pain",
+  "skin_rash",
+  "itching",
 ];
 
-const symptomSynonymsEN = {
-  fever: ["high temperature","hot","burning up","feverish","temperature"],
-  headache: ["head pain","migraine","head hurts","head ache"],
-  cough: ["coughing","hack","throat clearing"],
-  fatigue: ["tired","exhausted","weakness","lethargy","worn out"],
-  nausea: ["sick feeling","queasy","feel sick","stomach upset"],
-  chest_pain: ["chest hurts","chest discomfort","heart pain"],
-  shortness_of_breath: ["breathing difficulty","cant breathe","breathless"],
-  abdominal_pain: ["stomach pain","belly pain","tummy ache"],
-  sore_throat: ["throat pain","throat hurts","scratchy throat"],
-  dizziness: ["lightheaded","vertigo","spinning","unsteady"],
-};
-
-const symptomSynonymsUR = {
-  fever: ["بخار","تیز بخار","حرارت","گرمی محسوس ہونا"],
-  headache: ["سر درد","دردِ سر","مائگرین"],
-  cough: ["کھانسی","کھانکھار","گلا صاف کرنا"],
-  fatigue: ["کمزوری","تھکاوٹ","سستی","نڈھال"],
-  nausea: ["متلی","جی متلانا","ابکائیاں","دل متلانا"],
-  chest_pain: ["سینے میں درد","سینے میں کھچاؤ","دل کا درد"],
-  shortness_of_breath: ["سانس میں دقت","سانس پھولنا","سانس نہیں آرہا"],
-  abdominal_pain: ["پیٹ میں درد","پیٹ کا درد","پیٹ میں مروڑ","پیٹ کی تکلیف"],
-  sore_throat: ["گلے میں درد","گلا خراب","خراش"],
-  dizziness: ["چکر آنا","سر گھومنا","لڑکھڑانا"],
-  diarrhea: ["اسہال","پتلا پاخانہ"],
-  vomiting: ["قے","اُلٹی"],
-  runny_nose: ["ناک بہنا","زکام"],
-  skin_rash: ["جلدی خارش","دانے","راش"],
-  back_pain: ["کمر درد"],
-  joint_pain: ["جوڑوں کا درد"],
-  itching: ["خارش","کھجلی"],
-  muscle_aches: ["پٹھوں میں درد","بدن درد"],
-};
-
-const severityData = {
-  fever:7, chest_pain:9, shortness_of_breath:8, headache:5,
-  cough:4, fatigue:3, nausea:4, abdominal_pain:6, diarrhea:5,
-  vomiting:6, dizziness:7, joint_pain:4, back_pain:5, skin_rash:3
-};
-
-const precautionData = {
-  "Common Cold": [
-    "Rest and stay hydrated",
-    "Use saline nasal drops",
-    "Avoid close contact with others",
-  ],
-  "Flu": [
-    "Get plenty of rest and sleep",
-    "Drink lots of fluids",
-    "Stay home until fever-free for 24 hours",
-  ],
-  "Pneumonia": [
-    "Seek immediate medical attention",
-    "Take prescribed antibiotics if bacterial",
-    "Rest and drink plenty of fluids",
-  ],
-};
-
-/* =========================
-   2) i18n (EN/UR)
-   ========================= */
 const i18n = {
   en: {
     appName: "RoboDoc",
     subtitle: "AI Medical Assistant",
-    initial1: "Hello! I'm RoboDoc. I can help diagnose your symptoms using text or voice.",
-    initial2: 'Type "start" or click voice mode and say "start" to begin!',
-    btnText: "Text",
-    btnVoice: "Voice",
-    voiceReady: "Voice ready",
-    voiceNotSupported: "Voice not supported in this browser",
-    micDisabled: "Microphone Disabled",
-    clickToSpeak: "Click to Speak",
-    listening: "Listening...",
-    speaking: "Speaking...",
-    voiceErrorTitle: "Voice Error",
-    tip1: "💡 Tip: Speak clearly and wait for the green \"Voice ready\" indicator",
-    tip2ready: "✅ Voice system ready - Click microphone to start",
-    enableMic: "Enable Microphone",
-    tryAgain: "Try Again",
-    dismiss: "Dismiss",
-    debug: "Debug",
-    you: "You",
-    bot: "RoboDoc",
-    startPlease: 'Please say "start" to begin.',
+    initial1: "Hello! I'm RoboDoc, your AI health assistant.",
+    initial2: 'Type "start" to begin your symptom analysis.',
     askName: "What's your name?",
-    askAge: name => `Hi ${name}! How old are you?`,
-    ageNumber: "Please tell me your age as a number.",
-    askGender: "What's your gender? Male or Female?",
-    askMainSymptom: "Thank you! Now describe your main symptom. For example: headache, fever, cough.",
-    didntUnderstandSymptom: "I didn't understand that symptom. Try: headache, fever, cough, fatigue, nausea.",
-    addMoreSymptoms: s => `You have ${s.replace("_"," ")}. Any other symptoms?`,
-    addedSymptom: s => `Added ${s.replace("_"," ")}. Any other symptoms?`,
-    sayNoOrAdd: "Say 'no' if no more symptoms, or describe another symptom.",
+    askAge: (name: string) => `Hi ${name}! How old are you?`,
+    askGender: "What's your gender? (Male/Female)",
+    askMainSymptom: "Describe your main symptom (e.g., fever, cough, headache)",
+    addMoreSymptoms: (s: string) =>
+      `Got it: ${s.replace("_", " ")}. Any other symptoms?`,
     askDays: "How many days have you had these symptoms?",
-    daysNumber: "Please tell me the number of days, like '3' or '5'.",
     analysisComplete: "Analysis Complete",
-    condition: c => `Condition: ${c}`,
-    severity: s => `Severity: ${s.toUpperCase()}`,
+    analyzing: "Analyzing your symptoms with AI...",
+    condition: (c: string) => `Predicted Condition: ${c}`,
+    severity: (s: string) => `Severity Level: ${s.toUpperCase()}`,
     recommendations: "Recommendations:",
-    urgent: "URGENT: Please seek immediate medical attention!",
-    moreCheck: name => `Would you like to check other symptoms, ${name}?`,
-    thanksRestart: name => `Thank you, ${name}! Stay healthy! Say 'start' to begin again.`,
-    emergency: "Emergency",
-    langToggle: "Language",
-    english: "English",
-    urdu: "Urdu",
-  },
-  ur: {
-    appName: "روبو ڈاک",
-    subtitle: "AI میڈیکل اسسٹنٹ",
-    initial1: "اسلام علیکم! میں RoboDoc ہوں۔ میں آپ کی علامات کی بنیاد پر مدد کر سکتا ہوں۔",
-    initial2: 'شروع کرنے کے لیے "start" لکھیں یا وائس موڈ پر "start" کہیں۔',
-    btnText: "ٹیکسٹ",
-    btnVoice: "وائس",
-    voiceReady: "وائس تیار ہے",
-    voiceNotSupported: "اس براؤزر میں وائس سپورٹ نہیں ہے",
-    micDisabled: "مائیکروفون بند ہے",
-    clickToSpeak: "بولنے کے لیے کلک کریں",
-    listening: "سن رہا ہوں...",
-    speaking: "بول رہا ہوں...",
-    voiceErrorTitle: "وائس ایرر",
-    tip1: "💡 مشورہ: واضح بولیں اور سبز \"وائس تیار ہے\" اشارے کا انتظار کریں",
-    tip2ready: "✅ وائس سسٹم تیار ہے - مائیک پر کلک کریں",
-    enableMic: "مائیک آن کریں",
-    tryAgain: "دوبارہ کوشش کریں",
-    dismiss: "بند کریں",
-    debug: "ڈی بگ",
-    you: "آپ",
-    bot: "روبو ڈاک",
-    startPlease: 'براہِ کرم شروع کرنے کے لیے "start" کہیں۔',
-    askName: "آپ کا نام کیا ہے؟",
-    askAge: name => `خوش آمدید ${name}! آپ کی عمر کتنی ہے؟`,
-    ageNumber: "براہِ مہربانی عمر ہندسوں میں بتائیں۔",
-    askGender: "آپ کی جنس کیا ہے؟ مرد یا عورت؟",
-    askMainSymptom: "شکریہ! اب اپنی بنیادی علامت بتائیں۔ مثال: سر درد، بخار، کھانسی۔",
-    didntUnderstandSymptom: "میں سمجھ نہیں سکا۔ مثالیں: سر درد، بخار، کھانسی، تھکاوٹ، متلی۔",
-    addMoreSymptoms: s => `آپ کو ${humanSymptomUrdu(s)} ہے۔ کوئی اور علامت؟`,
-    addedSymptom: s => `${humanSymptomUrdu(s)} شامل کر دی۔ کوئی اور علامت؟`,
-    sayNoOrAdd: "اگر مزید علامات نہیں تو 'نہیں' کہیں، یا دوسری علامت بتائیں۔",
-    askDays: "یہ علامات کتنے دن سے ہیں؟",
-    daysNumber: "براہِ مہربانی دن ہندسوں میں بتائیں، جیسے '3' یا '5'۔",
-    analysisComplete: "تجزیہ مکمل",
-    condition: c => `ممکنہ حالت: ${condUrdu(c)}`,
-    severity: s => `شدت: ${sevUrdu(s)}`,
-    recommendations: "ہدایات:",
-    urgent: "ہنگامی صورتحال: براہِ کرم فوراً ڈاکٹر سے رجوع کریں!",
-    moreCheck: name => `کیا آپ مزید علامات چیک کرنا چاہیں گے، ${name}؟`,
-    thanksRestart: name => `شکریہ ${name}! صحت مند رہیں! دوبارہ شروع کرنے کیلئے 'start' کہیں۔`,
-    emergency: "ایمرجنسی",
-    langToggle: "زبان",
-    english: "انگریزی",
-    urdu: "اردو",
+    moreCheck: (name: string) => `Check more symptoms, ${name}?`,
+    thanksRestart: (name: string) =>
+      `Thanks ${name}! Type 'start' to begin again.`,
   },
 };
 
-// Urdu helpers for display
-function humanSymptomUrdu(key) {
-  const map = {
-    fever:"بخار", headache:"سر درد", cough:"کھانسی", fatigue:"تھکاوٹ", nausea:"متلی",
-    chest_pain:"سینے میں درد", shortness_of_breath:"سانس میں دقت", abdominal_pain:"پیٹ میں درد",
-    diarrhea:"اسہال", vomiting:"قے", muscle_aches:"بدن درد", sore_throat:"گلے میں درد",
-    runny_nose:"ناک بہنا", dizziness:"چکر آنا", joint_pain:"جوڑوں کا درد", back_pain:"کمر درد",
-    skin_rash:"جلدی خارش", itching:"خارش",
-  };
-  return map[key] || key;
-}
-function condUrdu(c){
-  const map = { "Common Cold":"نزلہ زکام", "Flu":"فلو", "Pneumonia":"نمونیا" };
-  return map[c] || c;
-}
-function sevUrdu(s){
-  const map = { low:"کم", moderate:"درمیانی", high:"زیادہ" };
-  return map[s] || s;
-}
-
-/* =========================
-   3) Bilingual processing
-   ========================= */
-const URDU_DIGITS = { "۰":"0","۱":"1","۲":"2","۳":"3","۴":"4","۵":"5","۶":"6","۷":"7","۸":"8","۹":"9" };
-const normalizeUrduDigits = (s="") =>
-  s.replace(/[۰-۹]/g, d => URDU_DIGITS[d] ?? d);
-
-const YES_WORDS_EN = ["yes","yeah","yep","okay","ok","sure","absolutely","definitely"];
-const NO_WORDS_EN  = ["no","nope","not really","none","nothing","never"];
-const YES_WORDS_UR = ["ہاں","جی","جی ہاں","بالکل"];
-const NO_WORDS_UR  = ["نہیں","جی نہیں","ہرگز نہیں","کوئی نہیں"];
-
-const isUrduText = (txt="") => /[\u0600-\u06FF]/.test(txt);
-
-/** returns {lang:'en'|'ur', token:'yes'|'no'|number|symptom|raw} */
-const processInputBilingual = (input) => {
-  const raw = input.trim();
-  const lower = raw.toLowerCase();
-  const ur = isUrduText(raw);
-
-  // map Urdu digits to Latin first, then extract numbers
-  const normalizedForNumber = normalizeUrduDigits(raw);
-  const numberMatch = normalizedForNumber.match(/\d+/);
-
-  // YES/NO
-  if (!ur) {
-    if (YES_WORDS_EN.some(w => lower.includes(w))) return { lang:"en", token:"yes" };
-    if (NO_WORDS_EN.some(w => lower.includes(w)))  return { lang:"en", token:"no"  };
-  } else {
-    if (YES_WORDS_UR.some(w => raw.includes(w))) return { lang:"ur", token:"yes" };
-    if (NO_WORDS_UR.some(w => raw.includes(w)))  return { lang:"ur", token:"no"  };
-  }
-
-  // number
-  if (numberMatch) {
-    return { lang: ur ? "ur" : "en", token: numberMatch[0] };
-  }
-
-  // symptoms
-  const hitSym = (table) => {
-    for (const [sym, syns] of Object.entries(table)) {
-      const found = syns.some(s => (ur ? raw.includes(s) : lower.includes(s)));
-      if (found) return sym;
-      // also check "word match" for keys ("chest pain" vs "chest_pain")
-      const keyPlain = sym.replace("_"," ");
-      if (ur ? raw.includes(keyPlain) : lower.includes(keyPlain)) return sym;
-    }
-    return null;
-  };
-  if (!ur) {
-    const s = hitSym(symptomSynonymsEN);
-    if (s) return { lang:"en", token:s };
-  } else {
-    const s = hitSym(symptomSynonymsUR);
-    if (s) return { lang:"ur", token:s };
-  }
-
-  return { lang: ur ? "ur" : "en", token: raw };
+const processInput = (input: string): { token: string } => {
+  const lower = input.toLowerCase().trim();
+  if (["yes", "yeah", "ok", "sure"].some((w) => lower.includes(w)))
+    return { token: "yes" };
+  if (["no", "nope", "never"].some((w) => lower.includes(w)))
+    return { token: "no" };
+  const num = lower.match(/\d+/);
+  if (num) return { token: num[0] };
+  return { token: lower };
 };
 
-/* =========================
-   4) Diagnosis logic (unchanged)
-   ========================= */
-const predictDisease = (symptoms) => {
+// Local fallback prediction
+const predictDiseaseLocal = (symptoms: string[]): string => {
   const set = new Set(symptoms);
-  if (set.has("fever") && set.has("cough") && set.has("shortness_of_breath")) return "Pneumonia";
-  if (set.has("fever") && set.has("cough") && set.has("muscle_aches")) return "Flu";
-  if (set.has("runny_nose") && set.has("sore_throat") && set.has("cough")) return "Common Cold";
-  return symptoms.length > 0 ? "Common Cold" : "Unable to determine";
+
+  if (set.has("fever") && set.has("cough") && set.has("shortness_of_breath")) {
+    return "Pneumonia";
+  }
+  if (set.has("fever") && set.has("cough") && set.has("fatigue")) {
+    return "Influenza (Flu)";
+  }
+  if (set.has("runny_nose") && set.has("sore_throat") && set.has("cough")) {
+    return "Common Cold";
+  }
+  if (set.has("diarrhea") && set.has("vomiting") && set.has("abdominal_pain")) {
+    return "Gastroenteritis";
+  }
+  if (set.has("nausea") && set.has("vomiting")) {
+    return "Food Poisoning";
+  }
+  if (set.has("skin_rash") && set.has("itching")) {
+    return "Allergic Reaction";
+  }
+  if (set.has("muscle_aches") && set.has("joint_pain")) {
+    return "Arthritis";
+  }
+  if (set.has("back_pain") && set.has("muscle_aches")) {
+    return "Muscle Strain";
+  }
+  if (set.has("chest_pain") && set.has("shortness_of_breath")) {
+    return "Cardiac Issue (Seek immediate care)";
+  }
+  if (set.has("headache") && set.has("fever") && set.has("dizziness")) {
+    return "Viral Infection";
+  }
+  if (set.has("headache") && set.has("dizziness")) {
+    return "Migraine";
+  }
+  if (set.has("fever")) return "Viral Infection";
+  if (set.has("headache")) return "Tension Headache";
+  if (set.has("cough")) return "Bronchitis";
+  if (set.has("fatigue")) return "General Fatigue";
+
+  return "General Illness";
 };
 
-const calculateSeverity = (symptoms, days) => {
-  if (symptoms.length === 0) return "low";
-  const total = symptoms.reduce((sum, s) => sum + (severityData[s] || 3), 0);
-  const avg = total / symptoms.length;
-  const score = avg * (days > 7 ? 1.5 : 1);
-  if (score > 15) return "high";
-  if (score > 8) return "moderate";
-  return "low";
-};
-
-/* =========================
-   5) Component
-   ========================= */
-const RoboDocVoiceChatbot = () => {
-  // language state (default EN). Will auto-switch if Urdu text detected.
-  const [lang, setLang] = useState("en");
-
-  const t = (key, ...args) => {
-    const dict = i18n[lang];
-    const val = dict[key];
-    return typeof val === "function" ? val(...args) : val;
-  };
-
-  const [messages, setMessages] = useState([
-    { id:1, sender:"bot", text:i18n.en.initial1, timestamp:new Date() },
-    { id:2, sender:"bot", text:i18n.en.initial2, timestamp:new Date() },
+const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) => {
+  const [messages, setMessages] = useState<Message[]>([
+    { id: 1, sender: "bot", text: i18n.en.initial1, timestamp: new Date() },
+    { id: 2, sender: "bot", text: i18n.en.initial2, timestamp: new Date() },
   ]);
-  const [inputValue, setInputValue] = useState("");
-  const [isVoiceMode, setIsVoiceMode] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [isTyping, setIsTyping] = useState(false);
+  const [inputValue, setInputValue] = useState<string>("");
+  const [isTyping, setIsTyping] = useState<boolean>(false);
+  const [step, setStep] = useState<string>("initial");
+  const [userData, setUserData] = useState<UserData>({});
+  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
 
-  // voice state (kept as in your original – primarily English)
-  const [isListening, setIsListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [voiceError, setVoiceError] = useState("");
-  const [transcript, setTranscript] = useState("");
-  const [micPermission, setMicPermission] = useState("prompt");
-  const [voiceReady, setVoiceReady] = useState(false);
-  const [browserSupport, setBrowserSupport] = useState({
-    speechRecognition: false, speechSynthesis: false, mediaDevices: false
-  });
-  const [debugInfo, setDebugInfo] = useState("");
+  const [availableSymptoms, setAvailableSymptoms] =
+    useState<string[]>(mockSymptoms);
+  const [backendConnected, setBackendConnected] = useState<boolean>(false);
+  const [symptomWeights, setSymptomWeights] = useState<Record<string, any>>({});
+  const [showAnalysis, setShowAnalysis] = useState<boolean>(false);
 
-  const [step, setStep] = useState("initial");
-  const [userData, setUserData] = useState({});
-  const [symptoms, setSymptoms] = useState([]);
-  const [diagnosis, setDiagnosis] = useState(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  const messagesEndRef = useRef(null);
-  const recognitionRef = useRef(null);
-  const speechTimeoutRef = useRef(null);
-  const autoListenTimeoutRef = useRef(null);
-
-  /* ===== Keep your original voice init/effects here =====
-     I only trimmed for brevity. Paste your exact voice init,
-     handlers, speak(), startListening/stopListening, etc.
-     (No functional change needed for bilingual text mode.)
-  ======================================================= */
   useEffect(() => {
-    // ... (your original voice initialization code unchanged)
-    // Set voiceReady / browserSupport accordingly
-    // For brevity in this snippet, keep your existing code block here.
+    const loadBackend = async () => {
+      try {
+        const health = await checkBackendHealth();
+        if (health.success && health.model_loaded) {
+          setBackendConnected(true);
+          const symptoms = await getAllSymptoms();
+          const weights = await getSymptomWeights();
+          setAvailableSymptoms(symptoms.length > 0 ? symptoms : mockSymptoms);
+          setSymptomWeights(weights);
+          console.log("Backend connected:", health.model_info);
+        }
+      } catch (error) {
+        console.warn("Backend offline, using fallback");
+        setBackendConnected(false);
+      }
+    };
+    loadBackend();
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
-  // If transcript comes from voice, keep your handler (English). No change needed.
-
-  const addMessage = async (sender, text) => {
-    const newMessage = { id: Date.now()+Math.random(), sender, text, timestamp: new Date() };
-    setMessages(prev => [...prev, newMessage]);
-    // speaking behavior unchanged...
-  };
-
-  const simulateTyping = async (text, delay = 800) => {
-    setIsTyping(true);
-    await new Promise(r => setTimeout(r, delay));
-    setIsTyping(false);
-    await addMessage("bot", text);
-  };
-
-  const handleUserInput = async (message) => {
-    // Auto-detect Urdu and switch UI language for THIS conversation turn (and subsequent)
-    if (isUrduText(message) && lang !== "ur") {
-      setLang("ur");
-      // also swap initial messages if still at initial
-      if (step === "initial" && messages.length <= 3) {
-        setMessages([
-          { id:1, sender:"bot", text:i18n.ur.initial1, timestamp:new Date() },
-          { id:2, sender:"bot", text:i18n.ur.initial2, timestamp:new Date() },
-        ]);
-      }
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "40px";
+      const scrollHeight = textareaRef.current.scrollHeight;
+      textareaRef.current.style.height = Math.min(scrollHeight, 100) + "px";
     }
+  }, [inputValue]);
 
+  const addMessage = (sender: "bot" | "user", text: string) => {
+    const msg: Message = {
+      id: Date.now() + Math.random(),
+      sender,
+      text,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, msg]);
+  };
+
+  const simulateTyping = async (
+    text: string,
+    delay: number = 600
+  ): Promise<void> => {
+    setIsTyping(true);
+    await new Promise((r) => setTimeout(r, delay));
+    setIsTyping(false);
+    addMessage("bot", text);
+  };
+
+  const handleUserInput = async (message: string): Promise<void> => {
     addMessage("user", message);
     setInputValue("");
-    clearTimeout(autoListenTimeoutRef.current);
-
-    const { lang: detectedLang, token } = processInputBilingual(message);
-
-    // If user switched language mid-flow, update UI lang
-    if (detectedLang !== lang) setLang(detectedLang);
+    const { token } = processInput(message);
 
     switch (step) {
-      case "initial": {
-        if (token === "yes" || message.toLowerCase().includes("start") || isUrduText(message)) {
+      case "initial":
+        if (message.toLowerCase().includes("start")) {
           setStep("name");
-          await simulateTyping(i18n[detectedLang].askName);
-        } else {
-          await simulateTyping(i18n[detectedLang].startPlease);
+          await simulateTyping(i18n.en.askName);
         }
         break;
-      }
-      case "name": {
-        const name = message.trim();
-        setUserData(prev => ({ ...prev, name }));
+
+      case "name":
+        setUserData((prev) => ({ ...prev, name: message }));
         setStep("age");
-        await simulateTyping(i18n[detectedLang].askAge(name));
+        await simulateTyping(i18n.en.askAge(message));
         break;
-      }
-      case "age": {
-        const num = parseInt(token, 10);
-        if (num && num > 0 && num < 150) {
-          setUserData(prev => ({ ...prev, age:num }));
+
+      case "age":
+        const age = parseInt(token);
+        if (age && age > 0 && age < 150) {
+          setUserData((prev) => ({ ...prev, age }));
           setStep("gender");
-          await simulateTyping(i18n[detectedLang].askGender);
+          await simulateTyping(i18n.en.askGender);
         } else {
-          await simulateTyping(i18n[detectedLang].ageNumber);
+          await simulateTyping("Please enter a valid age (1-150)");
         }
         break;
-      }
-      case "gender": {
-        const lower = message.toLowerCase();
-        const ur = isUrduText(message);
-        const isFemale = ur ? /عورت|فی میل/.test(message) : lower.includes("female");
-        const gender = isFemale ? "female" : "male";
-        setUserData(prev => ({ ...prev, gender }));
+
+      case "gender":
+        const gender = message.toLowerCase().includes("female")
+          ? "female"
+          : "male";
+        setUserData((prev) => ({ ...prev, gender }));
         setStep("symptoms");
-        await simulateTyping(i18n[detectedLang].askMainSymptom);
+        await simulateTyping(i18n.en.askMainSymptom);
         break;
-      }
-      case "symptoms": {
-        if (mockSymptoms.includes(token)) {
+
+      case "symptoms":
+        if (availableSymptoms.includes(token)) {
           setSymptoms([token]);
           setStep("moreSymptoms");
-          await simulateTyping(i18n[detectedLang].addMoreSymptoms(token));
+          await simulateTyping(i18n.en.addMoreSymptoms(token));
         } else {
-          await simulateTyping(i18n[detectedLang].didntUnderstandSymptom);
+          await simulateTyping(
+            `Symptom not recognized. Try: ${availableSymptoms
+              .slice(0, 5)
+              .join(", ")}`
+          );
         }
         break;
-      }
-      case "moreSymptoms": {
+
+      case "moreSymptoms":
         if (token === "no") {
           setStep("duration");
-          await simulateTyping(i18n[detectedLang].askDays);
-        } else if (mockSymptoms.includes(token)) {
-          setSymptoms(prev => [...prev, token]);
-          await simulateTyping(i18n[detectedLang].addedSymptom(token));
-        } else {
-          await simulateTyping(i18n[detectedLang].sayNoOrAdd);
+          await simulateTyping(i18n.en.askDays);
+        } else if (availableSymptoms.includes(token)) {
+          setSymptoms((prev) => [...prev, token]);
+          await simulateTyping(i18n.en.addMoreSymptoms(token));
         }
         break;
-      }
-      case "duration": {
-        const numDays = parseInt(token, 10);
-        if (numDays && numDays > 0) {
-          await provideDiagnosis(numDays, detectedLang);
+
+      case "duration":
+        const days = parseInt(token);
+        if (days && days > 0) {
+          await provideDiagnosis(days);
         } else {
-          await simulateTyping(i18n[detectedLang].daysNumber);
+          await simulateTyping("Please enter number of days (e.g., 3, 5, 7)");
         }
         break;
-      }
-      case "completed": {
+
+      case "completed":
         if (token === "yes") {
           setStep("symptoms");
           setSymptoms([]);
           setDiagnosis(null);
-          await simulateTyping(i18n[detectedLang].askMainSymptom);
+          await simulateTyping(i18n.en.askMainSymptom);
         } else {
-          await simulateTyping(i18n[detectedLang].thanksRestart(userData.name || ""));
+          await simulateTyping(i18n.en.thanksRestart(userData.name || "there"));
           setStep("initial");
         }
         break;
+    }
+  };
+
+  const provideDiagnosis = async (days: number): Promise<void> => {
+    try {
+      await simulateTyping(i18n.en.analyzing, 400);
+
+      console.log("Sending to API:", { symptoms, days });
+
+      if (backendConnected) {
+        const result = await predictDiseaseAPI(symptoms, days);
+
+        console.log("API Response:", result);
+
+        if (result.success && result.primary_prediction && result.severity) {
+          const { primary_prediction, severity } = result;
+
+          setDiagnosis({
+            prediction: primary_prediction.disease,
+            severity: severity.level,
+            precautions: primary_prediction.info.precautions,
+            confidence: primary_prediction.confidence,
+            days,
+          });
+
+          setStep("completed");
+          await simulateTyping(i18n.en.analysisComplete);
+          await simulateTyping(
+            `${i18n.en.condition(primary_prediction.disease)} (${(
+              primary_prediction.confidence * 100
+            ).toFixed(1)}% confidence)`
+          );
+          await simulateTyping(
+            `${i18n.en.severity(severity.level)} (Score: ${severity.score})`
+          );
+          await simulateTyping(i18n.en.recommendations);
+
+          for (let i = 0; i < primary_prediction.info.precautions.length; i++) {
+            await simulateTyping(
+              `${i + 1}. ${primary_prediction.info.precautions[i]}`,
+              500
+            );
+          }
+
+          if (severity.level === "high") {
+            await simulateTyping(`${severity.recommendation}`, 800);
+          }
+        }
+      } else {
+        const prediction = predictDiseaseLocal(symptoms);
+        const severity = symptoms.length > 3 ? "moderate" : "low";
+
+        setDiagnosis({
+          prediction,
+          severity,
+          days,
+          precautions: [
+            "Rest and stay hydrated",
+            "Monitor symptoms",
+            "Consult a doctor if symptoms persist",
+          ],
+        });
+        setStep("completed");
+
+        await simulateTyping(i18n.en.analysisComplete);
+        await simulateTyping(i18n.en.condition(prediction));
+        await simulateTyping(i18n.en.severity(severity));
+        await simulateTyping("Rest, stay hydrated, and monitor symptoms.");
       }
-      default:
-        await simulateTyping(i18n[detectedLang].startPlease);
+
+      await simulateTyping(i18n.en.moreCheck(userData.name || "there"));
+    } catch (error) {
+      console.error("Diagnosis error:", error);
+      await simulateTyping(
+        "Sorry, analysis failed. Please try again or consult a doctor."
+      );
     }
   };
 
-  const provideDiagnosis = async (days, currentLang) => {
-    const prediction = predictDisease(symptoms);
-    const severity = calculateSeverity(symptoms, days);
-    const precautions = precautionData[prediction] || [
-      "Rest and stay hydrated",
-      "Monitor symptoms",
-      "Consult a healthcare provider",
-    ];
-
-    const newDiagnosis = { prediction, severity, precautions, days };
-    setDiagnosis(newDiagnosis);
-    setStep("completed");
-
-    await simulateTyping(i18n[currentLang].analysisComplete);
-    await simulateTyping(i18n[currentLang].condition(prediction));
-    await simulateTyping(i18n[currentLang].severity(severity));
-
-    await simulateTyping(i18n[currentLang].recommendations);
-    for (let i = 0; i < precautions.length; i++) {
-      // For Urdu, you could localize these lines later if you want
-      await simulateTyping(`${i + 1}. ${precautions[i]}`, 650);
-    }
-
-    if (severity === "high") {
-      await simulateTyping(i18n[currentLang].urgent, 1200);
-    }
-    await simulateTyping(i18n[currentLang].moreCheck(userData.name || ""));
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     if (!inputValue.trim() || isTyping) return;
     handleUserInput(inputValue.trim());
   };
 
-  const resetChat = () => {
-    const initialLang = lang;
+  const resetChat = (): void => {
     setMessages([
-      { id:1, sender:"bot", text:i18n[initialLang].initial1, timestamp:new Date() },
-      { id:2, sender:"bot", text:i18n[initialLang].initial2, timestamp:new Date() },
+      { id: 1, sender: "bot", text: i18n.en.initial1, timestamp: new Date() },
+      { id: 2, sender: "bot", text: i18n.en.initial2, timestamp: new Date() },
     ]);
     setStep("initial");
     setUserData({});
     setSymptoms([]);
     setDiagnosis(null);
-    setInputValue("");
-    setTranscript("");
-    setVoiceError("");
-    setDebugInfo("");
-    // stopListening / cancel speech if you keep voice code
+    setShowAnalysis(false);
   };
 
-  const formatTime = (date) =>
-    date.toLocaleTimeString("en-US", { hour12:true, hour:"numeric", minute:"2-digit" });
+  const generatePDF = (): void => {
+    if (!diagnosis) return;
 
-  const dir = lang === "ur" ? "rtl" : "ltr";
-  const align = lang === "ur" ? "text-right" : "text-left";
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>RoboDoc Medical Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px;
+      color: #333;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 3px solid #3b82f6;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .header h1 {
+      color: #3b82f6;
+      margin: 0;
+      font-size: 32px;
+    }
+    .section {
+      margin-bottom: 25px;
+      background: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+    }
+    .symptoms {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .symptom-tag {
+      background: #dcfce7;
+      color: #166534;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+    .recommendations {
+      list-style: none;
+      padding: 0;
+    }
+    .recommendations li {
+      padding: 10px;
+      margin-bottom: 8px;
+      background: white;
+      border-radius: 6px;
+      border-left: 3px solid #3b82f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>ROBODOC</h1>
+    <p>AI Medical Analysis Report</p>
+  </div>
+  <div class="section">
+    <h2>Patient Information</h2>
+    <div class="info-grid">
+      <div><strong>Name:</strong> ${userData.name || "N/A"}</div>
+      <div><strong>Age:</strong> ${userData.age || "N/A"}</div>
+      <div><strong>Gender:</strong> ${userData.gender || "N/A"}</div>
+    </div>
+  </div>
+  <div class="section">
+    <h2>Symptoms</h2>
+    <div class="symptoms">
+      ${symptoms
+        .map((s) => `<span class="symptom-tag">${s.replace(/_/g, " ")}</span>`)
+        .join("")}
+    </div>
+    <p>Duration: ${diagnosis.days} days</p>
+  </div>
+  <div class="section">
+    <h2>Diagnosis</h2>
+    <h3>${diagnosis.prediction}</h3>
+    <p>Severity: ${diagnosis.severity}</p>
+    ${
+      diagnosis.confidence
+        ? `<p>Confidence: ${(diagnosis.confidence * 100).toFixed(1)}%</p>`
+        : ""
+    }
+  </div>
+  <div class="section">
+    <h2>Recommendations</h2>
+    <ul class="recommendations">
+      ${
+        diagnosis.precautions
+          ? diagnosis.precautions.map((p) => `<li>${p}</li>`).join("")
+          : "<li>Rest and consult a doctor</li>"
+      }
+    </ul>
+  </div>
+  <p style="margin-top: 30px; font-size: 12px; color: #666;">Generated: ${new Date().toLocaleString()}</p>
+</body>
+</html>`;
+
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(htmlContent);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col" dir={dir}>
+    <div className="h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
-                <Stethoscope className="w-6 h-6 text-white" />
-              </div>
-              <div className={`${align}`}>
-                <h1 className="text-2xl font-bold text-gray-900">{t("appName")}</h1>
-                <p className="text-sm text-gray-600">{t("subtitle")}</p>
-              </div>
+      <header className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-gray-200/50 flex-shrink-0">
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-9 h-9 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
+              <Stethoscope className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                {i18n.en.appName}
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-600 hidden xs:block">
+                {i18n.en.subtitle}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-1.5 sm:space-x-3">
+            <div className="flex items-center space-x-1 sm:space-x-2 px-2 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm">
+              {backendConnected ? (
+                <>
+                  <Wifi className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
+                  <span className="text-xs text-green-600 font-medium hidden xs:inline">
+                    Online
+                  </span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+                  <span className="text-xs text-gray-500 hidden xs:inline">
+                    Offline
+                  </span>
+                </>
+              )}
             </div>
 
-            <div className="flex items-center space-x-3">
-              {/* Language Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-full p-1">
-                <span className="px-3 text-xs text-gray-600">{t("langToggle")}:</span>
-                <button
-                  onClick={()=>setLang("en")}
-                  className={`px-3 py-1 rounded-full text-sm ${lang==="en"?"bg-white shadow-sm text-blue-600":"text-gray-600"}`}
-                >
-                  {t("english")}
-                </button>
-                <button
-                  onClick={()=>setLang("ur")}
-                  className={`px-3 py-1 rounded-full text-sm ${lang==="ur"?"bg-white shadow-sm text-blue-600":"text-gray-600"}`}
-                >
-                  {t("urdu")}
-                </button>
-              </div>
+            <button
+              onClick={onNavigateToDoctor}
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md text-xs sm:text-sm font-medium"
+              title="Find a Doctor"
+            >
+              <UserRound className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Find Doctor</span>
+              <span className="sm:hidden">Doctor</span>
+            </button>
 
-              {/* Text/Voice mode toggle (kept) */}
-              <div className="flex items-center bg-gray-100 rounded-full p-1">
-                <button
-                  onClick={() => setIsVoiceMode(false)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    !isVoiceMode ? "bg-white text-blue-600 shadow-sm" : "text-gray-600"
-                  }`}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>{t("btnText")}</span>
-                </button>
-                <button
-                  onClick={() => setIsVoiceMode(true)}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                    isVoiceMode ? "bg-white text-green-600 shadow-sm" : "text-gray-600"
-                  }`}
-                >
-                  <Mic className="w-4 h-4" />
-                  <span>{t("btnVoice")}</span>
-                </button>
-              </div>
-
-              <button
-                onClick={() => setVoiceEnabled(!voiceEnabled)}
-                className={`p-2 rounded-full transition-colors ${
-                  voiceEnabled ? "bg-green-100 text-green-600 hover:bg-green-200"
-                                : "bg-red-100 text-red-600 hover:bg-red-200"
-                }`}
-              >
-                {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              </button>
-
-              <button onClick={resetChat} className="p-2 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            </div>
+            <button
+              onClick={resetChat}
+              className="p-1.5 sm:p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+              title="Reset Chat"
+            >
+              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600" />
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Voice status bar (texts localized) */}
-      {isVoiceMode && (
-        <div className="bg-gradient-to-r from-green-50 to-blue-50 border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-6 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                {isListening && (
-                  <div className="flex items-center space-x-2 text-red-600">
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                    <span className="font-medium">{t("listening")}</span>
-                  </div>
-                )}
-                {isSpeaking && (
-                  <div className="flex items-center space-x-2 text-blue-600">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span className="font-medium">{t("speaking")}</span>
-                  </div>
-                )}
-                {!isListening && !isSpeaking && !voiceError && micPermission === "granted" && (
-                  <span className="text-green-600 font-medium">{t("voiceReady")}</span>
-                )}
-                {voiceError && (
-                  <div className="flex items-center space-x-2 text-red-600">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span className="text-sm">{t("voiceErrorTitle")}: {voiceError}</span>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center space-x-2">
-                {debugInfo && (
-                  <button onClick={() => setDebugInfo("")} className="px-2 py-1 bg-gray-200 text-gray-600 rounded text-xs hover:bg-gray-300" title={debugInfo}>
-                    {t("debug")}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Chat Container */}
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full">
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
-          {messages.map((m) => (
-            <div key={m.id} className={`flex ${m.sender==="user" ? "justify-end" : "justify-start"}`}>
-              <div className={`flex max-w-2xl ${m.sender==="user" ? "flex-row-reverse" : "flex-row"}`}>
-                <div className={`${m.sender==="user" ? "ml-3" : "mr-3"}`}>
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    m.sender==="user" ? "bg-blue-500 text-white" : "bg-gradient-to-br from-green-400 to-blue-500 text-white"
-                  }`}>
-                    {m.sender==="user" ? <User className="w-5 h-5" /> : <Bot className="w-5 h-5" />}
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full min-h-0">
+        <div
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4 space-y-2.5 sm:space-y-4"
+        >
+          {messages.map((m, index) => (
+            <div
+              key={m.id}
+              className={`flex ${
+                m.sender === "user" ? "justify-end" : "justify-start"
+              } animate-[fadeIn_0.3s_ease-in-out]`}
+              style={{ animationDelay: `${index * 0.05}s` }}
+            >
+              <div
+                className={`flex max-w-[90%] sm:max-w-xl ${
+                  m.sender === "user" ? "flex-row-reverse" : "flex-row"
+                } items-end`}
+              >
+                <div
+                  className={
+                    m.sender === "user" ? "ml-1.5 sm:ml-2" : "mr-1.5 sm:mr-2"
+                  }
+                >
+                  <div
+                    className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shadow-md ${
+                      m.sender === "user"
+                        ? "bg-gradient-to-br from-blue-500 to-indigo-600"
+                        : "bg-gradient-to-br from-emerald-400 via-cyan-500 to-blue-500"
+                    }`}
+                  >
+                    {m.sender === "user" ? (
+                      <User className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
+                    ) : (
+                      <Bot className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
+                    )}
                   </div>
                 </div>
-
-                <div className={`rounded-2xl px-4 py-3 shadow-sm max-w-md ${
-                  m.sender==="user" ? "bg-blue-500 text-white" : "bg-white text-gray-800 border border-gray-100"
-                } ${lang==="ur" ? "text-right" : "text-left"}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-xs font-medium ${m.sender==="user" ? "text-blue-100" : "text-gray-500"}`}>
-                      {m.sender==="user" ? t("you") : t("bot")}
-                    </span>
-                    <span className={`text-xs ${m.sender==="user" ? "text-blue-100" : "text-gray-400"}`}>
-                      {formatTime(m.timestamp)}
-                    </span>
-                  </div>
-                  <div className="whitespace-pre-line leading-relaxed">
-                    {m.text}
-                  </div>
+                <div
+                  className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-sm text-sm ${
+                    m.sender === "user"
+                      ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white"
+                      : "bg-white text-gray-800 border border-gray-200"
+                  }`}
+                >
+                  <p className="leading-relaxed break-words">{m.text}</p>
                 </div>
               </div>
             </div>
           ))}
 
           {isTyping && (
-            <div className="flex justify-start">
-              <div className="flex">
-                <div className="flex-shrink-0 mr-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-blue-500 text-white flex items-center justify-center">
-                    <Bot className="w-5 h-5" />
-                  </div>
-                </div>
-                <div className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay:"0.1s" }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay:"0.2s" }}></div>
-                  </div>
+            <div className="flex animate-[fadeIn_0.3s_ease-in-out]">
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-emerald-400 via-cyan-500 to-blue-500 mr-1.5 sm:mr-2 flex items-center justify-center shadow-md">
+                <Bot className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
+              </div>
+              <div className="bg-white rounded-2xl px-4 py-3 border border-gray-200 shadow-sm">
+                <div className="flex space-x-1.5">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+                  <div
+                    className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.15s" }}
+                  ></div>
+                  <div
+                    className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
+                    style={{ animationDelay: "0.3s" }}
+                  ></div>
                 </div>
               </div>
             </div>
           )}
-
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input */}
-        <div className="bg-white border-t border-gray-200 px-6 py-4">
-          {!isVoiceMode ? (
-            <form onSubmit={handleSubmit} className="flex space-x-3">
-              <input
-                type="text"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder={lang==="ur" ? "یہاں اپنا پیغام لکھیں..." : "Type your message here..."}
-                className={`flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 text-gray-900 ${lang==="ur"?"text-right":"text-left"}`}
-              />
-              <button
-                type="submit"
-                disabled={!inputValue.trim() || isTyping}
-                className="px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 transition-all font-medium shadow-lg"
-              >
-                <Send className="w-5 h-5" />
-              </button>
-            </form>
-          ) : (
-            /* Your existing voice button block; only replace static strings via t() if you like */
-            <div className={`text-sm ${align}`}>{t("voiceNotSupported")} (voice kept as-is)</div>
-          )}
+        {/* Input Area */}
+        <div className="bg-white border-t px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
+          <form onSubmit={handleSubmit} className="flex items-end space-x-2 sm:space-x-3">
+            <textarea
+              ref={textareaRef}
+              value={inputValue}
+              onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                setInputValue(e.target.value)
+              }
+              onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e as any);
+                }
+              }}
+              placeholder="Type your message..."
+              rows={1}
+              className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto text-sm sm:text-base"
+              style={{
+                minHeight: "40px",
+                maxHeight: "100px",
+              }}
+            />
+            <button
+              type="submit"
+              disabled={!inputValue.trim() || isTyping}
+              className="px-4 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 flex-shrink-0 shadow-md"
+            >
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </form>
         </div>
       </div>
 
-      {/* Diagnosis Footer */}
-      {diagnosis && (
-        <div className="bg-white border-t border-gray-200 shadow-sm">
-          <div className="max-w-4xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-5 h-5 text-green-500" />
-                  <span className="font-medium text-gray-900">
-                    {lang==="ur" ? condUrdu(diagnosis.prediction) : diagnosis.prediction}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className={`w-5 h-5 ${
-                    diagnosis.severity==="high" ? "text-red-500" :
-                    diagnosis.severity==="moderate" ? "text-yellow-500" : "text-green-500"
-                  }`} />
-                  <span className="text-gray-700 capitalize">
-                    {lang==="ur" ? sevUrdu(diagnosis.severity) : `${diagnosis.severity} severity`}
-                  </span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5 text-blue-500" />
-                  <span className="text-gray-700">
-                    {lang==="ur"
-                      ? `${diagnosis.days} دن`
-                      : `${diagnosis.days} day${diagnosis.days!==1?'s':''}`
-                    }
-                  </span>
+      {/* Diagnosis Summary Bar */}
+      {diagnosis && !isTyping && step === "completed" && (
+        <div className="bg-white border-t shadow-lg sticky bottom-0 z-10">
+          <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+                <span className="font-medium truncate max-w-[150px] sm:max-w-none">{diagnosis.prediction}</span>
+              </div>
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <AlertTriangle
+                  className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${
+                    diagnosis.severity === "high"
+                      ? "text-red-500"
+                      : diagnosis.severity === "moderate"
+                      ? "text-yellow-500"
+                      : "text-green-500"
+                  }`}
+                />
+                <span className="capitalize">{diagnosis.severity}</span>
+              </div>
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
+                <span>{diagnosis.days} days</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <button
+                onClick={() => setShowAnalysis(true)}
+                className="flex items-center justify-center space-x-1.5 sm:space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs sm:text-sm flex-1 sm:flex-initial"
+              >
+                <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>View Analysis</span>
+              </button>
+              <button 
+                onClick={onNavigateToDoctor}
+                className="flex items-center justify-center space-x-1.5 sm:space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition text-xs sm:text-sm flex-1 sm:flex-initial"
+              >
+                <UserRound className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>Consult Doctor</span>
+              </button>
+              {diagnosis.severity === "high" && (
+                <button className="flex items-center justify-center space-x-1.5 sm:space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-xs sm:text-sm flex-1 sm:flex-initial">
+                  <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Emergency</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Analysis Modal */}
+      {showAnalysis && diagnosis && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
+              <div className="flex items-center space-x-2 sm:space-x-3">
+                <Activity className="w-5 h-5 sm:w-6 sm:h-6" />
+                <h2 className="text-base sm:text-xl font-bold">Medical Analysis Report</h2>
+              </div>
+              <button
+                onClick={() => setShowAnalysis(false)}
+                className="p-1 hover:bg-white hover:bg-opacity-20 rounded-full transition"
+              >
+                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
+              <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
+                <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+                  <User className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-500" />
+                  Patient Information
+                </h3>
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
+                  <div>
+                    <p className="text-gray-500 text-xs">Name</p>
+                    <p className="font-medium truncate">{userData.name || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs">Age</p>
+                    <p className="font-medium">{userData.age || "N/A"} years</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500 text-xs">Gender</p>
+                    <p className="font-medium capitalize">
+                      {userData.gender || "N/A"}
+                    </p>
+                  </div>
                 </div>
               </div>
-              {diagnosis.severity === "high" && (
-                <div className="flex items-center space-x-2">
-                  <button className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium">
-                    <Phone className="w-4 h-4" />
-                    <span>{t("emergency")}</span>
-                  </button>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-green-500" />
+                  Reported Symptoms
+                </h3>
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  {symptoms.map((s, i) => (
+                    <span
+                      key={i}
+                      className="px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm"
+                    >
+                      {s.replace(/_/g, " ")}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                  Duration: {diagnosis.days} days
+                </p>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+                  <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-indigo-500" />
+                  Diagnosis
+                </h3>
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 sm:p-4 space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <span className="text-base sm:text-lg font-bold text-indigo-900">
+                      {diagnosis.prediction}
+                    </span>
+                    {diagnosis.confidence && (
+                      <span className="px-2.5 py-1 bg-indigo-200 text-indigo-800 rounded-full text-xs sm:text-sm font-medium w-fit">
+                        {(diagnosis.confidence * 100).toFixed(1)}% confidence
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-4 text-xs sm:text-sm">
+                    <div className="flex items-center space-x-1">
+                      <AlertTriangle
+                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${
+                          diagnosis.severity === "high"
+                            ? "text-red-500"
+                            : diagnosis.severity === "moderate"
+                            ? "text-yellow-500"
+                            : "text-green-500"
+                        }`}
+                      />
+                      <span className="capitalize font-medium">
+                        {diagnosis.severity} Severity
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {diagnosis.precautions && diagnosis.precautions.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
+                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-500" />
+                    Recommendations
+                  </h3>
+                  <ul className="space-y-2">
+                    {diagnosis.precautions.map((precaution, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start space-x-2 text-xs sm:text-sm"
+                      >
+                        <span className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 font-medium text-xs">
+                          {i + 1}
+                        </span>
+                        <span className="text-gray-700 pt-0.5">
+                          {precaution}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               )}
+
+              {diagnosis.severity === "high" && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded-r-lg">
+                  <div className="flex items-start space-x-2 sm:space-x-3">
+                    <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-red-900 mb-1 text-sm sm:text-base">
+                        Important Notice
+                      </h4>
+                      <p className="text-xs sm:text-sm text-red-700">
+                        This condition requires immediate medical attention.
+                        Please consult a healthcare professional as soon as
+                        possible.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2.5 sm:p-3 text-xs text-yellow-800">
+                <strong>Disclaimer:</strong> This is an AI-assisted preliminary
+                analysis and should NOT replace professional medical advice.
+                Always consult qualified healthcare providers for accurate
+                diagnosis and treatment.
+              </div>
+            </div>
+
+            <div className="border-t px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 flex-shrink-0">
+              <p className="text-xs text-gray-500 text-center sm:text-left">
+                Generated on {new Date().toLocaleString()}
+              </p>
+              <div className="flex space-x-2 sm:space-x-3">
+                <button
+                  onClick={() => setShowAnalysis(false)}
+                  className="flex-1 sm:flex-initial px-3 py-2 sm:px-4 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={onNavigateToDoctor}
+                  className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-3 py-2 sm:px-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition text-sm"
+                >
+                  <UserRound className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Consult Doctor</span>
+                </button>
+                <button
+                  onClick={generatePDF}
+                  className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-3 py-2 sm:px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition text-sm"
+                >
+                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Download</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -765,4 +1029,4 @@ const RoboDocVoiceChatbot = () => {
   );
 };
 
-export default RoboDocVoiceChatbot;
+export default RoboDocChatbot;

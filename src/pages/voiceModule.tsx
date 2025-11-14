@@ -186,7 +186,7 @@ const SymptomChecker: React.FC<SymptomCheckerProps> = ({ userLanguage = "en" }) 
   };
 
   const getRecommendations = (urgency: AssessmentResult['urgency'], lang: string): string[] => {
-    const recommendations = {
+    const recommendations: Record<AssessmentResult['urgency'], Record<string, string[]>> = {
       emergency: {
         en: ["Seek immediate emergency care", "Call emergency services", "Do not delay treatment"],
         ur: ["فوری طبی امداد حاصل کریں", "ایمرجنسی سروسز کو کال کریں", "علاج میں تاخیر نہ کریں"]

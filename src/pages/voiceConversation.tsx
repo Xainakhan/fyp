@@ -1,4 +1,3 @@
-// components/VoiceConversation.tsx
 import React, { useState, useEffect, useRef } from "react";
 
 interface Message {
@@ -10,11 +9,11 @@ interface Message {
 }
 
 interface VoiceConversationProps {
-  userLanguage: string;
+  userLanguage?: string;
 }
 
 const VoiceConversation: React.FC<VoiceConversationProps> = ({
-  userLanguage,
+  userLanguage = "en",
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -24,8 +23,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Refs for speech recognition and synthesis
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const synthesisRef = useRef<SpeechSynthesis | null>(null);
+  const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Initialize speech services
@@ -34,7 +32,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
     return () => {
       cleanup();
     };
-  }, []);
+  }, [userLanguage]);
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
@@ -42,25 +40,30 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
   }, [messages]);
 
   const initializeSpeechServices = () => {
-    // Initialize Speech Recognition
-    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-      const SpeechRecognition =
-        (window as any).SpeechRecognition ||
-        (window as any).webkitSpeechRecognition;
+    // Check for Speech Recognition support
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      setError("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+      return;
+    }
 
+    try {
       recognitionRef.current = new SpeechRecognition();
       const recognition = recognitionRef.current;
 
-      recognition.continuous = true;
+      recognition.continuous = false;
       recognition.interimResults = true;
       recognition.lang = userLanguage === "ur" ? "ur-PK" : "en-US";
+      recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
+        console.log("Speech recognition started");
         setIsListening(true);
         setError(null);
       };
 
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
+      recognition.onresult = (event: any) => {
         let finalTranscript = "";
         let interimTranscript = "";
 
@@ -74,56 +77,101 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
         }
 
         if (finalTranscript) {
+          console.log("Final transcript:", finalTranscript);
+          setCurrentTranscript("");
           handleUserMessage(finalTranscript.trim());
         } else {
           setCurrentTranscript(interimTranscript);
         }
       };
 
-      recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        setError(`Speech recognition error: ${event.error}`);
-        setIsListening(false);
-      };
-
-      recognition.onend = () => {
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        if (event.error === 'no-speech') {
+          setError("No speech detected. Please try again.");
+        } else if (event.error === 'audio-capture') {
+          setError("Microphone not available. Please check permissions.");
+        } else if (event.error === 'not-allowed') {
+          setError("Microphone access denied. Please allow microphone access.");
+        } else {
+          setError(`Speech recognition error: ${event.error}`);
+        }
         setIsListening(false);
         setCurrentTranscript("");
       };
-    } else {
-      setError("Speech recognition is not supported in this browser");
+
+      recognition.onend = () => {
+        console.log("Speech recognition ended");
+        setIsListening(false);
+        setCurrentTranscript("");
+      };
+    } catch (err) {
+      console.error("Error initializing speech recognition:", err);
+      setError("Failed to initialize speech recognition");
     }
 
-    // Initialize Speech Synthesis
-    if ("speechSynthesis" in window) {
-      synthesisRef.current = window.speechSynthesis;
-    } else {
+    // Check Speech Synthesis support
+    if (!('speechSynthesis' in window)) {
       setError("Speech synthesis is not supported in this browser");
     }
   };
 
   const cleanup = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        console.log("Error stopping recognition:", err);
+      }
     }
-    if (synthesisRef.current) {
-      synthesisRef.current.cancel();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
     }
   };
 
   const startListening = () => {
-    if (recognitionRef.current && !isListening) {
+    if (!recognitionRef.current) {
+      setError("Speech recognition not initialized");
+      return;
+    }
+
+    if (isListening) {
+      return;
+    }
+
+    try {
       setCurrentTranscript("");
+      setError(null);
       recognitionRef.current.start();
+      console.log("Starting speech recognition");
+    } catch (err: any) {
+      console.error("Error starting recognition:", err);
+      if (err.message.includes('already started')) {
+        // Recognition is already running, stop and restart
+        recognitionRef.current.stop();
+        setTimeout(() => {
+          recognitionRef.current.start();
+        }, 100);
+      } else {
+        setError("Failed to start listening");
+      }
     }
   };
 
   const stopListening = () => {
     if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop();
+      try {
+        recognitionRef.current.stop();
+        console.log("Stopping speech recognition");
+      } catch (err) {
+        console.error("Error stopping recognition:", err);
+      }
     }
   };
 
   const handleUserMessage = async (text: string) => {
+    if (!text.trim()) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       text,
@@ -136,7 +184,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
     setIsProcessing(true);
 
     try {
-      // Simulate AI response (replace with actual API call)
+      // Get AI response
       const aiResponse = await getAIResponse(text, userLanguage);
       
       const aiMessage: Message = {
@@ -200,13 +248,13 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
 
   const speakText = async (text: string, language: string): Promise<void> => {
     return new Promise((resolve, reject) => {
-      if (!synthesisRef.current) {
+      if (!('speechSynthesis' in window)) {
         reject(new Error("Speech synthesis not available"));
         return;
       }
 
       // Cancel any ongoing speech
-      synthesisRef.current.cancel();
+      window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language === "ur" ? "ur-PK" : "en-US";
@@ -225,17 +273,20 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
 
       utterance.onerror = (event) => {
         setIsSpeaking(false);
-        console.error("Speech synthesis error:", event.error);
-        reject(new Error(`Speech synthesis error: ${event.error}`));
+        console.error("Speech synthesis error:", event);
+        reject(new Error(`Speech synthesis error`));
       };
 
-      synthesisRef.current.speak(utterance);
+      // Small delay to ensure cancel has completed
+      setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+      }, 100);
     });
   };
 
   const stopSpeaking = () => {
-    if (synthesisRef.current) {
-      synthesisRef.current.cancel();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
       setIsSpeaking(false);
     }
   };
@@ -244,6 +295,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
     setMessages([]);
     stopSpeaking();
     stopListening();
+    setError(null);
   };
 
   const scrollToBottom = () => {
@@ -352,6 +404,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
                   ? "bg-red-500 hover:bg-red-600 animate-pulse"
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
+              title={isListening ? "Stop listening" : "Start listening"}
             >
               {isListening ? (
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
@@ -370,6 +423,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
               <button
                 onClick={stopSpeaking}
                 className="p-4 rounded-full bg-orange-500 text-white hover:bg-orange-600 transition-all transform hover:scale-105"
+                title="Stop speaking"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                   <rect x="6" y="6" width="12" height="12" rx="2" />
@@ -382,6 +436,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
               <button
                 onClick={clearConversation}
                 className="p-4 rounded-full bg-gray-500 text-white hover:bg-gray-600 transition-all transform hover:scale-105"
+                title="Clear conversation"
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>

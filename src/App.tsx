@@ -1,7 +1,6 @@
 // App.tsx - Final version with separate components
 import { useState } from "react";
 import "./App.css";
-
 // Import page components
 // import TextToSpeechModule from "./pages/TextToSpeech";
 // import AdvancedVoiceAnalysisEngine from "./pages/healthcareSystem";
@@ -25,10 +24,10 @@ function App() {
   const renderCurrentModule = () => {
     switch (currentModule) {
       case "tts":
-        return <VoiceConversation userLanguage={userLanguage} />;
+        return <VoiceConversation />;
 
       // case "interview":
-        // return <AdvancedVoiceAnalysisEngine />;
+      // return <AdvancedVoiceAnalysisEngine />;
 
       case "voice":
         return <VoiceModule userLanguage={userLanguage} />;
@@ -39,33 +38,27 @@ function App() {
             <h2 className="text-2xl mb-4">
               {APP_TEXT.placeholders.triageModule.title}
             </h2>
-            <p className="text-gray-600">
-              return <HealthTriageModule />
-            </p>
+            <HealthTriageModule />
           </div>
         );
 
-        case "assessment":
+      case "assessment":
         return (
           <div className="p-8 text-center">
             <h2 className="text-2xl mb-4">
               {APP_TEXT.placeholders.specialtyModule.title}
             </h2>
-             <p className="text-gray-600">
-                  return <SymptomAnalysisDoctorFinder />
-
-            </p>
+            <SymptomAnalysisDoctorFinder />
           </div>
         );
+
       case "specialty":
         return (
           <div className="p-8 text-center">
             <h2 className="text-2xl mb-4">
               {APP_TEXT.placeholders.specialtyModule.title}
             </h2>
-            <p className="text-gray-600">
-             return <FindDoctorPage />
-            </p>
+            <FindDoctorPage />
           </div>
         );
 

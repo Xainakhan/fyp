@@ -32,9 +32,9 @@ export interface EmergencyContact {
 // App modules configuration
 export const APP_MODULES: Module[] = [
   { id: "home", name: "Home", nameUrdu: "ہوم" },
-  { id: "tts", name: "Text-to-Speech", nameUrdu: "متن سے آواز" },
+  { id: "tts", name: "Voice Conversation", nameUrdu: "آواز سے ان پٹ" },
   { id: "interview", name: "Health Interview", nameUrdu: "صحت کا انٹرویو" },
-  { id: "voice", name: "Voice Input", nameUrdu: "آوازی ان پٹ" },
+  { id: "voice", name: " Symptom Checker", nameUrdu: "علامات کی جانچ" },
   { id: "triage", name: "Health Triage", nameUrdu: "صحت کی جانچ" },
   { id: "specialty", name: "Find Doctor", nameUrdu: "ڈاکٹر تلاش کریں" },
 ];
