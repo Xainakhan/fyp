@@ -1,61 +1,60 @@
-// src/services/apiService.js
+// src/services/apiService.ts
 
-const API_BASE_URL = 'http://localhost:5000/api/nlp';
+export const API_BASE_URL = "http://localhost:5000/api/nlp";
 
-export const predictDisease = async (symptoms, durationDays) => {
+export interface PredictResponse {
+  disease?: string;
+  confidence?: number;
+  precautions?: string[];
+  description?: string;
+  // backend may send more fields – keep it flexible:
+  [key: string]: any;
+}
+
+export const getAllSymptoms = async (): Promise<string[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/predict`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const res = await fetch(`${API_BASE_URL}/symptoms`);
+    const data = await res.json();
+    return data.symptoms || [];
+  } catch (err) {
+    console.error("Error fetching symptoms:", err);
+    return [];
+  }
+};
+
+export const predictDisease = async (
+  symptoms: string[],
+  durationDays: number
+): Promise<PredictResponse> => {
+  try {
+    const res = await fetch(`${API_BASE_URL}/predict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        symptoms: symptoms,
-        duration: durationDays
-      })
+        symptoms,
+        duration: durationDays,
+      }),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (!res.ok) {
+      throw new Error(`HTTP error: ${res.status}`);
     }
 
-    const data = await response.json();
+    const data = await res.json();
     return data;
-  } catch (error) {
-    console.error('Error predicting disease:', error);
-    throw error;
-  }
-};
-
-export const getSymptomWeights = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/symptom-weights`);
-    const data = await response.json();
-    return data.symptoms;
-  } catch (error) {
-    console.error('Error fetching symptom weights:', error);
-    return {};
-  }
-};
-
-export const getAllSymptoms = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/symptoms`);
-    const data = await response.json();
-    return data.symptoms;
-  } catch (error) {
-    console.error('Error fetching symptoms:', error);
-    return [];
+  } catch (err) {
+    console.error("Predict API failed:", err);
+    throw err;
   }
 };
 
 export const checkBackendHealth = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/health`);
-    const data = await response.json();
+    const res = await fetch(`${API_BASE_URL}/health`);
+    const data = await res.json();
     return data;
-  } catch (error) {
-    console.error('Backend health check failed:', error);
-    return { success: false, error: error.message };
+  } catch (err) {
+    console.error("Backend health failed:", err);
+    return { success: false };
   }
 };

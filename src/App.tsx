@@ -4,16 +4,16 @@ import "./App.css";
 // Import page components
 // import TextToSpeechModule from "./pages/TextToSpeech";
 // import AdvancedVoiceAnalysisEngine from "./pages/healthcareSystem";
-import VoiceModule from "./pages/voiceModule";
+import VoiceModule from "./pages/doctorsData";
 import VoiceConversation from "./pages/voiceConversation";
-import SymptomAnalysisDoctorFinder from "./pages/healthJournal";
+// import SymptomAnalysisDoctorFinder from "./pages/healthJournal";
 // Import layout components
 import Navbar from "./pages/navBar";
 import Footer from "./pages/footer";
 import HomePage from "./pages/homePage";
 
 // Import data constants
-import { APP_TEXT } from "./pages/data";
+import { APP_TEXT } from "./pages/navbarData";
 import HealthTriageModule from "./pages/heathTriage";
 import FindDoctorPage from "./pages/findDoctor";
 
@@ -25,9 +25,6 @@ function App() {
     switch (currentModule) {
       case "tts":
         return <VoiceConversation />;
-
-      // case "interview":
-      // return <AdvancedVoiceAnalysisEngine />;
 
       case "voice":
         return <VoiceModule userLanguage={userLanguage} />;
@@ -42,15 +39,6 @@ function App() {
           </div>
         );
 
-      case "assessment":
-        return (
-          <div className="p-8 text-center">
-            <h2 className="text-2xl mb-4">
-              {APP_TEXT.placeholders.specialtyModule.title}
-            </h2>
-            <SymptomAnalysisDoctorFinder />
-          </div>
-        );
 
       case "specialty":
         return (

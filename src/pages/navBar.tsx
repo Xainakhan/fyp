@@ -1,6 +1,6 @@
 // components/Navbar.tsx
 import React from "react";
-import { APP_MODULES, APP_TEXT } from "../pages/data";
+import { APP_MODULES, APP_TEXT } from "../pages/navbarData";
 
 interface NavbarProps {
   currentModule: string;
