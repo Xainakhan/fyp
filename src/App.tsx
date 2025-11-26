@@ -1,61 +1,83 @@
-// App.tsx - Final version with separate components
+// App.tsx
 import { useState } from "react";
 import "./App.css";
-// Import page components
-// import TextToSpeechModule from "./pages/TextToSpeech";
-// import AdvancedVoiceAnalysisEngine from "./pages/healthcareSystem";
-import VoiceModule from "./pages/doctorsData";
+// --- Page modules ---
 import VoiceConversation from "./pages/voiceConversation";
-// import SymptomAnalysisDoctorFinder from "./pages/healthJournal";
-// Import layout components
+import HealthTriageModule from "./pages/heathTriage";
+import Doc from "./pages/doctorsData";
+// --- Layout components ---
 import Navbar from "./pages/navBar";
 import Footer from "./pages/footer";
 import HomePage from "./pages/homePage";
-
-// Import data constants
-import { APP_TEXT } from "./pages/navbarData";
-import HealthTriageModule from "./pages/heathTriage";
-import FindDoctorPage from "./pages/findDoctor";
+import SymptomCheckerPage from "./pages/symptomChecker";
+import HealthInterviewPage from "./pages/healthInterview";
+import HealthTimeline from "./pages/healthTimeline";
 
 function App() {
-  const [currentModule, setCurrentModule] = useState<string>("home");
-  const [userLanguage, setUserLanguage] = useState<string>("en");
+  // which screen is active
+  const [currentModule, setCurrentModule] = useState<
+    | "home"
+    | "tts"
+    | "interview"
+    | "doctor"
+    | "triage"
+    | "specialty"
+    | "symptom"
+    | "timeline"
+  >("home");
+
+  // app language
+  const [userLanguage, setUserLanguage] = useState<"en" | "ur">("en");
 
   const renderCurrentModule = () => {
     switch (currentModule) {
       case "tts":
         return <VoiceConversation />;
 
-      case "voice":
-        return <VoiceModule userLanguage={userLanguage} />;
+      // 🔵 This is  DOCTOR PAGE
+      case "doctor":
+        return <Doc />;
 
+      // 🔵 Health triage (chatbot)
       case "triage":
         return (
-          <div className="p-8 text-center">
-            <h2 className="text-2xl mb-4">
-              {APP_TEXT.placeholders.triageModule.title}
-            </h2>
-            <HealthTriageModule />
-          </div>
+          <HealthTriageModule
+            onNavigateToDoctor={() => setCurrentModule("doctor")}
+          />
         );
+      case "timeline":
+        return <HealthTimeline />;
+      case "symptom":
+        return <SymptomCheckerPage userLanguage={userLanguage} />;
 
-
-      case "specialty":
+      // 🔵 Health interview page
+      case "interview":
         return (
-          <div className="p-8 text-center">
-            <h2 className="text-2xl mb-4">
-              {APP_TEXT.placeholders.specialtyModule.title}
-            </h2>
-            <FindDoctorPage />
+          <div className="w-full min-h-screen bg-white p-8">
+            <HealthInterviewPage userLanguage={userLanguage as "en" | "ur"} />
           </div>
         );
 
+      case "home":
       default:
         return (
           <HomePage
             userLanguage={userLanguage}
-            setUserLanguage={setUserLanguage}
-            setCurrentModule={setCurrentModule}
+            setUserLanguage={(lang: string) =>
+              setUserLanguage(lang as "en" | "ur")
+            }
+            setCurrentModule={(module: string) =>
+              setCurrentModule(
+                module as
+                  | "home"
+                  | "tts"
+                  | "interview"
+                  | "doctor"
+                  | "triage"
+                  | "specialty"
+                  | "symptom"
+              )
+            }
           />
         );
     }
@@ -63,23 +85,47 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation - Only show when not on home page */}
+      {/* Navbar appears on every screen except home */}
       {currentModule !== "home" && (
         <Navbar
           currentModule={currentModule}
-          setCurrentModule={setCurrentModule}
+          setCurrentModule={(module: string) =>
+            setCurrentModule(
+              module as
+                | "home"
+                | "tts"
+                | "interview"
+                | "doctor"
+                | "triage"
+                | "specialty"
+                | "symptom"
+            )
+          }
           userLanguage={userLanguage}
-          setUserLanguage={setUserLanguage}
+          setUserLanguage={(lang: string) =>
+            setUserLanguage(lang as "en" | "ur")
+          }
         />
       )}
 
-      {/* Main Content */}
-      <main className="min-h-screen">{renderCurrentModule()}</main>
+      {/* Main content */}
+      <main className="w-full">{renderCurrentModule()}</main>
 
-      {/* Footer - Only show when not on home page */}
+      {/* Footer appears on every screen except home */}
       {currentModule !== "home" && (
         <Footer
-          setCurrentModule={setCurrentModule}
+          setCurrentModule={(module: string) =>
+            setCurrentModule(
+              module as
+                | "home"
+                | "tts"
+                | "interview"
+                | "doctor"
+                | "triage"
+                | "specialty"
+                | "symptom"
+            )
+          }
           userLanguage={userLanguage}
         />
       )}

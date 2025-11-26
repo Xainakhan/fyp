@@ -1,6 +1,6 @@
 // components/Footer.tsx
 import React from "react";
-import { APP_MODULES, EMERGENCY_CONTACTS, APP_TEXT } from "../pages/data";
+import { APP_MODULES, EMERGENCY_CONTACTS, APP_TEXT } from "../pages/navbarData";
 
 interface FooterProps {
   setCurrentModule: (module: string) => void;

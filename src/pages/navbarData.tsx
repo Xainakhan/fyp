@@ -1,5 +1,3 @@
-// constants/appData.ts - Separated data and constants
-
 export interface Module {
   id: string;
   name: string;
@@ -34,9 +32,11 @@ export const APP_MODULES: Module[] = [
   { id: "home", name: "Home", nameUrdu: "ہوم" },
   { id: "tts", name: "Voice Conversation", nameUrdu: "آواز سے ان پٹ" },
   { id: "interview", name: "Health Interview", nameUrdu: "صحت کا انٹرویو" },
-  { id: "voice", name: " Symptom Checker", nameUrdu: "علامات کی جانچ" },
+{ id: "symptom", name: "Symptom Checker", nameUrdu: "علامات کی جانچ" },
+
   { id: "triage", name: "Health Triage", nameUrdu: "صحت کی جانچ" },
-  { id: "specialty", name: "Find Doctor", nameUrdu: "ڈاکٹر تلاش کریں" },
+  { id: "doctor", name: "Find Doctor", nameUrdu: "ڈاکٹر تلاش کریں" },
+   { id: "timeline", name: "Health Timeline", nameUrdu: "ڈاکٹر تلاش کریں" },
 ];
 
 // Features data for home page

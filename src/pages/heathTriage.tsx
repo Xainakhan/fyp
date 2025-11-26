@@ -2,9 +2,9 @@ import React, {
   useState,
   useEffect,
   useRef,
-  FormEvent,
-  KeyboardEvent,
-  ChangeEvent,
+  type FormEvent,
+  type KeyboardEvent,
+  type ChangeEvent,
 } from "react";
 import {
   Send,
@@ -14,15 +14,11 @@ import {
   Phone,
   Clock,
   CheckCircle,
-  Mic,
-  Volume2,
-  VolumeX,
   MessageSquare,
   Stethoscope,
   RotateCcw,
   Wifi,
   WifiOff,
-  FileText,
   Download,
   X,
   Activity,
@@ -268,7 +264,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
   const [availableSymptoms, setAvailableSymptoms] =
     useState<string[]>(mockSymptoms);
   const [backendConnected, setBackendConnected] = useState<boolean>(false);
-  const [symptomWeights, setSymptomWeights] = useState<Record<string, any>>({});
+  const [, setSymptomWeights] = useState<Record<string, any>>({});
   const [showAnalysis, setShowAnalysis] = useState<boolean>(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -669,7 +665,8 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
             </div>
 
             <button
-              onClick={onNavigateToDoctor}
+              onClick={() => onNavigateToDoctor?.()}
+
               className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md text-xs sm:text-sm font-medium"
               title="Find a Doctor"
             >

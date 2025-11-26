@@ -1,10 +1,12 @@
+// pages/homePage.tsx
 // components/HomePage.tsx
 import React from "react";
 import {
   APP_FEATURES,
   APP_STATISTICS,
   APP_TEXT,
-} from "../pages/data";
+} from "../pages/navbarData";
+ 
 
 interface HomePageProps {
   userLanguage: string;
