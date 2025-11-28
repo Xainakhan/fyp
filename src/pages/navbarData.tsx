@@ -1,3 +1,8 @@
+import { MdMic } from "react-icons/md";
+import { GiBrain } from "react-icons/gi";
+import { MdHealthAndSafety } from "react-icons/md";
+import { FaUserDoctor } from "react-icons/fa6";
+
 export interface Module {
   id: string;
   name: string;
@@ -40,38 +45,38 @@ export const APP_MODULES: Module[] = [
 ];
 
 // Features data for home page
-export const APP_FEATURES: Feature[] = [
+export const APP_FEATURES = [
   {
+    icon: <MdMic className="text-blue-600" />,
     title: "Voice Conversation",
-    titleUrdu: "آوازی گفتگو",
+    titleUrdu: "آواز پر مبنی مکالمہ",
     desc: "Natural voice interaction",
-    descUrdu: "قدرتی آواز میں بات کریں",
-    icon: "🎤",
+    descUrdu: "قدرتی آواز میں گفتگو",
     module: "tts",
   },
   {
+    icon: <GiBrain className="text-pink-500" />,
     title: "Smart Interview",
-    titleUrdu: "ذہین انٹرویو",
-    desc: "AI-powered health assessment",
-    descUrdu: "AI سے چلنے والا صحت کا جائزہ",
-    icon: "🧠",
+    titleUrdu: "اسمارٹ انٹرویو",
+    desc: "AI powered health assessment",
+    descUrdu: "اے آئی پر مبنی ہیلتھ اسیسمنٹ",
     module: "interview",
   },
   {
+    icon: <MdHealthAndSafety className="text-purple-500" />,
     title: "Smart Triage",
-    titleUrdu: "ذہین تشخیص",
+    titleUrdu: "اسمارٹ ٹریائج",
     desc: "Instant condition assessment",
-    descUrdu: "فوری طور پر حالت کا جائزہ",
-    icon: "🏥",
+    descUrdu: "فوری حالت کا جائزہ",
     module: "triage",
   },
   {
+    icon: <FaUserDoctor className="text-amber-500" />,
     title: "Specialist Routing",
-    titleUrdu: "ماہر ڈاکٹر",
+    titleUrdu: "اسپیشلسٹ رہنمائی",
     desc: "Right doctor guidance",
-    descUrdu: "صحیح ڈاکٹر کی رہنمائی",
-    icon: "👨‍⚕️",
-    module: "specialty",
+    descUrdu: "درست ڈاکٹر تک رہنمائی",
+    module: "specialist",
   },
 ];
 

@@ -32,7 +32,23 @@ function App() {
   const renderCurrentModule = () => {
     switch (currentModule) {
       case "tts":
-        return <VoiceConversation />;
+        return (
+          <VoiceConversation
+            userLanguage={userLanguage}
+            setCurrentModule={(module: string) =>
+              setCurrentModule(
+                module as
+                  | "home"
+                  | "tts"
+                  | "interview"
+                  | "doctor"
+                  | "triage"
+                  | "specialty"
+                  | "symptom"
+                  | "timeline"
+              )
+            }
+          />);
 
       // 🔵 This is  DOCTOR PAGE
       case "doctor":
