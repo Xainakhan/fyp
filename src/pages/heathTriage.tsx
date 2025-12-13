@@ -6,6 +6,8 @@ import React, {
   type KeyboardEvent,
   type ChangeEvent,
 } from "react";
+import { askRag } from "../services/ragService";
+
 import {
   Send,
   Bot,
@@ -73,6 +75,12 @@ interface HealthResponse {
 interface RoboDocChatbotProps {
   onNavigateToDoctor?: () => void;
 }
+const cleanMarkdown = (text: string) => {
+  return text
+    .replace(/\*\*/g, "") // remove bold
+    .replace(/\*/g, "") // remove single stars
+    .replace(/_/g, ""); // remove underscores
+};
 
 // API Configuration
 const API_BASE_URL = "http://localhost:5000/api/nlp";
@@ -203,6 +211,29 @@ const processInput = (input: string): { token: string } => {
   if (num) return { token: num[0] };
   return { token: lower };
 };
+// Detect symptoms even if user types natural language like "pain in neck"
+const detectSymptom = (input: string, available: string[]) => {
+  const lower = input.toLowerCase();
+
+  // 1) Exact match
+  if (available.includes(lower)) return lower;
+
+  // 2) Partial match (e.g., "severe headache" → headache)
+  for (const sym of available) {
+    if (lower.includes(sym.replace("_", " "))) {
+      return sym;
+    }
+  }
+
+  // 3) Special cases for phrases
+  if (lower.includes("neck")) return "neck_pain";
+  if (lower.includes("back")) return "back_pain";
+  if (lower.includes("throat")) return "sore_throat";
+  if (lower.includes("stomach") || lower.includes("belly"))
+    return "abdominal_pain";
+
+  return null;
+};
 
 // Local fallback prediction
 const predictDiseaseLocal = (symptoms: string[]): string => {
@@ -249,7 +280,9 @@ const predictDiseaseLocal = (symptoms: string[]): string => {
   return "General Illness";
 };
 
-const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) => {
+const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
+  onNavigateToDoctor,
+}) => {
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, sender: "bot", text: i18n.en.initial1, timestamp: new Date() },
     { id: 2, sender: "bot", text: i18n.en.initial2, timestamp: new Date() },
@@ -293,7 +326,8 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
 
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
   }, [messages]);
 
@@ -306,12 +340,15 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
   }, [inputValue]);
 
   const addMessage = (sender: "bot" | "user", text: string) => {
+    const cleaned = cleanMarkdown(text);
+
     const msg: Message = {
       id: Date.now() + Math.random(),
       sender,
-      text,
+      text: cleaned,
       timestamp: new Date(),
     };
+
     setMessages((prev) => [...prev, msg]);
   };
 
@@ -322,27 +359,125 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
     setIsTyping(true);
     await new Promise((r) => setTimeout(r, delay));
     setIsTyping(false);
-    addMessage("bot", text);
+    addMessage("bot", cleanMarkdown(text));
   };
+ const normalizeSymptom = (text: string): string => {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-zA-Z0-9 ]/g, "")     // remove special chars
+    .replace(/\s+/g, " ")              // fix spacing
+    .replace(/back ?pain|pain in back|lower back pain|backache/g, "back pain")
+    .replace(/head ?ache|head pain/g, "headache")
+    .replace(/chest ?pain/g, "chest pain")
+    .replace(/shortness of breath|difficulty breathing/g, "shortness of breath");
+};
+
 
   const handleUserInput = async (message: string): Promise<void> => {
     addMessage("user", message);
     setInputValue("");
     const { token } = processInput(message);
 
-    switch (step) {
-      case "initial":
-        if (message.toLowerCase().includes("start")) {
-          setStep("name");
-          await simulateTyping(i18n.en.askName);
-        }
-        break;
+    // ================================
+    // 1️⃣ UNIVERSAL EXIT / RESET
+    // ================================
+    if (message.toLowerCase().includes("restart")) {
+      resetChat();
+      return;
+    }
 
-      case "name":
+    // ================================
+    // 2️⃣ IF USER TYPES START → BEGIN DIAGNOSIS FLOW
+    // ================================
+    if (message.toLowerCase() === "start") {
+      setStep("name");
+      await simulateTyping(i18n.en.askName);
+      return;
+    }
+
+    // ================================
+    // 3️⃣ IF NOT INSIDE DIAGNOSIS, HANDLE CHAT MODE
+    // ================================
+    if (step === "initial") {
+      // ——— RAG FOR MEDICAL QUESTIONS ———
+      if (message.trim().split(" ").length > 2) {
+        try {
+          await simulateTyping("Let me check that for you...", 400);
+          const rag = await askRag(message);
+          await simulateTyping(rag.answer);
+        } catch (err) {
+          console.error(err);
+          await simulateTyping("Sorry, I couldn't fetch an answer right now.");
+        }
+        return;
+      }
+
+      // ——— BASIC CONVERSATION HANDLING ———
+      const lower = message.toLowerCase();
+
+      if (lower.includes("hi") || lower.includes("hello")) {
+        await simulateTyping("Hello! How can I help you today?");
+        return;
+      }
+
+      if (lower.includes("how are you")) {
+        await simulateTyping("I'm doing great! How can I assist you?");
+        return;
+      }
+
+      if (lower.includes("bye")) {
+        await simulateTyping("Goodbye! Stay healthy 😊");
+        return;
+      }
+
+      // DEFAULT RESPONSE
+      await simulateTyping(
+        "You can chat with me freely, or type “start” to begin a symptom diagnosis."
+      );
+      return;
+    }
+
+    // ================================
+    // 4️⃣ DIAGNOSIS FLOW (OLD LOGIC)
+    // ================================
+    switch (step) {
+      case "name": {
+        const medicalKeywords = [
+          "fever",
+          "malaria",
+          "dengue",
+          "pain",
+          "cough",
+          "flu",
+          "headache",
+          "nausea",
+          "vomiting",
+          "diarrhea",
+          "infection",
+          "ill",
+          "dizzy",
+        ];
+
+        const lower = message.toLowerCase();
+
+        // If user types a disease or symptom instead of a name → DO NOT accept
+        if (medicalKeywords.some((k) => lower.includes(k))) {
+          await simulateTyping(
+            "It looks like you're talking about a medical condition.\n\n" +
+              "👉 Do you want to **chat normally** or **start a full diagnosis**?\n" +
+              "Type **chat** or **diagnose**."
+          );
+          setStep("confirmMode");
+          return;
+        }
+
+        // Otherwise accept as normal name
         setUserData((prev) => ({ ...prev, name: message }));
         setStep("age");
         await simulateTyping(i18n.en.askAge(message));
         break;
+      }
 
       case "age":
         const age = parseInt(token);
@@ -364,29 +499,26 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
         await simulateTyping(i18n.en.askMainSymptom);
         break;
 
-      case "symptoms":
-        if (availableSymptoms.includes(token)) {
-          setSymptoms([token]);
-          setStep("moreSymptoms");
-          await simulateTyping(i18n.en.addMoreSymptoms(token));
-        } else {
-          await simulateTyping(
-            `Symptom not recognized. Try: ${availableSymptoms
-              .slice(0, 5)
-              .join(", ")}`
-          );
-        }
-        break;
+case "symptoms":
+  const firstSymptom = normalizeSymptom(message);
+  setSymptoms([firstSymptom]);
+  setStep("moreSymptoms");
+  await simulateTyping(`Got it: ${firstSymptom}. Any other symptoms?`);
+  break;
 
-      case "moreSymptoms":
-        if (token === "no") {
-          setStep("duration");
-          await simulateTyping(i18n.en.askDays);
-        } else if (availableSymptoms.includes(token)) {
-          setSymptoms((prev) => [...prev, token]);
-          await simulateTyping(i18n.en.addMoreSymptoms(token));
-        }
-        break;
+
+case "moreSymptoms":
+  if (token === "no") {
+    setStep("duration");
+    await simulateTyping(i18n.en.askDays);
+  } else {
+    const s = normalizeSymptom(message);
+    setSymptoms((prev) => [...prev, s]);
+    await simulateTyping(`Added: ${s}. Any more symptoms?`);
+  }
+  break;
+
+
 
       case "duration":
         const days = parseInt(token);
@@ -408,6 +540,22 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
           setStep("initial");
         }
         break;
+      case "confirmMode":
+        if (message.toLowerCase() === "chat") {
+          setStep("initial");
+          await simulateTyping("Sure! You can chat with me freely now.");
+        } else if (message.toLowerCase() === "diagnose") {
+          setStep("age");
+          await simulateTyping("Great! Let's continue. How old are you?");
+        } else {
+          await simulateTyping('Please type "chat" or "diagnose".');
+        }
+        break;
+
+      default:
+        await simulateTyping(
+          "I didn’t understand that. Type “start” to begin diagnosis or ask your question."
+        );
     }
   };
 
@@ -666,7 +814,6 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
 
             <button
               onClick={() => onNavigateToDoctor?.()}
-
               className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md text-xs sm:text-sm font-medium"
               title="Find a Doctor"
             >
@@ -762,7 +909,10 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
 
         {/* Input Area */}
         <div className="bg-white border-t px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
-          <form onSubmit={handleSubmit} className="flex items-end space-x-2 sm:space-x-3">
+          <form
+            onSubmit={handleSubmit}
+            className="flex items-end space-x-2 sm:space-x-3"
+          >
             <textarea
               ref={textareaRef}
               value={inputValue}
@@ -801,7 +951,9 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
             <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
               <div className="flex items-center space-x-1.5 sm:space-x-2">
                 <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-                <span className="font-medium truncate max-w-[150px] sm:max-w-none">{diagnosis.prediction}</span>
+                <span className="font-medium truncate max-w-[150px] sm:max-w-none">
+                  {diagnosis.prediction}
+                </span>
               </div>
               <div className="flex items-center space-x-1.5 sm:space-x-2">
                 <AlertTriangle
@@ -828,7 +980,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
                 <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span>View Analysis</span>
               </button>
-              <button 
+              <button
                 onClick={onNavigateToDoctor}
                 className="flex items-center justify-center space-x-1.5 sm:space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition text-xs sm:text-sm flex-1 sm:flex-initial"
               >
@@ -853,7 +1005,9 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
             <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <Activity className="w-5 h-5 sm:w-6 sm:h-6" />
-                <h2 className="text-base sm:text-xl font-bold">Medical Analysis Report</h2>
+                <h2 className="text-base sm:text-xl font-bold">
+                  Medical Analysis Report
+                </h2>
               </div>
               <button
                 onClick={() => setShowAnalysis(false)}
@@ -872,7 +1026,9 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({ onNavigateToDoctor }) =
                 <div className="grid grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
                   <div>
                     <p className="text-gray-500 text-xs">Name</p>
-                    <p className="font-medium truncate">{userData.name || "N/A"}</p>
+                    <p className="font-medium truncate">
+                      {userData.name || "N/A"}
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Age</p>

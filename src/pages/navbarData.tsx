@@ -41,7 +41,8 @@ export const APP_MODULES: Module[] = [
 
   { id: "triage", name: "Health Triage", nameUrdu: "صحت کی جانچ" },
   { id: "doctor", name: "Find Doctor", nameUrdu: "ڈاکٹر تلاش کریں" },
-   { id: "timeline", name: "Health Timeline", nameUrdu: "ڈاکٹر تلاش کریں" },
+   { id: "timeline", name: "Health Timeline", nameUrdu: " ٹائم لائن " },
+  
 ];
 
 // Features data for home page
@@ -76,7 +77,7 @@ export const APP_FEATURES = [
     titleUrdu: "اسپیشلسٹ رہنمائی",
     desc: "Right doctor guidance",
     descUrdu: "درست ڈاکٹر تک رہنمائی",
-    module: "specialist",
+    module: "doctor",
   },
 ];
 

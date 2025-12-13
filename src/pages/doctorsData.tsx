@@ -1,3 +1,5 @@
+// pages/FindDoctorPage.tsx
+
 import React, { useState, useEffect } from "react";
 import {
   Users,
@@ -37,9 +39,9 @@ interface DoctorBase {
   id: number;
   name: string;
   qualification: string;
-  experience: string;
+  experience: string; // e.g. "15 years"
   hospital: string;
-  location: string;
+  location: string; // city name
   coordinates: Coordinates;
   address?: string;
   phone: string;
@@ -87,556 +89,566 @@ interface PriceRange {
   max: string;
 }
 
+// ---------------- DOCTOR DATABASE (same as yours) ----------------
+
+const doctorDatabase: DoctorDatabase = {
+  cardiology: {
+    name: { en: "Cardiologist", ur: "دل کا ڈاکٹر" },
+    specialty: {
+      en: "Heart & Cardiovascular System",
+      ur: "دل اور قلبی نظام",
+    },
+    conditions: [
+      "heart_attack",
+      "hypertension",
+      "chest_pain",
+      "arrhythmia",
+      "heart_failure",
+      "angina",
+    ],
+    doctors: [
+      {
+        id: 1,
+        name: "Dr. Ahmed Hassan",
+        qualification: "MBBS, MD Cardiology, FACC",
+        experience: "15 years",
+        hospital: "Services Hospital Lahore",
+        location: "Lahore",
+        coordinates: { lat: 31.5804, lng: 74.3587 },
+        address: "Jail Road, Lahore",
+        phone: "+92-42-99231441",
+        rating: 4.8,
+        reviews: 245,
+        consultationFee: 3000,
+        availability: ["Monday", "Wednesday", "Friday"],
+        timeSlots: ["9:00 AM - 1:00 PM", "4:00 PM - 8:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: [
+          "Interventional Cardiology",
+          "Heart Failure",
+          "Cardiac Catheterization",
+        ],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+      {
+        id: 2,
+        name: "Dr. Fatima Khan",
+        qualification: "MBBS, FCPS Cardiology, FESC",
+        experience: "12 years",
+        hospital: "Aga Khan University Hospital",
+        location: "Karachi",
+        coordinates: { lat: 24.8607, lng: 67.0011 },
+        address: "Stadium Road, Karachi",
+        phone: "+92-21-34864000",
+        rating: 4.9,
+        reviews: 189,
+        consultationFee: 4500,
+        availability: ["Tuesday", "Thursday", "Saturday"],
+        timeSlots: ["10:00 AM - 2:00 PM", "5:00 PM - 9:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: [
+          "Cardiac Surgery",
+          "Valve Disease",
+          "Congenital Heart Disease",
+        ],
+        verified: true,
+        onlineConsultation: false,
+        distance: null,
+      },
+      {
+        id: 3,
+        name: "Dr. Rizwan Ahmad",
+        qualification: "MBBS, MS Cardiology",
+        experience: "18 years",
+        hospital: "Punjab Institute of Cardiology",
+        location: "Lahore",
+        coordinates: { lat: 31.5497, lng: 74.3436 },
+        address: "Jail Road, Lahore",
+        phone: "+92-42-99211441",
+        rating: 4.7,
+        reviews: 312,
+        consultationFee: 2800,
+        availability: ["Monday", "Tuesday", "Thursday", "Friday"],
+        timeSlots: ["8:00 AM - 12:00 PM", "3:00 PM - 7:00 PM"],
+        languages: ["English", "Urdu", "Punjabi"],
+        specializations: [
+          "Preventive Cardiology",
+          "Lipid Disorders",
+          "Hypertension",
+        ],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+    ],
+  },
+
+  pulmonology: {
+    name: { en: "Pulmonologist", ur: "پھیپھڑوں کا ڈاکٹر" },
+    specialty: {
+      en: "Respiratory & Lung Diseases",
+      ur: "سانس اور پھیپھڑوں کی بیماریاں",
+    },
+    conditions: [
+      "asthma",
+      "pneumonia",
+      "breathing_difficulty",
+      "copd",
+      "lung_infection",
+      "tuberculosis",
+    ],
+    doctors: [
+      {
+        id: 4,
+        name: "Dr. Muhammad Ali",
+        qualification: "MBBS, FCPS Pulmonology, FRCP",
+        experience: "18 years",
+        hospital: "Mayo Hospital Lahore",
+        location: "Lahore",
+        coordinates: { lat: 31.5925, lng: 74.3095 },
+        address: "Nila Gumbad, Lahore",
+        phone: "+92-42-99212011",
+        rating: 4.7,
+        reviews: 178,
+        consultationFee: 2500,
+        availability: ["Monday", "Tuesday", "Thursday"],
+        timeSlots: ["9:00 AM - 1:00 PM", "4:30 PM - 8:30 PM"],
+        languages: ["English", "Urdu", "Punjabi"],
+        specializations: [
+          "Sleep Medicine",
+          "Critical Care",
+          "Interventional Pulmonology",
+        ],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+      {
+        id: 5,
+        name: "Dr. Saira Malik",
+        qualification: "MBBS, MD Chest Medicine",
+        experience: "10 years",
+        hospital: "Ziauddin Hospital",
+        location: "Karachi",
+        coordinates: { lat: 24.9056, lng: 67.0822 },
+        address: "Clifton, Karachi",
+        phone: "+92-21-35862937",
+        rating: 4.6,
+        reviews: 134,
+        consultationFee: 3500,
+        availability: ["Wednesday", "Friday", "Saturday"],
+        timeSlots: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: ["Asthma Management", "Lung Cancer", "Bronchoscopy"],
+        verified: true,
+        onlineConsultation: false,
+        distance: null,
+      },
+    ],
+  },
+
+  neurology: {
+    name: { en: "Neurologist", ur: "اعصابی ڈاکٹر" },
+    specialty: { en: "Brain & Nervous System", ur: "دماغ اور اعصابی نظام" },
+    conditions: [
+      "stroke",
+      "migraine",
+      "seizures",
+      "headache",
+      "epilepsy",
+      "parkinsons",
+      "alzheimers",
+    ],
+    doctors: [
+      {
+        id: 6,
+        name: "Dr. Tariq Mahmood",
+        qualification: "MBBS, FCPS Neurology, FRCP",
+        experience: "20 years",
+        hospital: "Lahore General Hospital",
+        location: "Lahore",
+        coordinates: { lat: 31.5656, lng: 74.3141 },
+        address: "Ferozpur Road, Lahore",
+        phone: "+92-42-99211441",
+        rating: 4.9,
+        reviews: 267,
+        consultationFee: 4000,
+        availability: ["Monday", "Wednesday", "Friday"],
+        timeSlots: ["8:30 AM - 12:30 PM", "3:30 PM - 7:30 PM"],
+        languages: ["English", "Urdu"],
+        specializations: ["Stroke Medicine", "Movement Disorders", "Epilepsy"],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+      {
+        id: 7,
+        name: "Dr. Ayesha Siddique",
+        qualification: "MBBS, MD Neurology, DNB",
+        experience: "8 years",
+        hospital: "Shaukat Khanum Hospital",
+        location: "Lahore",
+        coordinates: { lat: 31.5164, lng: 74.3493 },
+        address: "7A Block R-3 M.A. Johar Town, Lahore",
+        phone: "+92-42-35905000",
+        rating: 4.8,
+        reviews: 156,
+        consultationFee: 5000,
+        availability: ["Tuesday", "Thursday", "Saturday"],
+        timeSlots: ["9:00 AM - 1:00 PM", "4:00 PM - 8:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: [
+          "Pediatric Neurology",
+          "Headache Medicine",
+          "Neuromuscular Disorders",
+        ],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+    ],
+  },
+
+  gastroenterology: {
+    name: { en: "Gastroenterologist", ur: "معدے کا ڈاکٹر" },
+    specialty: { en: "Digestive System", ur: "نظام ہاضمہ" },
+    conditions: [
+      "stomach_pain",
+      "nausea",
+      "vomiting",
+      "diarrhea",
+      "liver_disease",
+      "ibs",
+      "ulcers",
+    ],
+    doctors: [
+      {
+        id: 8,
+        name: "Dr. Kashif Ahmad",
+        qualification: "MBBS, FCPS Gastroenterology, MRCP",
+        experience: "14 years",
+        hospital: "Combined Military Hospital",
+        location: "Rawalpindi",
+        coordinates: { lat: 33.6844, lng: 73.0479 },
+        address: "CMH Road, Rawalpindi Cantt",
+        phone: "+92-51-9270012",
+        rating: 4.7,
+        reviews: 198,
+        consultationFee: 3500,
+        availability: ["Monday", "Tuesday", "Friday"],
+        timeSlots: ["9:00 AM - 1:00 PM", "5:00 PM - 9:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: [
+          "Hepatology",
+          "Endoscopy",
+          "Inflammatory Bowel Disease",
+        ],
+        verified: true,
+        onlineConsultation: false,
+        distance: null,
+      },
+      {
+        id: 9,
+        name: "Dr. Samina Khatoon",
+        qualification: "MBBS, MD Gastroenterology",
+        experience: "11 years",
+        hospital: "Jinnah Hospital Lahore",
+        location: "Lahore",
+        coordinates: { lat: 31.5925, lng: 74.3095 },
+        address: "Allama Iqbal Road, Lahore",
+        phone: "+92-42-99203841",
+        rating: 4.5,
+        reviews: 143,
+        consultationFee: 2800,
+        availability: ["Wednesday", "Thursday", "Saturday"],
+        timeSlots: ["10:00 AM - 2:00 PM", "4:30 PM - 8:30 PM"],
+        languages: ["English", "Urdu", "Punjabi"],
+        specializations: ["Pancreatic Disorders", "GERD", "Colonoscopy"],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+    ],
+  },
+
+  endocrinology: {
+    name: { en: "Endocrinologist", ur: "ہارمون کا ڈاکٹر" },
+    specialty: { en: "Diabetes & Hormones", ur: "ذیابیطس اور ہارمونز" },
+    conditions: [
+      "diabetes",
+      "thyroid_disorders",
+      "hormonal_imbalance",
+      "obesity",
+      "pcos",
+      "osteoporosis",
+    ],
+    doctors: [
+      {
+        id: 10,
+        name: "Dr. Nadia Bashir",
+        qualification: "MBBS, FCPS Endocrinology, FACE",
+        experience: "16 years",
+        hospital: "Fatima Jinnah Medical University",
+        location: "Lahore",
+        coordinates: { lat: 31.5804, lng: 74.3587 },
+        address: "Queens Road, Lahore",
+        phone: "+92-42-99203801",
+        rating: 4.8,
+        reviews: 221,
+        consultationFee: 3000,
+        availability: ["Wednesday", "Thursday", "Saturday"],
+        timeSlots: ["8:00 AM - 12:00 PM", "3:00 PM - 7:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: [
+          "Diabetes Management",
+          "Thyroid Disorders",
+          "Reproductive Endocrinology",
+        ],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+    ],
+  },
+
+  orthopedics: {
+    name: { en: "Orthopedic Surgeon", ur: "ہڈیوں کا سرجن" },
+    specialty: { en: "Bones, Joints & Muscles", ur: "ہڈیاں، جوڑ اور پٹھے" },
+    conditions: [
+      "fractures",
+      "joint_pain",
+      "back_pain",
+      "sports_injuries",
+      "arthritis",
+    ],
+    doctors: [
+      {
+        id: 11,
+        name: "Dr. Imran Sheikh",
+        qualification: "MBBS, MS Orthopedics, FRCS",
+        experience: "22 years",
+        hospital: "National Hospital Lahore",
+        location: "Lahore",
+        coordinates: { lat: 31.5497, lng: 74.3436 },
+        address: "DHA Phase 1, Lahore",
+        phone: "+92-42-35777441",
+        rating: 4.9,
+        reviews: 334,
+        consultationFee: 4000,
+        availability: ["Monday", "Wednesday", "Saturday"],
+        timeSlots: ["7:00 AM - 11:00 AM", "2:00 PM - 6:00 PM"],
+        languages: ["English", "Urdu", "Punjabi"],
+        specializations: [
+          "Joint Replacement",
+          "Spine Surgery",
+          "Sports Medicine",
+        ],
+        verified: true,
+        onlineConsultation: false,
+        distance: null,
+      },
+    ],
+  },
+
+  psychiatry: {
+    name: { en: "Psychiatrist", ur: "ذہنی صحت کا ڈاکٹر" },
+    specialty: { en: "Mental Health", ur: "ذہنی صحت" },
+    conditions: [
+      "depression",
+      "anxiety",
+      "mental_health",
+      "stress_disorders",
+      "bipolar_disorder",
+      "schizophrenia",
+    ],
+    doctors: [
+      {
+        id: 12,
+        name: "Dr. Sarah Ahmed",
+        qualification: "MBBS, FCPS Psychiatry, MRCPsych",
+        experience: "11 years",
+        hospital: "Institute of Psychiatry",
+        location: "Rawalpindi",
+        coordinates: { lat: 33.6007, lng: 73.0679 },
+        address: "Benazir Bhutto Hospital, Rawalpindi",
+        phone: "+92-51-9290441",
+        rating: 4.6,
+        reviews: 167,
+        consultationFee: 2800,
+        availability: ["Monday", "Tuesday", "Thursday", "Friday"],
+        timeSlots: ["9:00 AM - 1:00 PM", "4:00 PM - 8:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: [
+          "Cognitive Behavioral Therapy",
+          "Addiction Medicine",
+          "Child Psychiatry",
+        ],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+    ],
+  },
+
+  dermatology: {
+    name: { en: "Dermatologist", ur: "جلدی امراض کا ڈاکٹر" },
+    specialty: {
+      en: "Skin, Hair & Nail Diseases",
+      ur: "جلد، بال اور ناخن کی بیماریاں",
+    },
+    conditions: [
+      "skin_rash",
+      "allergies",
+      "acne",
+      "skin_infections",
+      "eczema",
+      "psoriasis",
+      "hair_loss",
+    ],
+    doctors: [
+      {
+        id: 13,
+        name: "Dr. Hina Altaf",
+        qualification: "MBBS, FCPS Dermatology, DDV",
+        experience: "9 years",
+        hospital: "Hameed Latif Hospital",
+        location: "Lahore",
+        coordinates: { lat: 31.4504, lng: 74.2669 },
+        address: "14 Abubakar Block, New Garden Town, Lahore",
+        phone: "+92-42-35777441",
+        rating: 4.7,
+        reviews: 203,
+        consultationFee: 2500,
+        availability: ["Tuesday", "Thursday", "Saturday"],
+        timeSlots: ["10:00 AM - 2:00 PM", "5:00 PM - 9:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: [
+          "Cosmetic Dermatology",
+          "Pediatric Dermatology",
+          "Dermatopathology",
+        ],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+    ],
+  },
+
+  oncology: {
+    name: { en: "Oncologist", ur: "کینسر کا ڈاکٹر" },
+    specialty: { en: "Cancer Treatment", ur: "کینسر کا علاج" },
+    conditions: ["cancer", "tumors", "chemotherapy", "radiation_therapy"],
+    doctors: [
+      {
+        id: 14,
+        name: "Dr. Asim Jamal",
+        qualification: "MBBS, FCPS Oncology, MD",
+        experience: "17 years",
+        hospital: "Shaukat Khanum Memorial Cancer Hospital",
+        location: "Lahore",
+        coordinates: { lat: 31.5164, lng: 74.3493 },
+        address: "7A Block R-3 M.A. Johar Town, Lahore",
+        phone: "+92-42-35905000",
+        rating: 4.9,
+        reviews: 289,
+        consultationFee: 5500,
+        availability: ["Monday", "Wednesday", "Friday"],
+        timeSlots: ["8:00 AM - 12:00 PM", "2:00 PM - 6:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: [
+          "Breast Cancer",
+          "Lung Cancer",
+          "Hematological Malignancies",
+        ],
+        verified: true,
+        onlineConsultation: false,
+        distance: null,
+      },
+    ],
+  },
+
+  generalMedicine: {
+    name: { en: "General Physician", ur: "عام ڈاکٹر" },
+    specialty: {
+      en: "General Medicine & Family Care",
+      ur: "عام طب اور خاندانی نگہداشت",
+    },
+    conditions: [
+      "fever",
+      "common_cold",
+      "general_checkup",
+      "minor_ailments",
+      "flu",
+      "infections",
+    ],
+    doctors: [
+      {
+        id: 15,
+        name: "Dr. Hassan Raza",
+        qualification: "MBBS, FCPS Medicine, MRCP",
+        experience: "13 years",
+        hospital: "Lahore Medical Complex",
+        location: "Lahore",
+        coordinates: { lat: 31.5656, lng: 74.3141 },
+        address: "Ferozpur Road, Lahore",
+        phone: "+92-42-99211221",
+        rating: 4.4,
+        reviews: 187,
+        consultationFee: 1500,
+        availability: [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+        ],
+        timeSlots: ["9:00 AM - 1:00 PM", "4:00 PM - 8:00 PM"],
+        languages: ["English", "Urdu", "Punjabi"],
+        specializations: [
+          "Family Medicine",
+          "Preventive Care",
+          "Chronic Disease Management",
+        ],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+      {
+        id: 16,
+        name: "Dr. Rabia Jamil",
+        qualification: "MBBS, MD Medicine",
+        experience: "6 years",
+        hospital: "Al-Shifa Trust Hospital",
+        location: "Rawalpindi",
+        coordinates: { lat: 33.6007, lng: 73.0679 },
+        address: "G.T Road, Rawalpindi",
+        phone: "+92-51-4443151",
+        rating: 4.3,
+        reviews: 124,
+        consultationFee: 1200,
+        availability: ["Monday", "Wednesday", "Friday", "Saturday"],
+        timeSlots: ["10:00 AM - 2:00 PM", "5:00 PM - 9:00 PM"],
+        languages: ["English", "Urdu"],
+        specializations: [
+          "Internal Medicine",
+          "Geriatric Care",
+          "Women's Health",
+        ],
+        verified: true,
+        onlineConsultation: true,
+        distance: null,
+      },
+    ],
+  },
+};
+
+// ------------------------- COMPONENT -----------------------------
+
 const FindDoctorPage: React.FC = () => {
   const [currentLanguage, setCurrentLanguage] = useState<Language>("en");
 
-  // ---------- DATABASE (unchanged) ----------
-  const doctorDatabase: DoctorDatabase = {
-    cardiology: {
-      name: { en: "Cardiologist", ur: "دل کا ڈاکٹر" },
-      specialty: {
-        en: "Heart & Cardiovascular System",
-        ur: "دل اور قلبی نظام",
-      },
-      conditions: [
-        "heart_attack",
-        "hypertension",
-        "chest_pain",
-        "arrhythmia",
-        "heart_failure",
-        "angina",
-      ],
-      doctors: [
-        {
-          id: 1,
-          name: "Dr. Ahmed Hassan",
-          qualification: "MBBS, MD Cardiology, FACC",
-          experience: "15 years",
-          hospital: "Services Hospital Lahore",
-          location: "Lahore",
-          coordinates: { lat: 31.5804, lng: 74.3587 },
-          address: "Jail Road, Lahore",
-          phone: "+92-42-99231441",
-          rating: 4.8,
-          reviews: 245,
-          consultationFee: 3000,
-          availability: ["Monday", "Wednesday", "Friday"],
-          timeSlots: ["9:00 AM - 1:00 PM", "4:00 PM - 8:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: [
-            "Interventional Cardiology",
-            "Heart Failure",
-            "Cardiac Catheterization",
-          ],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-        {
-          id: 2,
-          name: "Dr. Fatima Khan",
-          qualification: "MBBS, FCPS Cardiology, FESC",
-          experience: "12 years",
-          hospital: "Aga Khan University Hospital",
-          location: "Karachi",
-          coordinates: { lat: 24.8607, lng: 67.0011 },
-          address: "Stadium Road, Karachi",
-          phone: "+92-21-34864000",
-          rating: 4.9,
-          reviews: 189,
-          consultationFee: 4500,
-          availability: ["Tuesday", "Thursday", "Saturday"],
-          timeSlots: ["10:00 AM - 2:00 PM", "5:00 PM - 9:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: [
-            "Cardiac Surgery",
-            "Valve Disease",
-            "Congenital Heart Disease",
-          ],
-          verified: true,
-          onlineConsultation: false,
-          distance: null,
-        },
-        {
-          id: 3,
-          name: "Dr. Rizwan Ahmad",
-          qualification: "MBBS, MS Cardiology",
-          experience: "18 years",
-          hospital: "Punjab Institute of Cardiology",
-          location: "Lahore",
-          coordinates: { lat: 31.5497, lng: 74.3436 },
-          address: "Jail Road, Lahore",
-          phone: "+92-42-99211441",
-          rating: 4.7,
-          reviews: 312,
-          consultationFee: 2800,
-          availability: ["Monday", "Tuesday", "Thursday", "Friday"],
-          timeSlots: ["8:00 AM - 12:00 PM", "3:00 PM - 7:00 PM"],
-          languages: ["English", "Urdu", "Punjabi"],
-          specializations: [
-            "Preventive Cardiology",
-            "Lipid Disorders",
-            "Hypertension",
-          ],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-      ],
-    },
-    // ... all other specialties exactly the same as your code ...
-    pulmonology: {
-      name: { en: "Pulmonologist", ur: "پھیپھڑوں کا ڈاکٹر" },
-      specialty: {
-        en: "Respiratory & Lung Diseases",
-        ur: "سانس اور پھیپھڑوں کی بیماریاں",
-      },
-      conditions: [
-        "asthma",
-        "pneumonia",
-        "breathing_difficulty",
-        "copd",
-        "lung_infection",
-        "tuberculosis",
-      ],
-      doctors: [
-        {
-          id: 4,
-          name: "Dr. Muhammad Ali",
-          qualification: "MBBS, FCPS Pulmonology, FRCP",
-          experience: "18 years",
-          hospital: "Mayo Hospital Lahore",
-          location: "Lahore",
-          coordinates: { lat: 31.5925, lng: 74.3095 },
-          address: "Nila Gumbad, Lahore",
-          phone: "+92-42-99212011",
-          rating: 4.7,
-          reviews: 178,
-          consultationFee: 2500,
-          availability: ["Monday", "Tuesday", "Thursday"],
-          timeSlots: ["9:00 AM - 1:00 PM", "4:30 PM - 8:30 PM"],
-          languages: ["English", "Urdu", "Punjabi"],
-          specializations: [
-            "Sleep Medicine",
-            "Critical Care",
-            "Interventional Pulmonology",
-          ],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-        {
-          id: 5,
-          name: "Dr. Saira Malik",
-          qualification: "MBBS, MD Chest Medicine",
-          experience: "10 years",
-          hospital: "Ziauddin Hospital",
-          location: "Karachi",
-          coordinates: { lat: 24.9056, lng: 67.0822 },
-          address: "Clifton, Karachi",
-          phone: "+92-21-35862937",
-          rating: 4.6,
-          reviews: 134,
-          consultationFee: 3500,
-          availability: ["Wednesday", "Friday", "Saturday"],
-          timeSlots: ["10:00 AM - 2:00 PM", "6:00 PM - 10:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: ["Asthma Management", "Lung Cancer", "Bronchoscopy"],
-          verified: true,
-          onlineConsultation: false,
-          distance: null,
-        },
-      ],
-    },
-    neurology: {
-      name: { en: "Neurologist", ur: "اعصابی ڈاکٹر" },
-      specialty: { en: "Brain & Nervous System", ur: "دماغ اور اعصابی نظام" },
-      conditions: [
-        "stroke",
-        "migraine",
-        "seizures",
-        "headache",
-        "epilepsy",
-        "parkinsons",
-        "alzheimers",
-      ],
-      doctors: [
-        {
-          id: 6,
-          name: "Dr. Tariq Mahmood",
-          qualification: "MBBS, FCPS Neurology, FRCP",
-          experience: "20 years",
-          hospital: "Lahore General Hospital",
-          location: "Lahore",
-          coordinates: { lat: 31.5656, lng: 74.3141 },
-          address: "Ferozpur Road, Lahore",
-          phone: "+92-42-99211441",
-          rating: 4.9,
-          reviews: 267,
-          consultationFee: 4000,
-          availability: ["Monday", "Wednesday", "Friday"],
-          timeSlots: ["8:30 AM - 12:30 PM", "3:30 PM - 7:30 PM"],
-          languages: ["English", "Urdu"],
-          specializations: ["Stroke Medicine", "Movement Disorders", "Epilepsy"],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-        {
-          id: 7,
-          name: "Dr. Ayesha Siddique",
-          qualification: "MBBS, MD Neurology, DNB",
-          experience: "8 years",
-          hospital: "Shaukat Khanum Hospital",
-          location: "Lahore",
-          coordinates: { lat: 31.5164, lng: 74.3493 },
-          address: "7A Block R-3 M.A. Johar Town, Lahore",
-          phone: "+92-42-35905000",
-          rating: 4.8,
-          reviews: 156,
-          consultationFee: 5000,
-          availability: ["Tuesday", "Thursday", "Saturday"],
-          timeSlots: ["9:00 AM - 1:00 PM", "4:00 PM - 8:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: [
-            "Pediatric Neurology",
-            "Headache Medicine",
-            "Neuromuscular Disorders",
-          ],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-      ],
-    },
-    gastroenterology: {
-      name: { en: "Gastroenterologist", ur: "معدے کا ڈاکٹر" },
-      specialty: { en: "Digestive System", ur: "نظام ہاضمہ" },
-      conditions: [
-        "stomach_pain",
-        "nausea",
-        "vomiting",
-        "diarrhea",
-        "liver_disease",
-        "ibs",
-        "ulcers",
-      ],
-      doctors: [
-        {
-          id: 8,
-          name: "Dr. Kashif Ahmad",
-          qualification: "MBBS, FCPS Gastroenterology, MRCP",
-          experience: "14 years",
-          hospital: "Combined Military Hospital",
-          location: "Rawalpindi",
-          coordinates: { lat: 33.6844, lng: 73.0479 },
-          address: "CMH Road, Rawalpindi Cantt",
-          phone: "+92-51-9270012",
-          rating: 4.7,
-          reviews: 198,
-          consultationFee: 3500,
-          availability: ["Monday", "Tuesday", "Friday"],
-          timeSlots: ["9:00 AM - 1:00 PM", "5:00 PM - 9:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: [
-            "Hepatology",
-            "Endoscopy",
-            "Inflammatory Bowel Disease",
-          ],
-          verified: true,
-          onlineConsultation: false,
-          distance: null,
-        },
-        {
-          id: 9,
-          name: "Dr. Samina Khatoon",
-          qualification: "MBBS, MD Gastroenterology",
-          experience: "11 years",
-          hospital: "Jinnah Hospital Lahore",
-          location: "Lahore",
-          coordinates: { lat: 31.5925, lng: 74.3095 },
-          address: "Allama Iqbal Road, Lahore",
-          phone: "+92-42-99203841",
-          rating: 4.5,
-          reviews: 143,
-          consultationFee: 2800,
-          availability: ["Wednesday", "Thursday", "Saturday"],
-          timeSlots: ["10:00 AM - 2:00 PM", "4:30 PM - 8:30 PM"],
-          languages: ["English", "Urdu", "Punjabi"],
-          specializations: ["Pancreatic Disorders", "GERD", "Colonoscopy"],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-      ],
-    },
-    endocrinology: {
-      name: { en: "Endocrinologist", ur: "ہارمون کا ڈاکٹر" },
-      specialty: { en: "Diabetes & Hormones", ur: "ذیابیطس اور ہارمونز" },
-      conditions: [
-        "diabetes",
-        "thyroid_disorders",
-        "hormonal_imbalance",
-        "obesity",
-        "pcos",
-        "osteoporosis",
-      ],
-      doctors: [
-        {
-          id: 10,
-          name: "Dr. Nadia Bashir",
-          qualification: "MBBS, FCPS Endocrinology, FACE",
-          experience: "16 years",
-          hospital: "Fatima Jinnah Medical University",
-          location: "Lahore",
-          coordinates: { lat: 31.5804, lng: 74.3587 },
-          address: "Queens Road, Lahore",
-          phone: "+92-42-99203801",
-          rating: 4.8,
-          reviews: 221,
-          consultationFee: 3000,
-          availability: ["Wednesday", "Thursday", "Saturday"],
-          timeSlots: ["8:00 AM - 12:00 PM", "3:00 PM - 7:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: [
-            "Diabetes Management",
-            "Thyroid Disorders",
-            "Reproductive Endocrinology",
-          ],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-      ],
-    },
-    orthopedics: {
-      name: { en: "Orthopedic Surgeon", ur: "ہڈیوں کا سرجن" },
-      specialty: { en: "Bones, Joints & Muscles", ur: "ہڈیاں، جوڑ اور پٹھے" },
-      conditions: [
-        "fractures",
-        "joint_pain",
-        "back_pain",
-        "sports_injuries",
-        "arthritis",
-      ],
-      doctors: [
-        {
-          id: 11,
-          name: "Dr. Imran Sheikh",
-          qualification: "MBBS, MS Orthopedics, FRCS",
-          experience: "22 years",
-          hospital: "National Hospital Lahore",
-          location: "Lahore",
-          coordinates: { lat: 31.5497, lng: 74.3436 },
-          address: "DHA Phase 1, Lahore",
-          phone: "+92-42-35777441",
-          rating: 4.9,
-          reviews: 334,
-          consultationFee: 4000,
-          availability: ["Monday", "Wednesday", "Saturday"],
-          timeSlots: ["7:00 AM - 11:00 AM", "2:00 PM - 6:00 PM"],
-          languages: ["English", "Urdu", "Punjabi"],
-          specializations: [
-            "Joint Replacement",
-            "Spine Surgery",
-            "Sports Medicine",
-          ],
-          verified: true,
-          onlineConsultation: false,
-          distance: null,
-        },
-      ],
-    },
-    psychiatry: {
-      name: { en: "Psychiatrist", ur: "ذہنی صحت کا ڈاکٹر" },
-      specialty: { en: "Mental Health", ur: "ذہنی صحت" },
-      conditions: [
-        "depression",
-        "anxiety",
-        "mental_health",
-        "stress_disorders",
-        "bipolar_disorder",
-        "schizophrenia",
-      ],
-      doctors: [
-        {
-          id: 12,
-          name: "Dr. Sarah Ahmed",
-          qualification: "MBBS, FCPS Psychiatry, MRCPsych",
-          experience: "11 years",
-          hospital: "Institute of Psychiatry",
-          location: "Rawalpindi",
-          coordinates: { lat: 33.6007, lng: 73.0679 },
-          address: "Benazir Bhutto Hospital, Rawalpindi",
-          phone: "+92-51-9290441",
-          rating: 4.6,
-          reviews: 167,
-          consultationFee: 2800,
-          availability: ["Monday", "Tuesday", "Thursday", "Friday"],
-          timeSlots: ["9:00 AM - 1:00 PM", "4:00 PM - 8:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: [
-            "Cognitive Behavioral Therapy",
-            "Addiction Medicine",
-            "Child Psychiatry",
-          ],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-      ],
-    },
-    dermatology: {
-      name: { en: "Dermatologist", ur: "جلدی امراض کا ڈاکٹر" },
-      specialty: {
-        en: "Skin, Hair & Nail Diseases",
-        ur: "جلد، بال اور ناخن کی بیماریاں",
-      },
-      conditions: [
-        "skin_rash",
-        "allergies",
-        "acne",
-        "skin_infections",
-        "eczema",
-        "psoriasis",
-        "hair_loss",
-      ],
-      doctors: [
-        {
-          id: 13,
-          name: "Dr. Hina Altaf",
-          qualification: "MBBS, FCPS Dermatology, DDV",
-          experience: "9 years",
-          hospital: "Hameed Latif Hospital",
-          location: "Lahore",
-          coordinates: { lat: 31.4504, lng: 74.2669 },
-          address: "14 Abubakar Block, New Garden Town, Lahore",
-          phone: "+92-42-35777441",
-          rating: 4.7,
-          reviews: 203,
-          consultationFee: 2500,
-          availability: ["Tuesday", "Thursday", "Saturday"],
-          timeSlots: ["10:00 AM - 2:00 PM", "5:00 PM - 9:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: [
-            "Cosmetic Dermatology",
-            "Pediatric Dermatology",
-            "Dermatopathology",
-          ],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-      ],
-    },
-    oncology: {
-      name: { en: "Oncologist", ur: "کینسر کا ڈاکٹر" },
-      specialty: { en: "Cancer Treatment", ur: "کینسر کا علاج" },
-      conditions: ["cancer", "tumors", "chemotherapy", "radiation_therapy"],
-      doctors: [
-        {
-          id: 14,
-          name: "Dr. Asim Jamal",
-          qualification: "MBBS, FCPS Oncology, MD",
-          experience: "17 years",
-          hospital: "Shaukat Khanum Memorial Cancer Hospital",
-          location: "Lahore",
-          coordinates: { lat: 31.5164, lng: 74.3493 },
-          address: "7A Block R-3 M.A. Johar Town, Lahore",
-          phone: "+92-42-35905000",
-          rating: 4.9,
-          reviews: 289,
-          consultationFee: 5500,
-          availability: ["Monday", "Wednesday", "Friday"],
-          timeSlots: ["8:00 AM - 12:00 PM", "2:00 PM - 6:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: [
-            "Breast Cancer",
-            "Lung Cancer",
-            "Hematological Malignancies",
-          ],
-          verified: true,
-          onlineConsultation: false,
-          distance: null,
-        },
-      ],
-    },
-    generalMedicine: {
-      name: { en: "General Physician", ur: "عام ڈاکٹر" },
-      specialty: {
-        en: "General Medicine & Family Care",
-        ur: "عام طب اور خاندانی نگہداشت",
-      },
-      conditions: [
-        "fever",
-        "common_cold",
-        "general_checkup",
-        "minor_ailments",
-        "flu",
-        "infections",
-      ],
-      doctors: [
-        {
-          id: 15,
-          name: "Dr. Hassan Raza",
-          qualification: "MBBS, FCPS Medicine, MRCP",
-          experience: "13 years",
-          hospital: "Lahore Medical Complex",
-          location: "Lahore",
-          coordinates: { lat: 31.5656, lng: 74.3141 },
-          address: "Ferozpur Road, Lahore",
-          phone: "+92-42-99211221",
-          rating: 4.4,
-          reviews: 187,
-          consultationFee: 1500,
-          availability: [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-          ],
-          timeSlots: ["9:00 AM - 1:00 PM", "4:00 PM - 8:00 PM"],
-          languages: ["English", "Urdu", "Punjabi"],
-          specializations: [
-            "Family Medicine",
-            "Preventive Care",
-            "Chronic Disease Management",
-          ],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-        {
-          id: 16,
-          name: "Dr. Rabia Jamil",
-          qualification: "MBBS, MD Medicine",
-          experience: "6 years",
-          hospital: "Al-Shifa Trust Hospital",
-          location: "Rawalpindi",
-          coordinates: { lat: 33.6007, lng: 73.0679 },
-          address: "G.T Road, Rawalpindi",
-          phone: "+92-51-4443151",
-          rating: 4.3,
-          reviews: 124,
-          consultationFee: 1200,
-          availability: ["Monday", "Wednesday", "Friday", "Saturday"],
-          timeSlots: ["10:00 AM - 2:00 PM", "5:00 PM - 9:00 PM"],
-          languages: ["English", "Urdu"],
-          specializations: [
-            "Internal Medicine",
-            "Geriatric Care",
-            "Women's Health",
-          ],
-          verified: true,
-          onlineConsultation: true,
-          distance: null,
-        },
-      ],
-    },
-  };
-
-  // --- State management ---
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
   const [selectedLocation, setSelectedLocation] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -665,6 +677,8 @@ const FindDoctorPage: React.FC = () => {
     lng: 74.3587,
   });
   const [selectedRadius, setSelectedRadius] = useState<number>(10);
+
+  // --------- helpers ---------
 
   const sanitizeFeeInput = (value: string): string => {
     let v = value.replace(/[^\d]/g, "");
@@ -779,9 +793,44 @@ const FindDoctorPage: React.FC = () => {
     }
   };
 
+  // -------------- MAIN SEARCH LOGIC (fixed) -----------------
+
   const searchDoctors = () => {
     let results: DoctorWithMeta[] = [];
 
+    // 1) Normalize query
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    // 2) Map "reason words" to specialties
+    let specialtiesFromReason: string[] = [];
+
+    if (normalizedQuery.includes("blood pressure") || normalizedQuery === "bp") {
+      specialtiesFromReason = ["cardiology", "endocrinology", "generalMedicine"];
+    } else if (
+      normalizedQuery.includes("fever") ||
+      normalizedQuery.includes("flu")
+    ) {
+      specialtiesFromReason = ["generalMedicine", "pulmonology"];
+    } else if (normalizedQuery.includes("chest pain")) {
+      specialtiesFromReason = ["cardiology", "pulmonology"];
+    } else if (
+      normalizedQuery.includes("diabetes") ||
+      normalizedQuery.includes("sugar")
+    ) {
+      specialtiesFromReason = ["endocrinology"];
+    } else if (
+      normalizedQuery.includes("stomach") ||
+      normalizedQuery.includes("abdomen")
+    ) {
+      specialtiesFromReason = ["gastroenterology", "generalMedicine"];
+    } else if (
+      normalizedQuery.includes("headache") ||
+      normalizedQuery.includes("migraine")
+    ) {
+      specialtiesFromReason = ["neurology", "generalMedicine", "psychiatry"];
+    }
+
+    // 3) Base list — either selected specialty or all
     if (selectedSpecialty && doctorDatabase[selectedSpecialty]) {
       const specialtyData = doctorDatabase[selectedSpecialty];
       results = specialtyData.doctors.map<DoctorWithMeta>((doctor) => ({
@@ -803,6 +852,14 @@ const FindDoctorPage: React.FC = () => {
       });
     }
 
+    // 4) Restrict to specialties from "reason" if any
+    if (specialtiesFromReason.length > 0) {
+      results = results.filter((doctor) =>
+        specialtiesFromReason.includes(doctor.specialtyKey)
+      );
+    }
+
+    // 5) Add distance if we have location
     if (userLocation) {
       results = results.map((doctor) => ({
         ...doctor,
@@ -815,26 +872,31 @@ const FindDoctorPage: React.FC = () => {
       }));
     }
 
+    // 6) City filter (with fallback if no match)
     if (selectedLocation) {
       const loc = selectedLocation.toLowerCase();
-      results = results.filter((doctor) =>
+      const byCity = results.filter((doctor) =>
         doctor.location.toLowerCase().includes(loc)
       );
+      if (byCity.length > 0) {
+        results = byCity;
+      }
     }
 
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    // 7) Generic free-text filter (ONLY when query is not a mapped reason)
+    if (normalizedQuery && specialtiesFromReason.length === 0) {
       results = results.filter(
         (doctor) =>
-          doctor.name.toLowerCase().includes(query) ||
-          doctor.hospital.toLowerCase().includes(query) ||
+          doctor.name.toLowerCase().includes(normalizedQuery) ||
+          doctor.hospital.toLowerCase().includes(normalizedQuery) ||
           doctor.specializations.some((spec) =>
-            spec.toLowerCase().includes(query)
+            spec.toLowerCase().includes(normalizedQuery)
           ) ||
-          doctor.qualification.toLowerCase().includes(query)
+          doctor.qualification.toLowerCase().includes(normalizedQuery)
       );
     }
 
+    // 8) Fee range
     const minFee = priceRange.min ? parseInt(priceRange.min, 10) : 0;
     const maxFee = priceRange.max
       ? parseInt(priceRange.max, 10)
@@ -846,6 +908,7 @@ const FindDoctorPage: React.FC = () => {
         doctor.consultationFee <= maxFee
     );
 
+    // 9) Sorting
     switch (sortBy) {
       case "distance":
         if (userLocation) {
@@ -878,6 +941,26 @@ const FindDoctorPage: React.FC = () => {
     setDoctorSearchResults(results);
   };
 
+  // --------- EFFECTS ---------
+
+  // Read filters from HomePage (sessionStorage)
+  useEffect(() => {
+    try {
+      const storedCity = sessionStorage.getItem("sehatHub-findDoctor-city");
+      const storedQuery = sessionStorage.getItem("sehatHub-findDoctor-query");
+
+      if (storedCity) {
+        setSelectedLocation(storedCity.toLowerCase());
+      }
+      if (storedQuery) {
+        setSearchQuery(storedQuery);
+      }
+    } catch {
+      // ignore if sessionStorage not available
+    }
+  }, []);
+
+  // Run search when any filter changes
   useEffect(() => {
     searchDoctors();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -890,6 +973,7 @@ const FindDoctorPage: React.FC = () => {
     userLocation,
   ]);
 
+  // Update nearby when location / radius changes
   useEffect(() => {
     if (userLocation) {
       findNearbyDoctors(userLocation);
@@ -897,13 +981,14 @@ const FindDoctorPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userLocation, selectedRadius]);
 
+  // --------------- RENDER DOCTOR CARD -----------------
+
   const renderDoctorCard = (doctor: DoctorWithMeta, index: number) => (
     <div
       key={doctor.id ?? index}
       className="bg-white/90 backdrop-blur rounded-2xl shadow-md hover:shadow-xl border border-slate-100 transition-all p-5 sm:p-6"
     >
       <div className="grid gap-6 lg:grid-cols-4">
-        {/* Doctor Info */}
         <div className="lg:col-span-3 space-y-4">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
             <div className="flex-1">
@@ -988,7 +1073,6 @@ const FindDoctorPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Specializations */}
           <div className="space-y-2">
             <p className="text-xs sm:text-sm font-semibold text-gray-700">
               Specializations:
@@ -1005,7 +1089,6 @@ const FindDoctorPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Availability */}
           <div className="space-y-2">
             <p className="text-xs sm:text-sm font-semibold text-gray-700">
               Available Days:
@@ -1025,7 +1108,6 @@ const FindDoctorPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Languages */}
           <div>
             <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">
               Languages:
@@ -1043,7 +1125,6 @@ const FindDoctorPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col gap-2 sm:gap-3">
           <button
             onClick={() => setSelectedDoctor(doctor)}
@@ -1084,6 +1165,8 @@ const FindDoctorPage: React.FC = () => {
       </div>
     </div>
   );
+
+  // ------------------- JSX -------------------
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-blue-50 to-indigo-100">

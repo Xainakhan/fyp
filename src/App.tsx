@@ -24,6 +24,7 @@ function App() {
     | "specialty"
     | "symptom"
     | "timeline"
+
   >("home");
 
   // app language
@@ -46,6 +47,7 @@ function App() {
                   | "specialty"
                   | "symptom"
                   | "timeline"
+                
               )
             }
           />);
@@ -63,6 +65,7 @@ function App() {
         );
       case "timeline":
         return <HealthTimeline />;
+
       case "symptom":
         return <SymptomCheckerPage userLanguage={userLanguage} />;
 

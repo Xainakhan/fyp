@@ -12,6 +12,8 @@ import {
   FileDown,
 } from "lucide-react";
 
+const API_BASE = "http://localhost:5000";
+
 type Lang = "en" | "ur";
 
 interface HealthInterviewPageProps {
@@ -66,11 +68,33 @@ const TEXT = {
   },
 };
 
+interface TriageResponse {
+  primary_prediction: {
+    disease: string;
+    confidence: number; // 0–1
+    info?: {
+      precautions?: string[];
+    };
+  };
+  severity: {
+    level: string;
+    score: number;
+    recommendation: string;
+  };
+  input_symptoms?: string[];
+  duration_days?: number;
+}
+
 const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
   userLanguage = "en",
 }) => {
   const [currentLanguage, setCurrentLanguage] = useState<Lang>(userLanguage);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
+
+  // --- NEW: backend state ---
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [triageResult, setTriageResult] = useState<TriageResponse | null>(null);
 
   useEffect(() => {
     setCurrentLanguage(userLanguage);
@@ -134,7 +158,63 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
 
   const currentStep = STEPS[currentStepIndex];
 
-  // --- DOWNLOAD SUMMARY ---
+  // --- HELPERS FOR BACKEND PAYLOAD ---
+
+  const parseDurationToDays = (input: string): number => {
+    if (!input) return 0;
+    const lower = input.toLowerCase();
+    const numMatch = lower.match(/(\d+)/);
+    const n = numMatch ? parseInt(numMatch[1], 10) : 0;
+    if (!n) return 0;
+    if (lower.includes("week")) return n * 7;
+    if (lower.includes("month")) return n * 30;
+    if (lower.includes("day")) return n;
+    return n; // fallback
+  };
+
+  const buildSymptomsArray = (): string[] => {
+    // Take associated symptoms as comma-separated, fallback to mainConcern text
+    if (associatedSymptoms.trim().length > 0) {
+      return associatedSymptoms
+        .split(/,|;|\n/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
+    if (mainConcern.trim().length > 0) {
+      return [mainConcern.trim()];
+    }
+    return [];
+  };
+
+  const buildMedicalHistoryText = (): string => {
+    const parts: string[] = [];
+    if (chronicConditions.length > 0) {
+      parts.push(`Chronic conditions: ${chronicConditions.join(", ")}`);
+    }
+    if (otherConditions) {
+      parts.push(`Other history: ${otherConditions}`);
+    }
+    if (currentMedicines) {
+      parts.push(`Current medicines: ${currentMedicines}`);
+    }
+    if (allergies) {
+      parts.push(`Allergies: ${allergies}`);
+    }
+    return parts.join(" | ");
+  };
+
+  const buildLifestyleText = (): string => {
+    const parts: string[] = [];
+    if (smokingStatus) parts.push(`Smoking/tobacco: ${smokingStatus}`);
+    if (alcoholUse) parts.push(`Alcohol/substances: ${alcoholUse}`);
+    if (exercise) parts.push(`Exercise: ${exercise}`);
+    if (sleepHours) parts.push(`Sleep (hrs): ${sleepHours}`);
+    if (stressLevel) parts.push(`Stress level: ${stressLevel}`);
+    if (moodNotes) parts.push(`Mood notes: ${moodNotes}`);
+    return parts.join(" | ");
+  };
+
+  // --- DOWNLOAD SUMMARY (unchanged) ---
 
   const handleDownloadSummary = () => {
     const date = new Date();
@@ -153,10 +233,14 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
     lines.push(`Phone: ${phone || "Not provided"}`);
     lines.push("");
     lines.push("CURRENT PROBLEM");
-    lines.push(`Main concern / reason for visit: ${mainConcern || "Not provided"}`);
+    lines.push(
+      `Main concern / reason for visit: ${mainConcern || "Not provided"}`
+    );
     lines.push(`Duration of problem: ${symptomDuration || "Not provided"}`);
     lines.push(`Pattern (better/worse): ${symptomPattern || "Not provided"}`);
-    lines.push(`Worse when / triggers: ${symptomWorseWhen || "Not provided"}`);
+    lines.push(
+      `Worse when / triggers: ${symptomWorseWhen || "Not provided"}`
+    );
     lines.push(
       `Other associated symptoms: ${associatedSymptoms || "Not provided"}`
     );
@@ -170,10 +254,14 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
       }`
     );
     lines.push(
-      `Other past illnesses / surgeries: ${otherConditions || "Not provided"}`
+      `Other past illnesses / surgeries: ${
+        otherConditions || "Not provided"
+      }`
     );
     lines.push(
-      `Regular medicines: ${currentMedicines || "Not provided (patient may not remember)"}`
+      `Regular medicines: ${
+        currentMedicines || "Not provided (patient may not remember)"
+      }`
     );
     lines.push(`Allergies (drugs/food/etc.): ${allergies || "Not provided"}`);
     lines.push("");
@@ -200,6 +288,78 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  // --- NEW: SUBMIT TO BACKEND / AI TRIAGE ---
+
+  const handleSubmitInterview = async () => {
+    setSubmitError(null);
+    setTriageResult(null);
+
+    if (!fullName.trim()) {
+      setSubmitError(
+        currentLanguage === "en"
+          ? "Please enter your full name before submitting."
+          : "براہ کرم جمع کروانے سے پہلے اپنا مکمل نام درج کریں۔"
+      );
+      return;
+    }
+
+    const symptomsArray = buildSymptomsArray();
+    if (symptomsArray.length === 0) {
+      setSubmitError(
+        currentLanguage === "en"
+          ? "Please mention at least one symptom in the current problem section."
+          : "براہ کرم موجودہ مسئلے میں کم از کم ایک علامت ضرور لکھیں۔"
+      );
+      return;
+    }
+
+    const durationDays = parseDurationToDays(symptomDuration);
+
+    const payload = {
+      basic_info: {
+        full_name: fullName,
+        age: age ? Number(age) : null,
+        gender,
+        city,
+        phone,
+      },
+      current_issue: {
+        symptoms: symptomsArray,
+        duration_days: durationDays,
+        description: mainConcern,
+      },
+      medical_history: buildMedicalHistoryText(),
+      lifestyle: buildLifestyleText(),
+    };
+
+    try {
+      setSubmitting(true);
+      const res = await fetch(`${API_BASE}/api/interview/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to submit interview.");
+      }
+
+      setTriageResult(data.triage as TriageResponse);
+    } catch (err: any) {
+      console.error(err);
+      setSubmitError(
+        err?.message ||
+          (currentLanguage === "en"
+            ? "Something went wrong while submitting. Please try again."
+            : "جمع کرواتے ہوئے مسئلہ آیا، دوبارہ کوشش کریں۔")
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // --- RENDER HELPERS FOR EACH STEP ---
 
   const renderBasicStep = () => (
@@ -214,7 +374,9 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
             onChange={(e) => setFullName(e.target.value)}
             className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder={
-              currentLanguage === "en" ? "Your full name" : "اپنا پورا نام لکھیں"
+              currentLanguage === "en"
+                ? "Your full name"
+                : "اپنا پورا نام لکھیں"
             }
           />
         </div>
@@ -266,7 +428,9 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
             onChange={(e) => setCity(e.target.value)}
             className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder={
-              currentLanguage === "en" ? "e.g. Lahore, Faisalabad" : "مثلاً لاہور، فیصل آباد"
+              currentLanguage === "en"
+                ? "e.g. Lahore, Faisalabad"
+                : "مثلاً لاہور، فیصل آباد"
             }
           />
         </div>
@@ -420,7 +584,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
         <label className="block text-xs font-semibold text-gray-600 mb-1">
           {currentLanguage === "en"
             ? "Any other important past illness, surgery, or hospital admission?"
-            : "کوئی اور اہم پرانی بیماری، آپریشن یا हॉسپٹل میں داخلہ؟"}
+            : "کوئی اور اہم پرانی بیماری، آپریشن یا ہسپتال میں داخلہ؟"}
         </label>
         <textarea
           value={otherConditions}
@@ -489,7 +653,9 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
               {currentLanguage === "en" ? "Used in past" : "پہلے استعمال کرتے تھے"}
             </option>
             <option value="current">
-              {currentLanguage === "en" ? "Currently using" : "اس وقت استعمال کر رہے ہیں"}
+              {currentLanguage === "en"
+                ? "Currently using"
+                : "اس وقت استعمال کر رہے ہیں"}
             </option>
           </select>
         </div>
@@ -615,6 +781,13 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           : "اس خلاصے کو دیکھ لیں۔ آپ اسے اپنے ڈاکٹر کو دکھا سکتے ہیں یا بھیج سکتے ہیں۔"}
       </p>
 
+      {/* Error message from backend */}
+      {submitError && (
+        <div className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-2">
+          {submitError}
+        </div>
+      )}
+
       <div className="bg-white rounded-xl border p-4 space-y-3 max-h-[420px] overflow-auto">
         <h3 className="font-semibold text-gray-800 flex items-center gap-2">
           <User size={16} className="text-blue-600" />
@@ -723,10 +896,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           </li>
           <li>
             <strong>
-              {currentLanguage === "en"
-                ? "Allergies:"
-                : "الرجیز:"}
-            </strong>{" "}
+              {currentLanguage === "en" ? "Allergies:" : "الرجیز:"}</strong>{" "}
             {allergies || "-"}
           </li>
         </ul>
@@ -746,7 +916,9 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           </li>
           <li>
             <strong>
-              {currentLanguage === "en" ? "Alcohol / substances:" : "الکوحل:"}
+              {currentLanguage === "en"
+                ? "Alcohol / substances:"
+                : "الکوحل:"}
             </strong>{" "}
             {alcoholUse || "-"}
           </li>
@@ -785,6 +957,62 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
         </ul>
       </div>
 
+      {/* NEW: AI triage result card */}
+      {triageResult && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
+          <h3 className="font-semibold text-blue-900 flex items-center gap-2">
+            <Activity size={16} className="text-blue-600" />
+            {currentLanguage === "en"
+              ? "AI Triage Summary"
+              : "AI ٹرائیج خلاصہ"}
+          </h3>
+          <p className="text-sm">
+            <strong>
+              {currentLanguage === "en" ? "Possible condition: " : "ممکنہ بیماری: "}
+            </strong>
+            {triageResult.primary_prediction.disease}{" "}
+            <span className="text-xs text-gray-600">
+              ({Math.round(triageResult.primary_prediction.confidence * 100)}%
+              confidence)
+            </span>
+          </p>
+          <p className="text-sm">
+            <strong>
+              {currentLanguage === "en" ? "Risk level: " : "خطرے کی سطح: "}
+            </strong>
+            {triageResult.severity.level}{" "}
+            <span className="text-xs text-gray-600">
+              (score {triageResult.severity.score})
+            </span>
+          </p>
+          <p className="text-sm">
+            <strong>
+              {currentLanguage === "en"
+                ? "Recommendation: "
+                : "سفارش:"}
+            </strong>
+            {triageResult.severity.recommendation}
+          </p>
+          {triageResult.primary_prediction.info?.precautions &&
+            triageResult.primary_prediction.info.precautions.length > 0 && (
+              <div className="text-xs text-gray-700 mt-1">
+                <strong>
+                  {currentLanguage === "en"
+                    ? "General precautions:"
+                    : "احتیاطی تدابیر:"}
+                </strong>
+                <ul className="list-disc list-inside">
+                  {triageResult.primary_prediction.info.precautions.map(
+                    (p, idx) => (
+                      <li key={idx}>{p}</li>
+                    )
+                  )}
+                </ul>
+              </div>
+            )}
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row gap-3 mt-4">
         <button
           type="button"
@@ -795,6 +1023,21 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           {currentLanguage === "en"
             ? "Download Interview Summary"
             : "انٹرویو سمری ڈاؤن لوڈ کریں"}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleSubmitInterview}
+          disabled={submitting}
+          className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-60 transition"
+        >
+          {submitting
+            ? currentLanguage === "en"
+              ? "Submitting..."
+              : "جمع ہو رہا ہے..."
+            : currentLanguage === "en"
+            ? "Submit to RoboDoc AI"
+            : "RoboDoc AI کو بھیجیں"}
         </button>
       </div>
 

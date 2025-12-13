@@ -86,3 +86,4 @@ export const apiRequest = async <T>(
 };
 
 export { API_BASE_URL };
+export const RAG_ENDPOINT = "/nlp/rag-answer";
