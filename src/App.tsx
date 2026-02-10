@@ -12,6 +12,8 @@ import HomePage from "./pages/homePage";
 import SymptomCheckerPage from "./pages/symptomChecker";
 import HealthInterviewPage from "./pages/healthInterview";
 import HealthTimeline from "./pages/healthTimeline";
+// --- Background Wrapper ---
+import BackgroundWrapper from "./components/wrapperbg";
 
 function App() {
   // which screen is active
@@ -24,7 +26,6 @@ function App() {
     | "specialty"
     | "symptom"
     | "timeline"
-
   >("home");
 
   // app language
@@ -47,12 +48,12 @@ function App() {
                   | "specialty"
                   | "symptom"
                   | "timeline"
-                
               )
             }
-          />);
+          />
+        );
 
-      // 🔵 This is  DOCTOR PAGE
+      // 🔵 This is DOCTOR PAGE
       case "doctor":
         return <Doc />;
 
@@ -63,6 +64,7 @@ function App() {
             onNavigateToDoctor={() => setCurrentModule("doctor")}
           />
         );
+      
       case "timeline":
         return <HealthTimeline />;
 
@@ -72,7 +74,7 @@ function App() {
       // 🔵 Health interview page
       case "interview":
         return (
-          <div className="w-full min-h-screen bg-white p-8">
+          <div className="w-full min-h-screen p-8">
             <HealthInterviewPage userLanguage={userLanguage as "en" | "ur"} />
           </div>
         );
@@ -103,52 +105,54 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Navbar appears on every screen except home */}
-      {currentModule !== "home" && (
-        <Navbar
-          currentModule={currentModule}
-          setCurrentModule={(module: string) =>
-            setCurrentModule(
-              module as
-                | "home"
-                | "tts"
-                | "interview"
-                | "doctor"
-                | "triage"
-                | "specialty"
-                | "symptom"
-            )
-          }
-          userLanguage={userLanguage}
-          setUserLanguage={(lang: string) =>
-            setUserLanguage(lang as "en" | "ur")
-          }
-        />
-      )}
+    <BackgroundWrapper overlay={true} overlayIntensity="medium">
+      <div className="min-h-screen">
+        {/* Navbar appears on every screen except home */}
+        {currentModule !== "home" && (
+          <Navbar
+            currentModule={currentModule}
+            setCurrentModule={(module: string) =>
+              setCurrentModule(
+                module as
+                  | "home"
+                  | "tts"
+                  | "interview"
+                  | "doctor"
+                  | "triage"
+                  | "specialty"
+                  | "symptom"
+              )
+            }
+            userLanguage={userLanguage}
+            setUserLanguage={(lang: string) =>
+              setUserLanguage(lang as "en" | "ur")
+            }
+          />
+        )}
 
-      {/* Main content */}
-      <main className="w-full">{renderCurrentModule()}</main>
+        {/* Main content */}
+        <main className="w-full">{renderCurrentModule()}</main>
 
-      {/* Footer appears on every screen except home */}
-      {currentModule !== "home" && (
-        <Footer
-          setCurrentModule={(module: string) =>
-            setCurrentModule(
-              module as
-                | "home"
-                | "tts"
-                | "interview"
-                | "doctor"
-                | "triage"
-                | "specialty"
-                | "symptom"
-            )
-          }
-          userLanguage={userLanguage}
-        />
-      )}
-    </div>
+        {/* Footer appears on every screen except home */}
+        {currentModule !== "home" && (
+          <Footer
+            setCurrentModule={(module: string) =>
+              setCurrentModule(
+                module as
+                  | "home"
+                  | "tts"
+                  | "interview"
+                  | "doctor"
+                  | "triage"
+                  | "specialty"
+                  | "symptom"
+              )
+            }
+            userLanguage={userLanguage}
+          />
+        )}
+      </div>
+    </BackgroundWrapper>
   );
 }
 

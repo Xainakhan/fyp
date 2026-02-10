@@ -1,7 +1,7 @@
 // components/Navbar.tsx
 import React, { useState } from "react";
 import { APP_MODULES, APP_TEXT } from "../pages/navbarData";
-import { Hospital, Menu, X, PhoneCall } from "lucide-react";
+import { Hospital, Menu, X } from "lucide-react";
 
 interface NavbarProps {
   currentModule: string;
@@ -32,120 +32,139 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <nav className="bg-white/90 backdrop-blur-md shadow-sm border-b border-slate-100 sticky top-0 z-50">
-      <div className="max-w-6xl mx-auto px-3 sm:px-4">
-        {/* TOP BAR */}
-        <div className="flex items-center justify-between gap-3 py-3 sm:py-2">
+    <nav className="backdrop-blur-md sticky top-0 z-50">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
           {/* Logo / Brand */}
           <div
             onClick={handleHomeClick}
-            className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity"
+            className="flex items-center gap-3 cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
           >
-            <div className="flex items-center justify-center w-9 h-9 rounded-2xl bg-blue-600 text-white shadow-md">
-              <Hospital className="w-5 h-5" />
+            <div className="flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-green-500 to-teal-600 text-white shadow-md">
+              <Hospital className="w-6 h-6" />
             </div>
             <div className="flex flex-col leading-tight">
-              <span className="text-base sm:text-lg font-bold text-slate-900">
+              <span className="text-lg font-bold text-gray-900">
                 SehatHub
               </span>
-              <span className="text-[10px] sm:text-xs text-slate-500">
-                {isUrdu ? "وائس فرسٹ ہیلتھ ٹریائج" : "Voice-First Health Triage"}
+              <span className="text-xs text-gray-600 hidden sm:block">
+                Voice-First Health
               </span>
             </div>
           </div>
 
-          {/* Desktop module nav */}
-          <div className="hidden md:flex items-center gap-1 lg:gap-2">
-            {APP_MODULES.slice(1).map((module) => (
-              <button
-                key={module.id}
-                onClick={() => handleModuleClick(module.id)}
-                className={`px-3 lg:px-4 py-2 rounded-xl text-xs lg:text-sm font-medium transition-all
-                  ${
-                    currentModule === module.id
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "text-gray-600 hover:bg-slate-100 hover:text-gray-900"
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-2">
+            {APP_MODULES.slice(1).map((module) => {
+              const isActive = currentModule === module.id;
+              return (
+                <button
+                  key={module.id}
+                  onClick={() => handleModuleClick(module.id)}
+                  className={`px-5 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                    isActive
+                      ? "bg-green-600 text-white shadow-lg"
+                      : "text-gray-800 hover:bg-white/50 hover:shadow-md"
                   }`}
-              >
-                {isUrdu ? module.nameUrdu : module.name}
-              </button>
-            ))}
+                >
+                  {isUrdu ? module.nameUrdu : module.name}
+                </button>
+              );
+            })}
           </div>
 
-          {/* Right side: language + emergency (desktop) + menu toggle (mobile) */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Language toggle */}
+          {/* Right Side: Language + Emergency */}
+          <div className="flex items-center gap-3">
+            {/* Language Toggle */}
             <button
               onClick={() =>
                 setUserLanguage(userLanguage === "en" ? "ur" : "en")
               }
-              className="px-3 sm:px-4 py-1.5 sm:py-2 bg-slate-100 rounded-full text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-200 transition-all"
+              className="px-4 py-2 bg-white/70 hover:bg-white/90 rounded-lg text-sm font-medium text-gray-800 transition-all hidden sm:block shadow-sm"
             >
               {userLanguage === "en" ? "اردو" : "English"}
             </button>
 
-            {/* Emergency button – desktop only here */}
-            <button className="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-full text-xs sm:text-sm font-semibold hover:bg-red-600 transition-all shadow-sm">
-              <PhoneCall className="w-4 h-4" />
+            {/* Emergency Button - Desktop */}
+            <a
+              href="tel:1122"
+              className="hidden sm:flex items-center gap-2 px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-full text-sm font-bold transition-all shadow-md"
+            >
+              <span>🚨</span>
               {
                 APP_TEXT.buttons.emergency[
                   userLanguage as keyof typeof APP_TEXT.buttons.emergency
                 ]
               }
-            </button>
+            </a>
 
-            {/* Mobile menu toggle */}
+            {/* Mobile Menu Toggle */}
             <button
-              className="md:hidden p-2 rounded-lg bg-slate-100 hover:bg-slate-200 transition-all"
+              className="lg:hidden p-2 rounded-lg bg-white/70 hover:bg-white/90 transition-all shadow-sm"
               onClick={toggleMobile}
               aria-label="Toggle menu"
             >
               {isMobileOpen ? (
-                <X className="w-5 h-5 text-slate-700" />
+                <X className="w-6 h-6 text-gray-800" />
               ) : (
-                <Menu className="w-5 h-5 text-slate-700" />
+                <Menu className="w-6 h-6 text-gray-800" />
               )}
             </button>
           </div>
         </div>
 
-        {/* MOBILE DROPDOWN MENU */}
+        {/* Mobile Menu Dropdown */}
         {isMobileOpen && (
-          <div className="md:hidden pb-3 animate-in fade-in slide-in-from-top-1">
-            <div className="border-t border-slate-100 pt-3 space-y-2">
-              {/* Modules */}
-              <div className="flex flex-col gap-2">
-                {APP_MODULES.slice(1).map((module) => (
+          <div className="lg:hidden bg-white/90 backdrop-blur-md border-t border-gray-200 py-4 animate-in fade-in slide-in-from-top-2 shadow-lg">
+            <div className="space-y-2">
+              {/* Language Toggle Mobile */}
+              <button
+                onClick={() => {
+                  setUserLanguage(userLanguage === "en" ? "ur" : "en");
+                  setIsMobileOpen(false);
+                }}
+                className="w-full text-left px-4 py-3 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 transition-all"
+              >
+                {userLanguage === "en" ? "اردو" : "English"}
+              </button>
+
+              {/* Module Links */}
+              {APP_MODULES.slice(1).map((module) => {
+                const isActive = currentModule === module.id;
+                return (
                   <button
                     key={module.id}
                     onClick={() => handleModuleClick(module.id)}
-                    className={`w-full text-left px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                      ${
-                        currentModule === module.id
-                          ? "bg-blue-600 text-white shadow-md"
-                          : "bg-slate-50 text-gray-700 hover:bg-slate-100"
-                      }`}
+                    className={`w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                      isActive
+                        ? "bg-green-600 text-white shadow-md"
+                        : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    }`}
                   >
                     {isUrdu ? module.nameUrdu : module.name}
                   </button>
-                ))}
-              </div>
+                );
+              })}
 
-              {/* Emergency CTA – full width, clearer position */}
-              <button className="mt-1 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold shadow-md hover:bg-red-600 transition-all">
-                <PhoneCall className="w-4 h-4" />
+              {/* Emergency Button Mobile */}
+              <a
+                href="tel:1122"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-bold transition-all shadow-md mt-3"
+                onClick={() => setIsMobileOpen(false)}
+              >
+                <span>🚨</span>
                 {
                   APP_TEXT.buttons.emergency[
                     userLanguage as keyof typeof APP_TEXT.buttons.emergency
                   ]
                 }
-              </button>
+              </a>
 
-              {/* Hint */}
-              <p className="text-[11px] text-slate-500 mt-1 px-1">
+              {/* Helper Text */}
+              <p className="text-xs text-gray-500 text-center mt-3 px-4">
                 {isUrdu
-                  ? "کسی بھی فیچر پر جانے کے لیے اوپر سے منتخب کریں، ہنگامی صورتِ حال میں سرخ بٹن استعمال کریں۔"
-                  : "Choose a tool above to navigate, or use the red button only in emergencies."}
+                  ? "کسی بھی فیچر پر جانے کے لیے اوپر سے منتخب کریں"
+                  : "Select any feature above to navigate"}
               </p>
             </div>
           </div>

@@ -372,7 +372,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
             placeholder={
               currentLanguage === "en"
                 ? "Your full name"
@@ -390,7 +390,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
             max={120}
             value={age}
             onChange={(e) => setAge(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
           />
         </div>
       </div>
@@ -403,7 +403,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           <select
             value={gender}
             onChange={(e) => setGender(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
           >
             <option value="">
               {currentLanguage === "en" ? "Select" : "منتخب کریں"}
@@ -426,7 +426,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           <input
             value={city}
             onChange={(e) => setCity(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
             placeholder={
               currentLanguage === "en"
                 ? "e.g. Lahore, Faisalabad"
@@ -445,7 +445,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
         <input
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
           placeholder={
             currentLanguage === "en"
               ? "Phone / WhatsApp number"
@@ -468,7 +468,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           value={mainConcern}
           onChange={(e) => setMainConcern(e.target.value)}
           rows={3}
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
           placeholder={
             currentLanguage === "en"
               ? "Example: I have had chest pain and shortness of breath when walking."
@@ -487,7 +487,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           <input
             value={symptomDuration}
             onChange={(e) => setSymptomDuration(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
             placeholder={
               currentLanguage === "en"
                 ? "e.g. 3 days, 2 weeks, 6 months"
@@ -504,7 +504,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           <input
             value={symptomPattern}
             onChange={(e) => setSymptomPattern(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
             placeholder={
               currentLanguage === "en"
                 ? "e.g. Worse in last 2 days, slowly improving, no change"
@@ -523,7 +523,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
         <input
           value={symptomWorseWhen}
           onChange={(e) => setSymptomWorseWhen(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </div>
 
@@ -537,7 +537,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           value={associatedSymptoms}
           onChange={(e) => setAssociatedSymptoms(e.target.value)}
           rows={3}
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
           placeholder={
             currentLanguage === "en"
               ? "Example: fever, cough, weight loss, vomiting, dizziness etc."
@@ -566,8 +566,8 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
                 onClick={() => toggleChronic(item)}
                 className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs text-left ${
                   checked
-                    ? "bg-blue-50 border-blue-500 text-blue-700"
-                    : "border-gray-200 hover:border-blue-400"
+                    ? "bg-green-50 border-green-500 text-green-700"
+                    : "border-gray-200 hover:border-green-400"
                 }`}
               >
                 <span>{item}</span>
@@ -590,7 +590,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           value={otherConditions}
           onChange={(e) => setOtherConditions(e.target.value)}
           rows={3}
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </div>
 
@@ -604,7 +604,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           value={currentMedicines}
           onChange={(e) => setCurrentMedicines(e.target.value)}
           rows={3}
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
           placeholder={
             currentLanguage === "en"
               ? "Example: Panadol 500mg, once daily. Blood pressure tablet (don’t remember name)."
@@ -623,7 +623,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           value={allergies}
           onChange={(e) => setAllergies(e.target.value)}
           rows={2}
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </div>
     </div>
@@ -641,7 +641,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           <select
             value={smokingStatus}
             onChange={(e) => setSmokingStatus(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
           >
             <option value="">
               {currentLanguage === "en" ? "Select" : "منتخب کریں"}
@@ -668,7 +668,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           <select
             value={alcoholUse}
             onChange={(e) => setAlcoholUse(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
           >
             <option value="">
               {currentLanguage === "en" ? "Select" : "منتخب کریں"}
@@ -696,7 +696,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           <select
             value={exercise}
             onChange={(e) => setExercise(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
           >
             <option value="">
               {currentLanguage === "en" ? "Select" : "منتخب کریں"}
@@ -725,7 +725,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           <input
             value={sleepHours}
             onChange={(e) => setSleepHours(e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
             placeholder={currentLanguage === "en" ? "e.g. 5–6" : "مثلاً 5–6"}
           />
         </div>
@@ -740,7 +740,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
         <select
           value={stressLevel}
           onChange={(e) => setStressLevel(e.target.value)}
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
         >
           <option value="">
             {currentLanguage === "en" ? "Select" : "منتخب کریں"}
@@ -767,7 +767,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           value={moodNotes}
           onChange={(e) => setMoodNotes(e.target.value)}
           rows={3}
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
       </div>
     </div>
@@ -790,7 +790,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
 
       <div className="bg-white rounded-xl border p-4 space-y-3 max-h-[420px] overflow-auto">
         <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-          <User size={16} className="text-blue-600" />
+          <User size={16} className="text-green-600" />
           {currentLanguage === "en" ? "Basic Info" : "بنیادی معلومات"}
         </h3>
         <ul className="list-disc list-inside">
@@ -959,9 +959,9 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
 
       {/* NEW: AI triage result card */}
       {triageResult && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-2">
-          <h3 className="font-semibold text-blue-900 flex items-center gap-2">
-            <Activity size={16} className="text-blue-600" />
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4 space-y-2">
+          <h3 className="font-semibold text-green-900 flex items-center gap-2">
+            <Activity size={16} className="text-green-600" />
             {currentLanguage === "en"
               ? "AI Triage Summary"
               : "AI ٹرائیج خلاصہ"}
@@ -1029,7 +1029,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
           type="button"
           onClick={handleSubmitInterview}
           disabled={submitting}
-          className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-60 transition"
+          className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 disabled:opacity-60 transition"
         >
           {submitting
             ? currentLanguage === "en"
@@ -1058,8 +1058,8 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
-            <ClipboardList className="text-blue-600" size={28} />
+          <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+            <ClipboardList className="text-green-600" size={28} />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-800">
@@ -1094,7 +1094,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center border-2 mb-1 ${
                     isActive
-                      ? "border-blue-600 bg-blue-50"
+                      ? "border-green-600 bg-green-50"
                       : isDone
                       ? "border-green-500 bg-green-50"
                       : "border-gray-200 bg-white"
@@ -1104,7 +1104,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
                     size={18}
                     className={
                       isActive
-                        ? "text-blue-600"
+                        ? "text-green-600"
                         : isDone
                         ? "text-green-600"
                         : "text-gray-400"
@@ -1127,7 +1127,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
       {/* Card */}
       <div className="bg-white rounded-2xl shadow p-6">
         <div className="flex items-center gap-2 mb-4">
-          <StepIcon size={20} className="text-blue-600" />
+          <StepIcon size={20} className="text-green-600" />
           <h2 className="text-lg font-semibold text-gray-800">
             {
               TEXT.stepLabels[currentStep.id][
@@ -1166,7 +1166,7 @@ const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm ${
               currentStepIndex === STEPS.length - 1
                 ? "bg-gray-200 text-gray-400 cursor-default"
-                : "bg-blue-600 text-white hover:bg-blue-700"
+                : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >
             {currentLanguage === "en" ? "Next" : "اگلا"}

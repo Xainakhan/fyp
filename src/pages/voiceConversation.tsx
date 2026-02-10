@@ -602,18 +602,18 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
   // ---------------- UI ----------------
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-sky-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen w-full bg-gradient-to-b from-sky-50 via-green-50 to-indigo-100">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-10">
         <div className="grid gap-6 lg:grid-cols-[2.1fr,1.1fr]">
           {/* LEFT: Conversation Card */}
           <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/60 flex flex-col min-h-[480px] sm:min-h-[560px] transition-shadow duration-200 hover:shadow-2xl">
             {/* Header */}
-            <div className="px-5 sm:px-7 py-4 sm:py-5 border-b border-blue-50 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-3xl">
+            <div className="px-5 sm:px-7 py-4 sm:py-5 border-b border-green-50 bg-gradient-to-r from-green-600 to-indigo-600 text-white rounded-t-3xl">
               <h2 className="text-lg sm:text-xl font-semibold mb-1 flex items-center gap-2">
                 <Mic className="w-5 h-5 sm:w-6 sm:h-6" />
                 {isUrdu ? "آوازی ہیلتھ اسسٹنٹ" : "Voice Health Assistant"}
               </h2>
-              <p className="text-xs sm:text-sm text-blue-100">
+              <p className="text-xs sm:text-sm text-green-100">
                 {isUrdu
                   ? "مجھ سے آواز کے ذریعے بات کریں، میں بنیادی رہنمائی، جذباتی ٹون اور ایپ نیویگیشن میں مدد کروں گا۔"
                   : "Talk to me using your voice. I’ll give basic health guidance, track emotional tone, and help you navigate the app."}
@@ -632,7 +632,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
             <div className="flex-1 overflow-y-auto px-4 sm:px-6 pt-4 pb-3 space-y-4 bg-slate-50/60">
               {messages.length === 0 ? (
                 <div className="text-center text-gray-500 mt-10 sm:mt-14">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4 shadow-inner animate-pulse">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4 shadow-inner animate-pulse">
                     <Mic className="w-8 h-8" />
                   </div>
                   <p className="mb-2 text-sm sm:text-base">
@@ -657,7 +657,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
                     <div
                       className={`max-w-[80%] sm:max-w-sm lg:max-w-md px-4 py-3 rounded-2xl text-sm sm:text-[15px] leading-relaxed transition-all duration-150 ${
                         message.isUser
-                          ? "bg-blue-600 text-white shadow-md translate-y-[1px]"
+                          ? "bg-green-600 text-white shadow-md translate-y-[1px]"
                           : "bg-white text-gray-800 border border-gray-100 shadow-sm"
                       }`}
                     >
@@ -673,7 +673,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
               {/* Current Transcript */}
               {currentTranscript && (
                 <div className="flex justify-end">
-                  <div className="max-w-[80%] sm:max-w-sm lg:max-w-md px-4 py-3 rounded-2xl bg-blue-100 text-blue-900 border-2 border-blue-300 shadow-sm transition-all duration-150">
+                  <div className="max-w-[80%] sm:max-w-sm lg:max-w-md px-4 py-3 rounded-2xl bg-green-100 text-green-900 border-2 border-green-300 shadow-sm transition-all duration-150">
                     <p className="text-sm italic">{currentTranscript}</p>
                     <p className="text-[11px] opacity-70 mt-1">
                       {isUrdu ? "سن رہا ہوں..." : "Listening..."}
@@ -686,7 +686,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
               {isProcessing && (
                 <div className="flex justify-start">
                   <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-gray-200 text-gray-700 text-sm shadow-sm">
-                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent" />
+                    <span className="animate-spin rounded-full h-4 w-4 border-2 border-green-600 border-t-transparent" />
                     <span>{isUrdu ? "سوچ رہا ہوں..." : "Thinking..."}</span>
                   </div>
                 </div>
@@ -705,7 +705,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
                   className={`relative flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full text-white transition-all transform hover:scale-105 focus:outline-none focus:ring-0 disabled:opacity-50 disabled:cursor-not-allowed ${
                     isListening
                       ? "bg-red-500 hover:bg-red-600 animate-pulse shadow-[0_0_0_10px_rgba(239,68,68,0.25)]"
-                      : "bg-blue-600 hover:bg-blue-700 shadow-[0_10px_25px_rgba(37,99,235,0.35)]"
+                      : "bg-green-600 hover:bg-green-700 shadow-[0_10px_25px_rgba(37,99,235,0.35)]"
                   }`}
                   title={isListening ? "Stop listening" : "Start listening"}
                 >
@@ -765,17 +765,17 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
           {/* RIGHT: Emotion + Tips */}
           <div className="space-y-4 lg:space-y-5">
             {/* Emotion Summary */}
-            <div className="bg-blue-50/80 border border-blue-100 rounded-2xl p-4 sm:p-5 shadow-sm">
-              <h3 className="text-sm sm:text-base font-semibold text-blue-900 mb-1.5 flex items-center gap-2">
-                <Info className="w-4 h-4 text-blue-500" />
+            <div className="bg-green-50/80 border border-green-100 rounded-2xl p-4 sm:p-5 shadow-sm">
+              <h3 className="text-sm sm:text-base font-semibold text-green-900 mb-1.5 flex items-center gap-2">
+                <Info className="w-4 h-4 text-green-500" />
                 {isUrdu
                   ? "آپ کی مجموعی جذباتی ٹون"
                   : "Your Overall Emotional Tone"}
               </h3>
-              <p className="text-xs sm:text-sm text-blue-800 leading-relaxed">
+              <p className="text-xs sm:text-sm text-green-800 leading-relaxed">
                 {emotionalSummary}
               </p>
-              <p className="text-[10px] sm:text-[11px] text-blue-500 mt-2">
+              <p className="text-[10px] sm:text-[11px] text-green-500 mt-2">
                 {isUrdu
                   ? "یہ صرف اندازاً جذباتی تجزیہ ہے، طبی تشخیص نہیں۔"
                   : "This is an approximate emotional analysis, not a clinical diagnosis."}
@@ -785,7 +785,7 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
             {/* Instructions */}
             <div className="bg-white/80 border border-slate-100 rounded-2xl p-4 sm:p-5 shadow-sm">
               <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                <Info className="w-4 h-4 text-blue-500" />
+                <Info className="w-4 h-4 text-green-500" />
                 {isUrdu ? "مثالی وائس کمانڈز" : "Example Voice Commands"}
               </h3>
               <ul className="space-y-1.5 text-xs sm:text-sm text-gray-700">

@@ -597,13 +597,7 @@ const doctorDatabase: DoctorDatabase = {
         rating: 4.4,
         reviews: 187,
         consultationFee: 1500,
-        availability: [
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-        ],
+        availability: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
         timeSlots: ["9:00 AM - 1:00 PM", "4:00 PM - 8:00 PM"],
         languages: ["English", "Urdu", "Punjabi"],
         specializations: [
@@ -664,7 +658,7 @@ const FindDoctorPage: React.FC = () => {
   });
 
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorWithMeta | null>(
-    null
+    null,
   );
 
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
@@ -690,7 +684,7 @@ const FindDoctorPage: React.FC = () => {
     lat1: number,
     lon1: number,
     lat2: number,
-    lon2: number
+    lon2: number,
   ): number => {
     const R = 6371;
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -747,7 +741,7 @@ const FindDoctorPage: React.FC = () => {
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 600000,
-      }
+      },
     );
   };
 
@@ -761,7 +755,7 @@ const FindDoctorPage: React.FC = () => {
           location.lat,
           location.lng,
           doctor.coordinates.lat,
-          doctor.coordinates.lng
+          doctor.coordinates.lng,
         );
 
         if (distance <= selectedRadius) {
@@ -776,7 +770,7 @@ const FindDoctorPage: React.FC = () => {
     });
 
     nearbyList.sort(
-      (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity)
+      (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity),
     );
     setNearbyDoctors(nearbyList);
   };
@@ -787,7 +781,7 @@ const FindDoctorPage: React.FC = () => {
       window.open(url, "_blank");
     } else if (doctor.address) {
       const url = `https://www.google.com/maps/search/${encodeURIComponent(
-        doctor.address + ", " + doctor.location
+        doctor.address + ", " + doctor.location,
       )}`;
       window.open(url, "_blank");
     }
@@ -804,8 +798,15 @@ const FindDoctorPage: React.FC = () => {
     // 2) Map "reason words" to specialties
     let specialtiesFromReason: string[] = [];
 
-    if (normalizedQuery.includes("blood pressure") || normalizedQuery === "bp") {
-      specialtiesFromReason = ["cardiology", "endocrinology", "generalMedicine"];
+    if (
+      normalizedQuery.includes("blood pressure") ||
+      normalizedQuery === "bp"
+    ) {
+      specialtiesFromReason = [
+        "cardiology",
+        "endocrinology",
+        "generalMedicine",
+      ];
     } else if (
       normalizedQuery.includes("fever") ||
       normalizedQuery.includes("flu")
@@ -846,7 +847,7 @@ const FindDoctorPage: React.FC = () => {
             ...doctor,
             specialty: specialtyData.name,
             specialtyKey,
-          })
+          }),
         );
         results.push(...docsForSpecialty);
       });
@@ -855,7 +856,7 @@ const FindDoctorPage: React.FC = () => {
     // 4) Restrict to specialties from "reason" if any
     if (specialtiesFromReason.length > 0) {
       results = results.filter((doctor) =>
-        specialtiesFromReason.includes(doctor.specialtyKey)
+        specialtiesFromReason.includes(doctor.specialtyKey),
       );
     }
 
@@ -867,7 +868,7 @@ const FindDoctorPage: React.FC = () => {
           userLocation.lat,
           userLocation.lng,
           doctor.coordinates.lat,
-          doctor.coordinates.lng
+          doctor.coordinates.lng,
         ),
       }));
     }
@@ -876,7 +877,7 @@ const FindDoctorPage: React.FC = () => {
     if (selectedLocation) {
       const loc = selectedLocation.toLowerCase();
       const byCity = results.filter((doctor) =>
-        doctor.location.toLowerCase().includes(loc)
+        doctor.location.toLowerCase().includes(loc),
       );
       if (byCity.length > 0) {
         results = byCity;
@@ -890,9 +891,9 @@ const FindDoctorPage: React.FC = () => {
           doctor.name.toLowerCase().includes(normalizedQuery) ||
           doctor.hospital.toLowerCase().includes(normalizedQuery) ||
           doctor.specializations.some((spec) =>
-            spec.toLowerCase().includes(normalizedQuery)
+            spec.toLowerCase().includes(normalizedQuery),
           ) ||
-          doctor.qualification.toLowerCase().includes(normalizedQuery)
+          doctor.qualification.toLowerCase().includes(normalizedQuery),
       );
     }
 
@@ -904,8 +905,7 @@ const FindDoctorPage: React.FC = () => {
 
     results = results.filter(
       (doctor) =>
-        doctor.consultationFee >= minFee &&
-        doctor.consultationFee <= maxFee
+        doctor.consultationFee >= minFee && doctor.consultationFee <= maxFee,
     );
 
     // 9) Sorting
@@ -913,7 +913,7 @@ const FindDoctorPage: React.FC = () => {
       case "distance":
         if (userLocation) {
           results.sort(
-            (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity)
+            (a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity),
           );
         }
         break;
@@ -922,7 +922,7 @@ const FindDoctorPage: React.FC = () => {
         break;
       case "experience":
         results.sort(
-          (a, b) => parseInt(b.experience, 10) - parseInt(a.experience, 10)
+          (a, b) => parseInt(b.experience, 10) - parseInt(a.experience, 10),
         );
         break;
       case "price_low":
@@ -1005,7 +1005,7 @@ const FindDoctorPage: React.FC = () => {
                   </div>
                 )}
               </div>
-              <p className="text-sm sm:text-base text-blue-600 font-semibold mb-1">
+              <p className="text-sm sm:text-base text-green-600 font-semibold mb-1">
                 {doctor.specialty[currentLanguage]}
               </p>
               <p className="text-xs sm:text-sm text-gray-600 mb-2">
@@ -1022,7 +1022,7 @@ const FindDoctorPage: React.FC = () => {
                   </span>
                 </div>
                 {doctor.onlineConsultation && (
-                  <span className="inline-flex items-center bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full text-[11px] font-medium">
+                  <span className="inline-flex items-center bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-[11px] font-medium">
                     Online Available
                   </span>
                 )}
@@ -1081,7 +1081,7 @@ const FindDoctorPage: React.FC = () => {
               {doctor.specializations.map((spec, idx) => (
                 <span
                   key={idx}
-                  className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium"
+                  className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-[11px] sm:text-xs font-medium"
                 >
                   {spec}
                 </span>
@@ -1128,7 +1128,7 @@ const FindDoctorPage: React.FC = () => {
         <div className="flex flex-col gap-2 sm:gap-3">
           <button
             onClick={() => setSelectedDoctor(doctor)}
-            className="w-full bg-blue-600 text-white py-2.5 sm:py-3 px-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+            className="w-full bg-green-600 text-white py-2.5 sm:py-3 px-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-green-700 transition-all flex items-center justify-center gap-2"
           >
             <User size={18} />
             View Profile
@@ -1148,7 +1148,7 @@ const FindDoctorPage: React.FC = () => {
           </button>
 
           {doctor.onlineConsultation && (
-            <button className="w-full bg-indigo-600 text-white py-2.5 sm:py-3 px-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-indigo-700 transition-all flex items-center justify-center gap-2">
+            <button className="w-full bg-green-600 text-white py-2.5 sm:py-3 px-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-green-700 transition-all flex items-center justify-center gap-2">
               <Activity size={18} />
               Online Consult
             </button>
@@ -1169,13 +1169,13 @@ const FindDoctorPage: React.FC = () => {
   // ------------------- JSX -------------------
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sky-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-10">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 mb-4 sm:mb-5">
-            <div className="w-16 h-16 sm:w-18 sm:h-18 bg-blue-100 rounded-full flex items-center justify-center shadow-inner">
-              <Users className="text-blue-600" size={32} />
+            <div className="w-16 h-16 sm:w-18 sm:h-18 bg-green-100 rounded-full flex items-center justify-center shadow-inner">
+              <Users className="text-green-600" size={32} />
             </div>
             <div className="text-center sm:text-left">
               <h1 className="text-3xl sm:text-4xl font-bold text-gray-800 mb-1">
@@ -1194,10 +1194,10 @@ const FindDoctorPage: React.FC = () => {
           <button
             onClick={() =>
               setCurrentLanguage(
-                currentLanguage === "en" ? "ur" : ("en" as Language)
+                currentLanguage === "en" ? "ur" : ("en" as Language),
               )
             }
-            className="inline-flex items-center gap-2 mb-2 sm:mb-0 px-4 py-2 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-all text-sm font-medium"
+            className="inline-flex items-center gap-2 mb-2 sm:mb-0 px-4 py-2 bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-all text-sm font-medium"
           >
             {currentLanguage === "en" ? "اردو میں" : "English"}
           </button>
@@ -1217,7 +1217,11 @@ const FindDoctorPage: React.FC = () => {
             >
               <Filter size={18} />
               {currentLanguage === "en" ? "Filters" : "فلٹرز"}
-              {showFilters ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+              {showFilters ? (
+                <ChevronUp size={18} />
+              ) : (
+                <ChevronDown size={18} />
+              )}
             </button>
           </div>
 
@@ -1237,7 +1241,7 @@ const FindDoctorPage: React.FC = () => {
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                className="w-full pl-11 pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base"
                 dir="auto"
               />
             </div>
@@ -1252,12 +1256,10 @@ const FindDoctorPage: React.FC = () => {
               <select
                 value={selectedSpecialty}
                 onChange={(e) => setSelectedSpecialty(e.target.value)}
-                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
               >
                 <option value="">
-                  {currentLanguage === "en"
-                    ? "All Specialties"
-                    : "تمام تخصصات"}
+                  {currentLanguage === "en" ? "All Specialties" : "تمام تخصصات"}
                 </option>
                 {Object.keys(doctorDatabase).map((key) => (
                   <option key={key} value={key}>
@@ -1274,7 +1276,7 @@ const FindDoctorPage: React.FC = () => {
               <select
                 value={selectedLocation}
                 onChange={(e) => setSelectedLocation(e.target.value)}
-                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
               >
                 <option value="">
                   {currentLanguage === "en" ? "All Cities" : "تمام شہر"}
@@ -1296,7 +1298,7 @@ const FindDoctorPage: React.FC = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as SortBy)}
-                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm"
               >
                 <option value="rating">
                   {currentLanguage === "en"
@@ -1331,26 +1333,26 @@ const FindDoctorPage: React.FC = () => {
           </div>
 
           {/* Location section */}
-          <div className="bg-blue-50/90 p-4 sm:p-5 rounded-2xl border border-blue-200 mb-6">
+          <div className="bg-green-50/90 p-4 sm:p-5 rounded-2xl border border-green-200 mb-6">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               <div className="flex items-start gap-3">
                 <div className="mt-1">
-                  <MapPin className="text-blue-600" size={24} />
+                  <MapPin className="text-green-600" size={24} />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-blue-800 text-sm sm:text-base">
+                  <h4 className="font-semibold text-green-800 text-sm sm:text-base">
                     {currentLanguage === "en"
                       ? "Find Nearest Doctors"
                       : "قریب ترین ڈاکٹرز تلاش کریں"}
                   </h4>
-                  <p className="text-xs sm:text-sm text-blue-600">
+                  <p className="text-xs sm:text-sm text-green-600">
                     {userLocation
                       ? currentLanguage === "en"
                         ? "Location enabled - showing nearest doctors"
                         : "مقام فعال ہے - قریب ترین ڈاکٹرز دکھائے جا رہے ہیں"
                       : currentLanguage === "en"
-                      ? "Enable location to find doctors near you"
-                      : "اپنے قریب کے ڈاکٹرز تلاش کرنے کے لیے مقام کو فعال کریں"}
+                        ? "Enable location to find doctors near you"
+                        : "اپنے قریب کے ڈاکٹرز تلاش کرنے کے لیے مقام کو فعال کریں"}
                   </p>
                 </div>
               </div>
@@ -1360,7 +1362,7 @@ const FindDoctorPage: React.FC = () => {
                   <button
                     onClick={getUserLocation}
                     disabled={isLoadingLocation}
-                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-all text-sm"
+                    className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 transition-all text-sm"
                   >
                     <Locate size={18} />
                     {isLoadingLocation
@@ -1368,8 +1370,8 @@ const FindDoctorPage: React.FC = () => {
                         ? "Getting Location..."
                         : "مقام حاصل کر رہے ہیں..."
                       : currentLanguage === "en"
-                      ? "Use My Location"
-                      : "میرا مقام استعمال کریں"}
+                        ? "Use My Location"
+                        : "میرا مقام استعمال کریں"}
                   </button>
                 )}
 
@@ -1383,13 +1385,13 @@ const FindDoctorPage: React.FC = () => {
                       ? "Hide Map"
                       : "نقشہ چھپائیں"
                     : currentLanguage === "en"
-                    ? "Show Map"
-                    : "نقشہ دکھائیں"}
+                      ? "Show Map"
+                      : "نقشہ دکھائیں"}
                 </button>
 
                 {userLocation && (
                   <div className="flex items-center gap-2">
-                    <label className="text-xs sm:text-sm font-medium text-blue-700">
+                    <label className="text-xs sm:text-sm font-medium text-green-700">
                       {currentLanguage === "en" ? "Radius:" : "دائرہ:"}
                     </label>
                     <select
@@ -1399,7 +1401,7 @@ const FindDoctorPage: React.FC = () => {
                         setSelectedRadius(value);
                         if (userLocation) findNearbyDoctors(userLocation);
                       }}
-                      className="px-3 py-1.5 border border-blue-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 bg-white"
+                      className="px-3 py-1.5 border border-green-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-green-500 bg-white"
                     >
                       <option value={5}>5 km</option>
                       <option value={10}>10 km</option>
@@ -1438,7 +1440,7 @@ const FindDoctorPage: React.FC = () => {
                         {mapCenter.lng.toFixed(4)}
                       </p>
                       {userLocation && (
-                        <p className="text-blue-600 font-medium">
+                        <p className="text-green-600 font-medium">
                           Your Location: {userLocation.lat.toFixed(4)},{" "}
                           {userLocation.lng.toFixed(4)}
                         </p>
@@ -1457,7 +1459,7 @@ const FindDoctorPage: React.FC = () => {
                   title="Dr. Ahmed Hassan"
                 ></div>
                 <div
-                  className="absolute top-12 right-8 bg-blue-500 w-3 h-3 rounded-full border-2 border-white shadow-lg"
+                  className="absolute top-12 right-8 bg-green-500 w-3 h-3 rounded-full border-2 border-white shadow-lg"
                   title="Dr. Muhammad Ali"
                 ></div>
                 <div
@@ -1466,8 +1468,8 @@ const FindDoctorPage: React.FC = () => {
                 ></div>
                 {userLocation && (
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <div className="bg-blue-600 w-4 h-4 rounded-full border-4 border-white shadow-lg animate-pulse"></div>
-                    <div className="absolute -bottom-6 -left-8 bg-blue-600 text-white px-2 py-1 rounded text-[10px] whitespace-nowrap">
+                    <div className="bg-green-600 w-4 h-4 rounded-full border-4 border-white shadow-lg animate-pulse"></div>
+                    <div className="absolute -bottom-6 -left-8 bg-green-600 text-white px-2 py-1 rounded text-[10px] whitespace-nowrap">
                       Your Location
                     </div>
                   </div>
@@ -1480,7 +1482,7 @@ const FindDoctorPage: React.FC = () => {
                   <span className="text-gray-700">Cardiologists</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></div>
+                  <div className="w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
                   <span className="text-gray-700">Pulmonologists</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -1489,8 +1491,8 @@ const FindDoctorPage: React.FC = () => {
                 </div>
                 {userLocation && (
                   <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-4 bg-blue-600 rounded-full border-4 border-white"></div>
-                    <span className="text-blue-700 font-medium">
+                    <div className="w-4 h-4 bg-green-600 rounded-full border-4 border-white"></div>
+                    <span className="text-green-700 font-medium">
                       Your Location
                     </span>
                   </div>
@@ -1561,7 +1563,7 @@ const FindDoctorPage: React.FC = () => {
                       </button>
                       <a
                         href={`tel:${doctor.phone}`}
-                        className="flex items-center justify-center bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 transition-all"
+                        className="flex items-center justify-center bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-all"
                       >
                         <Phone size={16} />
                       </a>
@@ -1622,7 +1624,7 @@ const FindDoctorPage: React.FC = () => {
                             min: sanitizeFeeInput(e.target.value),
                           }))
                         }
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
                       />
                       <span className="text-gray-500 text-xs sm:text-sm">
                         to
@@ -1638,7 +1640,7 @@ const FindDoctorPage: React.FC = () => {
                             max: sanitizeFeeInput(e.target.value),
                           }))
                         }
-                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
                       />
                     </div>
                     <div className="flex items-center justify-between text-xs text-gray-600">
@@ -1692,7 +1694,7 @@ const FindDoctorPage: React.FC = () => {
         <div className="space-y-5 sm:space-y-6 mb-8">
           {doctorSearchResults.length > 0 ? (
             doctorSearchResults.map((doctor, index) =>
-              renderDoctorCard(doctor, index)
+              renderDoctorCard(doctor, index),
             )
           ) : (
             <div className="text-center py-10 sm:py-12 bg-white/90 rounded-2xl shadow-md border border-slate-100">
@@ -1743,16 +1745,16 @@ const FindDoctorPage: React.FC = () => {
                     setSelectedSpecialty(key);
                     setSearchQuery("");
                   }}
-                  className="p-4 sm:p-5 bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 rounded-2xl transition-all text-center group border border-blue-100 hover:border-blue-200 shadow-sm hover:shadow-md"
+                  className="p-4 sm:p-5 bg-gradient-to-br from-green-50 to-green-50 hover:from-green-100 hover:to-green-100 rounded-2xl transition-all text-center group border border-green-100 hover:border-green-200 shadow-sm hover:shadow-md"
                 >
                   <IconComponent
-                    className="mx-auto mb-2.5 sm:mb-3 text-blue-600 group-hover:text-blue-700"
+                    className="mx-auto mb-2.5 sm:mb-3 text-green-600 group-hover:text-green-700"
                     size={28}
                   />
                   <div className="font-medium text-gray-800 mb-0.5 text-xs sm:text-sm leading-tight">
                     {specialty.name[currentLanguage]}
                   </div>
-                  <div className="text-[11px] sm:text-xs text-blue-600 font-medium">
+                  <div className="text-[11px] sm:text-xs text-green-600 font-medium">
                     {specialty.doctors.length}{" "}
                     {currentLanguage === "en" ? "doctors" : "ڈاکٹرز"}
                   </div>
@@ -1793,9 +1795,7 @@ const FindDoctorPage: React.FC = () => {
               <div className="text-xl sm:text-2xl font-bold text-red-600 mb-0.5">
                 1166
               </div>
-              <div className="text-xs sm:text-sm text-red-600">
-                Poison Help
-              </div>
+              <div className="text-xs sm:text-sm text-red-600">Poison Help</div>
             </div>
 
             <div className="bg-white/90 p-5 rounded-2xl border border-red-200 text-center shadow-sm">
@@ -1924,7 +1924,7 @@ const FindDoctorPage: React.FC = () => {
                     <h4 className="text-lg sm:text-xl font-bold text-gray-800 mb-1.5">
                       {selectedDoctor.name}
                     </h4>
-                    <p className="text-sm sm:text-base text-blue-600 font-medium mb-3">
+                    <p className="text-sm sm:text-base text-green-600 font-medium mb-3">
                       {selectedDoctor.specialty[currentLanguage]}
                     </p>
                     <div className="flex items-center justify-center mb-3 sm:mb-4">
@@ -1997,7 +1997,7 @@ const FindDoctorPage: React.FC = () => {
                       {selectedDoctor.specializations.map((spec, idx) => (
                         <span
                           key={idx}
-                          className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs"
+                          className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs"
                         >
                           {spec}
                         </span>
@@ -2047,7 +2047,7 @@ const FindDoctorPage: React.FC = () => {
                     >
                       Call Now
                     </a>
-                    <button className="flex-1 bg-blue-600 text-white py-2.5 sm:py-3 px-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-blue-700 transition-all">
+                    <button className="flex-1 bg-green-600 text-white py-2.5 sm:py-3 px-4 rounded-lg text-sm sm:text-base font-semibold hover:bg-green-700 transition-all">
                       Book Appointment
                     </button>
                     <button

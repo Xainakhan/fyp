@@ -331,8 +331,8 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center">
-            <Activity className="text-blue-600" size={28} />
+          <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+            <Activity className="text-green-600" size={28} />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-800">
@@ -373,7 +373,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
                 max={120}
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
               {touched && !age && (
                 <p className="text-xs text-red-500 mt-1">
@@ -390,7 +390,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
               >
                 <option value="">
                   {currentLanguage === "en" ? "Select" : "منتخب کریں"}
@@ -430,12 +430,12 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
                     ? "Type a symptom and press Enter (e.g. chest pain, fever)"
                     : "علامت انگلش میں لکھیں اور Enter دبائیں (مثلاً chest pain, fever)"
                 }
-                className="w-full border rounded-lg pl-9 pr-24 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border rounded-lg pl-9 pr-24 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
               />
               <button
                 type="button"
                 onClick={() => addSymptom()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs rounded-full bg-blue-600 text-white hover:bg-blue-700"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1 text-xs rounded-full bg-green-600 text-white hover:bg-green-700"
               >
                 {currentLanguage === "en" ? "Add" : "شامل کریں"}
               </button>
@@ -453,13 +453,13 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
                 {symptoms.map((sym) => (
                   <span
                     key={sym}
-                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs"
+                    className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs"
                   >
                     {sym}
                     <button
                       type="button"
                       onClick={() => removeSymptom(sym)}
-                      className="text-blue-500 hover:text-blue-700"
+                      className="text-green-500 hover:text-green-700"
                     >
                       ×
                     </button>
@@ -482,7 +482,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
                   key={item}
                   type="button"
                   onClick={() => addSymptom(item)}
-                  className="px-3 py-1 rounded-full border text-[11px] text-gray-700 hover:bg-blue-50 hover:border-blue-300"
+                  className="px-3 py-1 rounded-full border text-[11px] text-gray-700 hover:bg-green-50 hover:border-green-300"
                 >
                   {item}
                 </button>
@@ -501,7 +501,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
               <select
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
               >
                 <option value="">
                   {currentLanguage === "en" ? "Select" : "منتخب کریں"}
@@ -536,8 +536,8 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
                     onClick={() => setSeverity(level)}
                     className={`flex-1 px-2 py-2 rounded-lg text-xs border transition ${
                       severity === level
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "border-gray-200 text-gray-700 hover:border-blue-400"
+                        ? "bg-green-600 text-white border-green-600"
+                        : "border-gray-200 text-gray-700 hover:border-green-400"
                     }`}
                   >
                     {currentLanguage === "en"
@@ -569,7 +569,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
                   ? "e.g. chest, lower abdomen, left leg, whole body"
                   : "مثال: سینہ، نچلا پیٹ، بایاں ٹانگ وغیرہ"
               }
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
           </div>
 
@@ -583,7 +583,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
             />
           </div>
 
@@ -592,7 +592,7 @@ const SymptomCheckerPage: React.FC<SymptomCheckerProps> = ({
             <button
               type="button"
               onClick={analyze}
-              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition"
+              className="w-full flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-xl font-semibold hover:bg-green-700 transition"
             >
               <Stethoscope size={18} />
               {currentLanguage === "en"

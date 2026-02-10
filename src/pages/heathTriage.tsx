@@ -25,6 +25,11 @@ import {
   X,
   Activity,
   UserRound,
+  Menu,
+  Plus,
+  History,
+  Settings,
+  LogOut,
 } from "lucide-react";
 
 // Types
@@ -75,11 +80,12 @@ interface HealthResponse {
 interface RoboDocChatbotProps {
   onNavigateToDoctor?: () => void;
 }
-const cleanMarkdown = (text: string) => {
+
+const cleanMarkdown = (text: string): string => {
   return text
-    .replace(/\*\*/g, "") // remove bold
-    .replace(/\*/g, "") // remove single stars
-    .replace(/_/g, ""); // remove underscores
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .replace(/_/g, "");
 };
 
 // API Configuration
@@ -211,34 +217,25 @@ const processInput = (input: string): { token: string } => {
   if (num) return { token: num[0] };
   return { token: lower };
 };
-// Detect symptoms even if user types natural language like "pain in neck"
-const detectSymptom = (input: string, available: string[]) => {
+
+const detectSymptom = (input: string, available: string[]): string | null => {
   const lower = input.toLowerCase();
-
-  // 1) Exact match
   if (available.includes(lower)) return lower;
-
-  // 2) Partial match (e.g., "severe headache" → headache)
   for (const sym of available) {
     if (lower.includes(sym.replace("_", " "))) {
       return sym;
     }
   }
-
-  // 3) Special cases for phrases
   if (lower.includes("neck")) return "neck_pain";
   if (lower.includes("back")) return "back_pain";
   if (lower.includes("throat")) return "sore_throat";
   if (lower.includes("stomach") || lower.includes("belly"))
     return "abdominal_pain";
-
   return null;
 };
 
-// Local fallback prediction
 const predictDiseaseLocal = (symptoms: string[]): string => {
   const set = new Set(symptoms);
-
   if (set.has("fever") && set.has("cough") && set.has("shortness_of_breath")) {
     return "Pneumonia";
   }
@@ -276,7 +273,6 @@ const predictDiseaseLocal = (symptoms: string[]): string => {
   if (set.has("headache")) return "Tension Headache";
   if (set.has("cough")) return "Bronchitis";
   if (set.has("fatigue")) return "General Fatigue";
-
   return "General Illness";
 };
 
@@ -293,6 +289,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
   const [userData, setUserData] = useState<UserData>({});
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
   const [availableSymptoms, setAvailableSymptoms] =
     useState<string[]>(mockSymptoms);
@@ -305,14 +302,16 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const loadBackend = async () => {
+    const loadBackend = async (): Promise<void> => {
       try {
         const health = await checkBackendHealth();
         if (health.success && health.model_loaded) {
           setBackendConnected(true);
-          const symptoms = await getAllSymptoms();
+          const symptomsData = await getAllSymptoms();
           const weights = await getSymptomWeights();
-          setAvailableSymptoms(symptoms.length > 0 ? symptoms : mockSymptoms);
+          setAvailableSymptoms(
+            symptomsData.length > 0 ? symptomsData : mockSymptoms
+          );
           setSymptomWeights(weights);
           console.log("Backend connected:", health.model_info);
         }
@@ -333,74 +332,62 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
 
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "40px";
+      textareaRef.current.style.height = "auto";
       const scrollHeight = textareaRef.current.scrollHeight;
-      textareaRef.current.style.height = Math.min(scrollHeight, 100) + "px";
+      textareaRef.current.style.height = Math.min(scrollHeight, 200) + "px";
     }
   }, [inputValue]);
 
-  const addMessage = (sender: "bot" | "user", text: string) => {
+  const addMessage = (sender: "bot" | "user", text: string): void => {
     const cleaned = cleanMarkdown(text);
-
     const msg: Message = {
       id: Date.now() + Math.random(),
       sender,
       text: cleaned,
       timestamp: new Date(),
     };
-
     setMessages((prev) => [...prev, msg]);
   };
 
-  const simulateTyping = async (
-    text: string,
-    delay: number = 600
-  ): Promise<void> => {
+  const simulateTyping = async (text: string, delay?: number): Promise<void> => {
     setIsTyping(true);
-    await new Promise((r) => setTimeout(r, delay));
+    await new Promise<void>((resolve) => setTimeout(resolve, delay ?? 600));
     setIsTyping(false);
     addMessage("bot", cleanMarkdown(text));
   };
- const normalizeSymptom = (text: string): string => {
-  return text
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-zA-Z0-9 ]/g, "")     // remove special chars
-    .replace(/\s+/g, " ")              // fix spacing
-    .replace(/back ?pain|pain in back|lower back pain|backache/g, "back pain")
-    .replace(/head ?ache|head pain/g, "headache")
-    .replace(/chest ?pain/g, "chest pain")
-    .replace(/shortness of breath|difficulty breathing/g, "shortness of breath");
-};
 
+  const normalizeSymptom = (text: string): string => {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-zA-Z0-9 ]/g, "")
+      .replace(/\s+/g, " ")
+      .replace(/back ?pain|pain in back|lower back pain|backache/g, "back pain")
+      .replace(/head ?ache|head pain/g, "headache")
+      .replace(/chest ?pain/g, "chest pain")
+      .replace(
+        /shortness of breath|difficulty breathing/g,
+        "shortness of breath"
+      );
+  };
 
   const handleUserInput = async (message: string): Promise<void> => {
     addMessage("user", message);
     setInputValue("");
     const { token } = processInput(message);
 
-    // ================================
-    // 1️⃣ UNIVERSAL EXIT / RESET
-    // ================================
     if (message.toLowerCase().includes("restart")) {
       resetChat();
       return;
     }
 
-    // ================================
-    // 2️⃣ IF USER TYPES START → BEGIN DIAGNOSIS FLOW
-    // ================================
     if (message.toLowerCase() === "start") {
       setStep("name");
       await simulateTyping(i18n.en.askName);
       return;
     }
 
-    // ================================
-    // 3️⃣ IF NOT INSIDE DIAGNOSIS, HANDLE CHAT MODE
-    // ================================
     if (step === "initial") {
-      // ——— RAG FOR MEDICAL QUESTIONS ———
       if (message.trim().split(" ").length > 2) {
         try {
           await simulateTyping("Let me check that for you...", 400);
@@ -413,34 +400,25 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
         return;
       }
 
-      // ——— BASIC CONVERSATION HANDLING ———
       const lower = message.toLowerCase();
-
       if (lower.includes("hi") || lower.includes("hello")) {
         await simulateTyping("Hello! How can I help you today?");
         return;
       }
-
       if (lower.includes("how are you")) {
         await simulateTyping("I'm doing great! How can I assist you?");
         return;
       }
-
       if (lower.includes("bye")) {
         await simulateTyping("Goodbye! Stay healthy 😊");
         return;
       }
-
-      // DEFAULT RESPONSE
       await simulateTyping(
-        "You can chat with me freely, or type “start” to begin a symptom diagnosis."
+        'You can chat with me freely, or type "start" to begin a symptom diagnosis.'
       );
       return;
     }
 
-    // ================================
-    // 4️⃣ DIAGNOSIS FLOW (OLD LOGIC)
-    // ================================
     switch (step) {
       case "name": {
         const medicalKeywords = [
@@ -458,28 +436,23 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
           "ill",
           "dizzy",
         ];
-
         const lower = message.toLowerCase();
-
-        // If user types a disease or symptom instead of a name → DO NOT accept
         if (medicalKeywords.some((k) => lower.includes(k))) {
           await simulateTyping(
             "It looks like you're talking about a medical condition.\n\n" +
-              "👉 Do you want to **chat normally** or **start a full diagnosis**?\n" +
-              "Type **chat** or **diagnose**."
+              "👉 Do you want to chat normally or start a full diagnosis?\n" +
+              'Type chat or diagnose.'
           );
           setStep("confirmMode");
           return;
         }
-
-        // Otherwise accept as normal name
         setUserData((prev) => ({ ...prev, name: message }));
         setStep("age");
         await simulateTyping(i18n.en.askAge(message));
         break;
       }
 
-      case "age":
+      case "age": {
         const age = parseInt(token);
         if (age && age > 0 && age < 150) {
           setUserData((prev) => ({ ...prev, age }));
@@ -489,8 +462,9 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
           await simulateTyping("Please enter a valid age (1-150)");
         }
         break;
+      }
 
-      case "gender":
+      case "gender": {
         const gender = message.toLowerCase().includes("female")
           ? "female"
           : "male";
@@ -498,29 +472,29 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
         setStep("symptoms");
         await simulateTyping(i18n.en.askMainSymptom);
         break;
+      }
 
-case "symptoms":
-  const firstSymptom = normalizeSymptom(message);
-  setSymptoms([firstSymptom]);
-  setStep("moreSymptoms");
-  await simulateTyping(`Got it: ${firstSymptom}. Any other symptoms?`);
-  break;
+      case "symptoms": {
+        const firstSymptom = normalizeSymptom(message);
+        setSymptoms([firstSymptom]);
+        setStep("moreSymptoms");
+        await simulateTyping(`Got it: ${firstSymptom}. Any other symptoms?`);
+        break;
+      }
 
+      case "moreSymptoms": {
+        if (token === "no") {
+          setStep("duration");
+          await simulateTyping(i18n.en.askDays);
+        } else {
+          const s = normalizeSymptom(message);
+          setSymptoms((prev) => [...prev, s]);
+          await simulateTyping(`Added: ${s}. Any more symptoms?`);
+        }
+        break;
+      }
 
-case "moreSymptoms":
-  if (token === "no") {
-    setStep("duration");
-    await simulateTyping(i18n.en.askDays);
-  } else {
-    const s = normalizeSymptom(message);
-    setSymptoms((prev) => [...prev, s]);
-    await simulateTyping(`Added: ${s}. Any more symptoms?`);
-  }
-  break;
-
-
-
-      case "duration":
+      case "duration": {
         const days = parseInt(token);
         if (days && days > 0) {
           await provideDiagnosis(days);
@@ -528,8 +502,9 @@ case "moreSymptoms":
           await simulateTyping("Please enter number of days (e.g., 3, 5, 7)");
         }
         break;
+      }
 
-      case "completed":
+      case "completed": {
         if (token === "yes") {
           setStep("symptoms");
           setSymptoms([]);
@@ -540,7 +515,9 @@ case "moreSymptoms":
           setStep("initial");
         }
         break;
-      case "confirmMode":
+      }
+
+      case "confirmMode": {
         if (message.toLowerCase() === "chat") {
           setStep("initial");
           await simulateTyping("Sure! You can chat with me freely now.");
@@ -551,28 +528,28 @@ case "moreSymptoms":
           await simulateTyping('Please type "chat" or "diagnose".');
         }
         break;
+      }
 
-      default:
+      default: {
         await simulateTyping(
-          "I didn’t understand that. Type “start” to begin diagnosis or ask your question."
+          'I didn\'t understand that. Type "start" to begin diagnosis or ask your question.'
         );
+        break;
+      }
     }
   };
 
   const provideDiagnosis = async (days: number): Promise<void> => {
     try {
       await simulateTyping(i18n.en.analyzing, 400);
-
       console.log("Sending to API:", { symptoms, days });
 
       if (backendConnected) {
         const result = await predictDiseaseAPI(symptoms, days);
-
         console.log("API Response:", result);
 
         if (result.success && result.primary_prediction && result.severity) {
           const { primary_prediction, severity } = result;
-
           setDiagnosis({
             prediction: primary_prediction.disease,
             severity: severity.level,
@@ -768,267 +745,274 @@ case "moreSymptoms":
     if (printWindow) {
       printWindow.document.write(htmlContent);
       printWindow.document.close();
-      printWindow.onload = () => {
+      printWindow.onload = (): void => {
         printWindow.print();
       };
     }
   };
 
   return (
-    <div className="h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex flex-col overflow-hidden">
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-lg shadow-sm border-b border-gray-200/50 flex-shrink-0">
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-9 h-9 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
-              <Stethoscope className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                {i18n.en.appName}
-              </h1>
-              <p className="text-xs sm:text-sm text-gray-600 hidden xs:block">
-                {i18n.en.subtitle}
-              </p>
-            </div>
+    <div className="flex h-screen bg-white overflow-hidden">
+
+      {/* ============================================================
+          SIDEBAR — sky/cloud gradient (matches screenshot)
+          ============================================================ */}
+      <div
+        className={`${
+          sidebarOpen ? "w-64" : "w-0"
+        } flex-shrink-0 transition-all duration-300 overflow-hidden flex flex-col`}
+        style={{
+          /* Sky-to-sea gradient matching the screenshot */
+          background: "linear-gradient(180deg, #b8d4e8 0%, #9ec4d8 25%, #82b4c8 55%, #8dbfaa 100%)",
+        }}
+      >
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-white/30">
+          <button
+            onClick={resetChat}
+            className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors text-sm font-medium text-white"
+            style={{ background: "rgba(59, 100, 150, 0.75)" }}
+            onMouseEnter={e => (e.currentTarget.style.background = "rgba(40, 80, 130, 0.85)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "rgba(59, 100, 150, 0.75)")}
+          >
+            <Plus className="w-4 h-4" />
+            <span>New chat</span>
+          </button>
+        </div>
+
+        {/* Chat History */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          {/* "Recent" label */}
+          <div className="text-xs px-3 py-2 font-semibold text-blue-900/60">
+            Recent
           </div>
 
-          <div className="flex items-center space-x-1.5 sm:space-x-3">
-            <div className="flex items-center space-x-1 sm:space-x-2 px-2 py-1.5 bg-white border border-gray-200 rounded-full shadow-sm">
-              {backendConnected ? (
-                <>
-                  <Wifi className="w-3 h-3 sm:w-4 sm:h-4 text-green-500" />
-                  <span className="text-xs text-green-600 font-medium hidden xs:inline">
-                    Online
-                  </span>
-                </>
-              ) : (
-                <>
-                  <WifiOff className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
-                  <span className="text-xs text-gray-500 hidden xs:inline">
-                    Offline
-                  </span>
-                </>
-              )}
-            </div>
+          {/* Active item — highlighted in semi-transparent blue (like "Symptom Analysis" in screenshot) */}
+          <button className="w-full text-left px-3 py-2.5 rounded-lg transition-colors text-sm flex items-center space-x-2 text-white font-medium"
+            style={{ background: "rgba(59, 100, 160, 0.65)" }}
+          >
+            <MessageSquare className="w-4 h-4 text-white/80" />
+            <span className="flex-1 truncate">Symptom Analysis</span>
+          </button>
 
-            <button
-              onClick={() => onNavigateToDoctor?.()}
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full hover:from-emerald-600 hover:to-teal-700 transition-all shadow-md text-xs sm:text-sm font-medium"
-              title="Find a Doctor"
-            >
-              <UserRound className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Find Doctor</span>
-              <span className="sm:hidden">Doctor</span>
-            </button>
+          {/* Inactive items */}
+          <button
+            className="w-full text-left px-3 py-2.5 rounded-lg transition-colors text-sm flex items-center space-x-2 text-blue-950/80 hover:bg-white/25"
+          >
+            <MessageSquare className="w-4 h-4 text-blue-900/50" />
+            <span className="flex-1 truncate">Medical Consultation</span>
+          </button>
+          <button
+            className="w-full text-left px-3 py-2.5 rounded-lg transition-colors text-sm flex items-center space-x-2 text-blue-950/80 hover:bg-white/25"
+          >
+            <MessageSquare className="w-4 h-4 text-blue-900/50" />
+            <span className="flex-1 truncate">Health Checkup</span>
+          </button>
+        </div>
 
-            <button
-              onClick={resetChat}
-              className="p-1.5 sm:p-2 rounded-full bg-white border border-gray-200 hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
-              title="Reset Chat"
-            >
-              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-600" />
-            </button>
+        {/* Sidebar Footer */}
+        <div className="border-t border-white/30 p-3 space-y-1">
+          <button
+            onClick={onNavigateToDoctor}
+            className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-sm text-blue-950/80 hover:bg-white/25"
+          >
+            <UserRound className="w-4 h-4 text-blue-900/60" />
+            <span>Find Doctor</span>
+          </button>
+          <button className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-colors text-sm text-blue-950/80 hover:bg-white/25">
+            <Settings className="w-4 h-4 text-blue-900/60" />
+            <span>Settings</span>
+          </button>
+          <div className="px-3 py-2 flex items-center space-x-2 text-xs">
+            {backendConnected ? (
+              <>
+                <Wifi className="w-3 h-3 text-green-600" />
+                <span className="text-green-700 font-medium">Connected</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3 text-blue-900/40" />
+                <span className="text-blue-900/50">Offline Mode</span>
+              </>
+            )}
           </div>
         </div>
-      </header>
+      </div>
+      {/* ============================================================ */}
 
-      {/* Chat Container */}
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full min-h-0">
+      {/* Main Chat Area — unchanged */}
+      <div className="flex-1 flex flex-col">
+        {/* Top Bar */}
+        <div className="h-14 border-b border-gray-200 flex items-center justify-between px-4 bg-white">
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Menu className="w-5 h-5 text-gray-600" />
+            </button>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                <Stethoscope className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-sm font-semibold text-gray-900">
+                  RoboDoc
+                </h1>
+                <p className="text-xs text-gray-500">AI Medical Assistant</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            {diagnosis && (
+              <>
+                <button
+                  onClick={() => setShowAnalysis(true)}
+                  className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm flex items-center space-x-1.5"
+                >
+                  <Activity className="w-4 h-4" />
+                  <span>View Report</span>
+                </button>
+                <button
+                  onClick={onNavigateToDoctor}
+                  className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm flex items-center space-x-1.5"
+                >
+                  <UserRound className="w-4 h-4" />
+                  <span>Find Doctor</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Messages Area */}
         <div
           ref={chatContainerRef}
-          className="flex-1 overflow-y-auto px-3 sm:px-6 py-3 sm:py-4 space-y-2.5 sm:space-y-4"
+          className="flex-1 overflow-y-auto bg-white"
         >
-          {messages.map((m, index) => (
-            <div
-              key={m.id}
-              className={`flex ${
-                m.sender === "user" ? "justify-end" : "justify-start"
-              } animate-[fadeIn_0.3s_ease-in-out]`}
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
+          <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+            {messages.map((m) => (
               <div
-                className={`flex max-w-[90%] sm:max-w-xl ${
-                  m.sender === "user" ? "flex-row-reverse" : "flex-row"
-                } items-end`}
+                key={m.id}
+                className={`flex ${
+                  m.sender === "user" ? "justify-end" : "justify-start"
+                }`}
               >
-                <div
-                  className={
-                    m.sender === "user" ? "ml-1.5 sm:ml-2" : "mr-1.5 sm:mr-2"
-                  }
-                >
-                  <div
-                    className={`w-7 h-7 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shadow-md ${
-                      m.sender === "user"
-                        ? "bg-gradient-to-br from-blue-500 to-indigo-600"
-                        : "bg-gradient-to-br from-emerald-400 via-cyan-500 to-blue-500"
-                    }`}
-                  >
-                    {m.sender === "user" ? (
-                      <User className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
-                    ) : (
-                      <Bot className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
-                    )}
+                {m.sender === "bot" && (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center mr-3 flex-shrink-0">
+                    <Bot className="w-5 h-5 text-white" />
                   </div>
-                </div>
+                )}
                 <div
-                  className={`rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-sm text-sm ${
+                  className={`max-w-[85%] ${
                     m.sender === "user"
-                      ? "bg-gradient-to-br from-blue-500 to-indigo-600 text-white"
-                      : "bg-white text-gray-800 border border-gray-200"
+                      ? "bg-green-600 text-white rounded-2xl px-4 py-2.5"
+                      : "text-gray-800"
                   }`}
                 >
-                  <p className="leading-relaxed break-words">{m.text}</p>
+                  <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
+                    {m.text}
+                  </p>
                 </div>
+                {m.sender === "user" && (
+                  <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center ml-3 flex-shrink-0">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                )}
               </div>
-            </div>
-          ))}
+            ))}
 
-          {isTyping && (
-            <div className="flex animate-[fadeIn_0.3s_ease-in-out]">
-              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-emerald-400 via-cyan-500 to-blue-500 mr-1.5 sm:mr-2 flex items-center justify-center shadow-md">
-                <Bot className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
-              </div>
-              <div className="bg-white rounded-2xl px-4 py-3 border border-gray-200 shadow-sm">
-                <div className="flex space-x-1.5">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                  <div
-                    className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.15s" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "0.3s" }}
-                  ></div>
+            {isTyping && (
+              <div className="flex">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center mr-3">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+                <div className="bg-gray-100 rounded-2xl px-4 py-3">
+                  <div className="flex space-x-1.5">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.15s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.3s" }}
+                    ></div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
+            )}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
         {/* Input Area */}
-        <div className="bg-white border-t px-3 sm:px-6 py-3 sm:py-4 flex-shrink-0">
-          <form
-            onSubmit={handleSubmit}
-            className="flex items-end space-x-2 sm:space-x-3"
-          >
-            <textarea
-              ref={textareaRef}
-              value={inputValue}
-              onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
-                setInputValue(e.target.value)
-              }
-              onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e as any);
+        <div className="border-t border-gray-200 bg-white">
+          <div className="max-w-3xl mx-auto px-4 py-4">
+            <form onSubmit={handleSubmit} className="relative">
+              <textarea
+                ref={textareaRef}
+                value={inputValue}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                  setInputValue(e.target.value)
                 }
-              }}
-              placeholder="Type your message..."
-              rows={1}
-              className="flex-1 px-3 py-2.5 sm:px-4 sm:py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto text-sm sm:text-base"
-              style={{
-                minHeight: "40px",
-                maxHeight: "100px",
-              }}
-            />
-            <button
-              type="submit"
-              disabled={!inputValue.trim() || isTyping}
-              className="px-4 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-full hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 flex-shrink-0 shadow-md"
-            >
-              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </form>
+                onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e as any);
+                  }
+                }}
+                placeholder="Message RoboDoc..."
+                rows={1}
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none text-[15px]"
+                style={{
+                  minHeight: "52px",
+                  maxHeight: "200px",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!inputValue.trim() || isTyping}
+                className="absolute right-2 bottom-2 p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </form>
+            <p className="text-xs text-center text-gray-500 mt-3">
+              RoboDoc can make mistakes. Check important info.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Diagnosis Summary Bar */}
-      {diagnosis && !isTyping && step === "completed" && (
-        <div className="bg-white border-t shadow-lg sticky bottom-0 z-10">
-          <div className="max-w-4xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm">
-              <div className="flex items-center space-x-1.5 sm:space-x-2">
-                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
-                <span className="font-medium truncate max-w-[150px] sm:max-w-none">
-                  {diagnosis.prediction}
-                </span>
-              </div>
-              <div className="flex items-center space-x-1.5 sm:space-x-2">
-                <AlertTriangle
-                  className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${
-                    diagnosis.severity === "high"
-                      ? "text-red-500"
-                      : diagnosis.severity === "moderate"
-                      ? "text-yellow-500"
-                      : "text-green-500"
-                  }`}
-                />
-                <span className="capitalize">{diagnosis.severity}</span>
-              </div>
-              <div className="flex items-center space-x-1.5 sm:space-x-2">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
-                <span>{diagnosis.days} days</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 w-full sm:w-auto">
-              <button
-                onClick={() => setShowAnalysis(true)}
-                className="flex items-center justify-center space-x-1.5 sm:space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs sm:text-sm flex-1 sm:flex-initial"
-              >
-                <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>View Analysis</span>
-              </button>
-              <button
-                onClick={onNavigateToDoctor}
-                className="flex items-center justify-center space-x-1.5 sm:space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition text-xs sm:text-sm flex-1 sm:flex-initial"
-              >
-                <UserRound className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>Consult Doctor</span>
-              </button>
-              {diagnosis.severity === "high" && (
-                <button className="flex items-center justify-center space-x-1.5 sm:space-x-2 px-3 py-1.5 sm:px-4 sm:py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-xs sm:text-sm flex-1 sm:flex-initial">
-                  <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span>Emergency</span>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Analysis Modal */}
+      {/* Analysis Modal — unchanged */}
       {showAnalysis && diagnosis && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                <Activity className="w-5 h-5 sm:w-6 sm:h-6" />
-                <h2 className="text-base sm:text-xl font-bold">
-                  Medical Analysis Report
-                </h2>
+            <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Activity className="w-6 h-6" />
+                <h2 className="text-xl font-bold">Medical Analysis Report</h2>
               </div>
               <button
                 onClick={() => setShowAnalysis(false)}
                 className="p-1 hover:bg-white hover:bg-opacity-20 rounded-full transition"
               >
-                <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
-              <div className="bg-gray-50 rounded-xl p-3 sm:p-4">
-                <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
-                  <User className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-500" />
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="bg-gray-50 rounded-xl p-4">
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <User className="w-5 h-5 mr-2 text-green-500" />
                   Patient Information
                 </h3>
-                <div className="grid grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
+                <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-gray-500 text-xs">Name</p>
-                    <p className="font-medium truncate">
-                      {userData.name || "N/A"}
-                    </p>
+                    <p className="font-medium">{userData.name || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-xs">Age</p>
@@ -1044,45 +1028,45 @@ case "moreSymptoms":
               </div>
 
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
-                  <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-green-500" />
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <MessageSquare className="w-5 h-5 mr-2 text-green-500" />
                   Reported Symptoms
                 </h3>
-                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                <div className="flex flex-wrap gap-2">
                   {symptoms.map((s, i) => (
                     <span
                       key={i}
-                      className="px-2.5 py-1 bg-green-100 text-green-700 rounded-full text-xs sm:text-sm"
+                      className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm"
                     >
                       {s.replace(/_/g, " ")}
                     </span>
                   ))}
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 mt-2">
+                <p className="text-sm text-gray-600 mt-2">
                   Duration: {diagnosis.days} days
                 </p>
               </div>
 
               <div>
-                <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
-                  <Stethoscope className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-indigo-500" />
+                <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <Stethoscope className="w-5 h-5 mr-2 text-indigo-500" />
                   Diagnosis
                 </h3>
-                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 sm:p-4 space-y-2">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <span className="text-base sm:text-lg font-bold text-indigo-900">
+                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-indigo-900">
                       {diagnosis.prediction}
                     </span>
                     {diagnosis.confidence && (
-                      <span className="px-2.5 py-1 bg-indigo-200 text-indigo-800 rounded-full text-xs sm:text-sm font-medium w-fit">
+                      <span className="px-3 py-1 bg-indigo-200 text-indigo-800 rounded-full text-sm font-medium">
                         {(diagnosis.confidence * 100).toFixed(1)}% confidence
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center space-x-4 text-xs sm:text-sm">
+                  <div className="flex items-center space-x-4 text-sm">
                     <div className="flex items-center space-x-1">
                       <AlertTriangle
-                        className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${
+                        className={`w-4 h-4 ${
                           diagnosis.severity === "high"
                             ? "text-red-500"
                             : diagnosis.severity === "moderate"
@@ -1100,22 +1084,17 @@ case "moreSymptoms":
 
               {diagnosis.precautions && diagnosis.precautions.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center text-sm sm:text-base">
-                    <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-500" />
+                  <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                    <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
                     Recommendations
                   </h3>
                   <ul className="space-y-2">
                     {diagnosis.precautions.map((precaution, i) => (
-                      <li
-                        key={i}
-                        className="flex items-start space-x-2 text-xs sm:text-sm"
-                      >
-                        <span className="w-5 h-5 sm:w-6 sm:h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0 font-medium text-xs">
+                      <li key={i} className="flex items-start space-x-2 text-sm">
+                        <span className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0 font-medium text-xs">
                           {i + 1}
                         </span>
-                        <span className="text-gray-700 pt-0.5">
-                          {precaution}
-                        </span>
+                        <span className="text-gray-700 pt-0.5">{precaution}</span>
                       </li>
                     ))}
                   </ul>
@@ -1123,54 +1102,53 @@ case "moreSymptoms":
               )}
 
               {diagnosis.severity === "high" && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 rounded-r-lg">
-                  <div className="flex items-start space-x-2 sm:space-x-3">
-                    <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500 flex-shrink-0 mt-0.5" />
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
+                  <div className="flex items-start space-x-3">
+                    <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="font-semibold text-red-900 mb-1 text-sm sm:text-base">
+                      <h4 className="font-semibold text-red-900 mb-1">
                         Important Notice
                       </h4>
-                      <p className="text-xs sm:text-sm text-red-700">
-                        This condition requires immediate medical attention.
-                        Please consult a healthcare professional as soon as
-                        possible.
+                      <p className="text-sm text-red-700">
+                        This condition requires immediate medical attention. Please
+                        consult a healthcare professional as soon as possible.
                       </p>
                     </div>
                   </div>
                 </div>
               )}
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2.5 sm:p-3 text-xs text-yellow-800">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800">
                 <strong>Disclaimer:</strong> This is an AI-assisted preliminary
-                analysis and should NOT replace professional medical advice.
-                Always consult qualified healthcare providers for accurate
-                diagnosis and treatment.
+                analysis and should NOT replace professional medical advice. Always
+                consult qualified healthcare providers for accurate diagnosis and
+                treatment.
               </div>
             </div>
 
-            <div className="border-t px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0 flex-shrink-0">
-              <p className="text-xs text-gray-500 text-center sm:text-left">
+            <div className="border-t px-6 py-4 bg-gray-50 flex items-center justify-between">
+              <p className="text-xs text-gray-500">
                 Generated on {new Date().toLocaleString()}
               </p>
-              <div className="flex space-x-2 sm:space-x-3">
+              <div className="flex space-x-3">
                 <button
                   onClick={() => setShowAnalysis(false)}
-                  className="flex-1 sm:flex-initial px-3 py-2 sm:px-4 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm"
+                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition text-sm"
                 >
                   Close
                 </button>
                 <button
                   onClick={onNavigateToDoctor}
-                  className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-3 py-2 sm:px-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition text-sm"
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 transition text-sm"
                 >
-                  <UserRound className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <UserRound className="w-4 h-4" />
                   <span>Consult Doctor</span>
                 </button>
                 <button
                   onClick={generatePDF}
-                  className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 px-3 py-2 sm:px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition text-sm"
+                  className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition text-sm"
                 >
-                  <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <Download className="w-4 h-4" />
                   <span>Download</span>
                 </button>
               </div>
