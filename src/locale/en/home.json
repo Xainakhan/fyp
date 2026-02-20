@@ -1,0 +1,65 @@
+{
+  "appName": "SehatHub",
+  "tagline": "Pakistan's first voice-first AI health triage platform. Describe your symptoms in Urdu or English and get instant guidance.",
+  "moduleHelperText": "Not sure where to start? Begin with a quick health interview and our AI will guide you to the right specialist.",
+
+  "badge": "Voice-First Health Triage",
+
+  "hero": {
+    "searchLabel": "Select your city and search for a doctor, specialist, or hospital",
+    "cityPlaceholder": "Select city",
+    "searchPlaceholder": "Search by doctor, specialty, hospital or disease...",
+    "findDoctorBtn": "Find Doctor",
+    "quickReasonsLabel": "Or choose from common health reasons:"
+  },
+
+  "popularReasons": {
+    "fever": "Fever & Flu",
+    "chestPain": "Chest Pain",
+    "bp": "Blood Pressure",
+    "sugar": "Diabetes / Sugar",
+    "stomach": "Stomach Pain",
+    "headache": "Headache / Migraine"
+  },
+
+  "howWeHelp": {
+    "heading": "How can we help you today?"
+  },
+
+  "features": {
+    "interview": {
+      "title": "Health Interview",
+      "desc": "Answer a few questions and get AI-powered triage guidance instantly."
+    },
+    "findDoctor": {
+      "title": "Find a Doctor",
+      "desc": "Search verified doctors, specialists, and hospitals near you."
+    },
+    "tts": {
+      "title": "Voice Assistant",
+      "desc": "Speak your symptoms in Urdu or English and get spoken guidance."
+    },
+    "healthTimeline": {
+      "title": "Health Timeline",
+      "desc": "Track your medical history, visits, and health records over time."
+    }
+  },
+
+  "quickStart": {
+    "heading": "Get Started Quickly",
+    "startInterviewBtn": "Start Health Interview",
+    "testVoiceBtn": "Test Voice Assistant"
+  },
+
+  "stats": {
+    "doctors": "Doctors",
+    "cities": "Cities",
+    "languages": "Languages",
+    "available": "Available 24/7"
+  },
+
+  "disclaimer": {
+    "title": "Medical Disclaimer",
+    "content": "SehatHub is an AI-assisted triage tool for informational purposes only. It does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical concerns."
+  }
+}

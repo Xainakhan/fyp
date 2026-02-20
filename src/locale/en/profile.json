@@ -1,0 +1,61 @@
+{
+  "sidebar": {
+    "role": "Patient",
+    "logout": "Logout"
+  },
+
+  "overview": {
+    "heading": "Welcome Back!",
+    "subheading": "Here's your health summary",
+    "upcomingAppointments": "Upcoming Appointments",
+    "quickActions": "Quick Actions",
+    "bookAppointment": "Book Appointment",
+    "findDoctors": "Find Doctors"
+  },
+
+  "appointments": {
+    "heading": "My Appointments",
+    "subheading": "View your upcoming and past appointments",
+    "viewDetails": "View Details",
+    "cancel": "Cancel",
+    "status": {
+      "confirmed": "Confirmed",
+      "pending": "Pending"
+    },
+    "type": {
+      "inPerson": "In-Person",
+      "videoCall": "Video Call"
+    }
+  },
+
+  "healthRecords": {
+    "heading": "Health Records",
+    "subheading": "View your medical records and test results",
+    "date": "Date:",
+    "doctor": "Doctor:",
+    "result": "Result:",
+    "view": "View"
+  },
+
+  "settings": {
+    "heading": "Settings",
+    "subheading": "Manage your account settings",
+    "profileInfo": {
+      "heading": "Profile Information",
+      "fullName": "Full Name",
+      "email": "Email Address",
+      "saveChanges": "Save Changes"
+    },
+    "notifications": {
+      "heading": "Notifications"
+    },
+    "password": {
+      "heading": "Change Password",
+      "current": "Current Password",
+      "currentPlaceholder": "Enter current password",
+      "new": "New Password",
+      "newPlaceholder": "Enter new password",
+      "update": "Update Password"
+    }
+  }
+}

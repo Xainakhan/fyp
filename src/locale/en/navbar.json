@@ -3,13 +3,36 @@
     "name": "SehatHub",
     "tagline": "Voice-First Health"
   },
-  "language": {
-    "switchToUrdu": "اردو",
-    "switchToEnglish": "English"
+  "emergency": {
+    "desktop": "1122",
+    "mobile": "Emergency 1122"
   },
-  "buttons": {
-    "emergency": "Emergency 1122",
-    "profile": "Profile"
+  "languageToggle": {
+    "desktop": "اردو",
+    "desktopAlt": "En",
+    "mobile": "🌐 Switch to Urdu",
+    "mobileAlt": "🌐 Switch to English",
+    "titleToUrdu": "Switch to Urdu",
+    "titleToEnglish": "Switch to English"
   },
-  "mobileHelper": "Select any feature above to navigate"
+  "profile": {
+    "label": "Profile",
+    "title": "Profile"
+  },
+  "mobileMenu": {
+    "helperText": "Select any feature above to navigate",
+    "ariaLabel": "Toggle menu"
+  },
+  "modules": {
+    "tts":            "Voice Assistant",
+    "interview":      "Health Interview",
+    "symptom":        "Symptom Checker",
+    "triage":         "AI Triage",
+    "doctor":         "Find Doctor",
+    "timeline":       "Health Timeline",
+    "findDoctor":     "Find Doctor",
+    "healthTimeline": "Health Timeline",
+    "doctors":        "Doctors",
+    "profile":        "Profile"
+  }
 }

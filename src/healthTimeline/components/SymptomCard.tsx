@@ -1,6 +1,8 @@
 import React from "react";
 import { Calendar, Clock, Edit2, Trash2 } from "lucide-react";
-import type { SymptomEntry, getSeverityColor, getSeverityDotColor } from "../../utils/healthUtils";
+import type { SymptomEntry } from "../../utils/healthUtils";
+import { getSeverityColor, getSeverityDotColor } from "../../utils/healthUtils";
+
 
 interface Props {
   entry: SymptomEntry;

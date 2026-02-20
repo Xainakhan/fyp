@@ -1,25 +1,27 @@
+// profile/components/overviewTab.tsx
+
 import React from "react";
 import { Calendar, Stethoscope } from "lucide-react";
 import { stats, upcomingAppointments } from "../../data/profileData";
+import { useTranslation } from "react-i18next";
 
 interface OverviewTabProps {
   userLanguage: string;
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({ userLanguage }) => {
+  const { t } = useTranslation("profile");
   const isUrdu = userLanguage === "ur";
 
   return (
     <div className="p-6 md:p-8">
+      {/* Heading */}
       <div className="mb-8">
-        <h2
-          className="text-3xl md:text-4xl font-bold mb-2"
-          style={{ color: "#1a6645" }}
-        >
-          {isUrdu ? "خوش آمدید!" : "Welcome Back!"}
+        <h2 className="text-3xl md:text-4xl font-bold mb-2" style={{ color: "#1a6645" }}>
+          {t("overview.heading")}
         </h2>
         <p className="text-base" style={{ color: "#4a7a60" }}>
-          {isUrdu ? "یہاں آپ کی صحت کا خلاصہ ہے" : "Here's your health summary"}
+          {t("overview.subheading")}
         </p>
       </div>
 
@@ -37,10 +39,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ userLanguage }) => {
               }}
             >
               <div className="flex items-start justify-between mb-4">
-                <div
-                  className="p-3 rounded-xl"
-                  style={{ background: "rgba(45,158,107,0.12)" }}
-                >
+                <div className="p-3 rounded-xl" style={{ background: "rgba(45,158,107,0.12)" }}>
                   <Icon className={`w-6 h-6 ${stat.color}`} />
                 </div>
               </div>
@@ -60,7 +59,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ userLanguage }) => {
       {/* Upcoming Appointments */}
       <div className="mb-8">
         <h3 className="text-2xl font-bold mb-4" style={{ color: "#1a6645" }}>
-          {isUrdu ? "آنے والی ملاقاتیں" : "Upcoming Appointments"}
+          {t("overview.upcomingAppointments")}
         </h3>
         <div className="space-y-4">
           {upcomingAppointments.map((appointment) => (
@@ -74,10 +73,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ userLanguage }) => {
             >
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h4
-                    className="text-lg font-semibold"
-                    style={{ color: "#1a6645" }}
-                  >
+                  <h4 className="text-lg font-semibold" style={{ color: "#1a6645" }}>
                     {isUrdu ? appointment.doctorNameUrdu : appointment.doctorName}
                   </h4>
                   <p className="text-sm" style={{ color: "#4a7a60" }}>
@@ -98,7 +94,6 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ userLanguage }) => {
                   {isUrdu ? appointment.statusUrdu : appointment.status}
                 </span>
               </div>
-
               <div className="flex gap-4 text-sm" style={{ color: "#4a7a60" }}>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
@@ -114,7 +109,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ userLanguage }) => {
       {/* Quick Actions */}
       <div>
         <h3 className="text-2xl font-bold mb-4" style={{ color: "#1a6645" }}>
-          {isUrdu ? "فوری اقدامات" : "Quick Actions"}
+          {t("overview.quickActions")}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
@@ -125,13 +120,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ userLanguage }) => {
               color: "#2d6e4e",
             }}
           >
-            <Calendar
-              className="w-8 h-8 mx-auto mb-2"
-              style={{ color: "#2d9e6b" }}
-            />
-            <p className="font-semibold">
-              {isUrdu ? "ملاقات بک کریں" : "Book Appointment"}
-            </p>
+            <Calendar className="w-8 h-8 mx-auto mb-2" style={{ color: "#2d9e6b" }} />
+            <p className="font-semibold">{t("overview.bookAppointment")}</p>
           </button>
           <button
             className="p-6 rounded-2xl text-center transition-all hover:shadow-md"
@@ -141,13 +131,8 @@ const OverviewTab: React.FC<OverviewTabProps> = ({ userLanguage }) => {
               color: "#2d6e4e",
             }}
           >
-            <Stethoscope
-              className="w-8 h-8 mx-auto mb-2"
-              style={{ color: "#2d9e6b" }}
-            />
-            <p className="font-semibold">
-              {isUrdu ? "ڈاکٹرز تلاش کریں" : "Find Doctors"}
-            </p>
+            <Stethoscope className="w-8 h-8 mx-auto mb-2" style={{ color: "#2d9e6b" }} />
+            <p className="font-semibold">{t("overview.findDoctors")}</p>
           </button>
         </div>
       </div>

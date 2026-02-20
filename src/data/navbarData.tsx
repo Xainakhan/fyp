@@ -37,7 +37,6 @@ export const APP_MODULES: Module[] = [
   { id: "home", name: "Home", nameUrdu: "ہوم" },
   { id: "tts", name: "Voice Conversation", nameUrdu: "آواز سے ان پٹ" },
   { id: "interview", name: "Health Interview", nameUrdu: "صحت کا انٹرویو" },
-{ id: "symptom", name: "Symptom Checker", nameUrdu: "علامات کی جانچ" },
 
   { id: "triage", name: "Health Triage", nameUrdu: "صحت کی جانچ" },
   { id: "doctor", name: "Find Doctor", nameUrdu: "ڈاکٹر تلاش کریں" },

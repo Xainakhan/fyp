@@ -1,0 +1,61 @@
+{
+  "sidebar": {
+    "role": "مریض",
+    "logout": "لاگ آؤٹ"
+  },
+
+  "overview": {
+    "heading": "خوش آمدید!",
+    "subheading": "یہاں آپ کی صحت کا خلاصہ ہے",
+    "upcomingAppointments": "آنے والی ملاقاتیں",
+    "quickActions": "فوری اقدامات",
+    "bookAppointment": "ملاقات بک کریں",
+    "findDoctors": "ڈاکٹرز تلاش کریں"
+  },
+
+  "appointments": {
+    "heading": "میری ملاقاتیں",
+    "subheading": "اپنی آنے والی اور ماضی کی ملاقاتوں کو دیکھیں",
+    "viewDetails": "تفصیلات دیکھیں",
+    "cancel": "منسوخ کریں",
+    "status": {
+      "confirmed": "تصدیق شدہ",
+      "pending": "زیر التواء"
+    },
+    "type": {
+      "inPerson": "ذاتی",
+      "videoCall": "ویڈیو کال"
+    }
+  },
+
+  "healthRecords": {
+    "heading": "صحت کے ریکارڈ",
+    "subheading": "اپنے طبی ریکارڈ اور ٹیسٹ کے نتائج دیکھیں",
+    "date": "تاریخ:",
+    "doctor": "ڈاکٹر:",
+    "result": "نتیجہ:",
+    "view": "دیکھیں"
+  },
+
+  "settings": {
+    "heading": "ترتیبات",
+    "subheading": "اپنے اکاؤنٹ کی ترتیبات کو منظم کریں",
+    "profileInfo": {
+      "heading": "پروفائل کی معلومات",
+      "fullName": "پورا نام",
+      "email": "ای میل ایڈریس",
+      "saveChanges": "تبدیلیاں محفوظ کریں"
+    },
+    "notifications": {
+      "heading": "اطلاعات"
+    },
+    "password": {
+      "heading": "پاس ورڈ تبدیل کریں",
+      "current": "موجودہ پاس ورڈ",
+      "currentPlaceholder": "موجودہ پاس ورڈ درج کریں",
+      "new": "نیا پاس ورڈ",
+      "newPlaceholder": "نیا پاس ورڈ درج کریں",
+      "update": "پاس ورڈ اپ ڈیٹ کریں"
+    }
+  }
+}

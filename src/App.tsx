@@ -9,7 +9,6 @@ import Doc from "./doctors/doctors";
 import Navbar from "./pages/navBar";
 import Footer from "./pages/footer";
 import HomePage from "./pages/homePage";
-import SymptomCheckerPage from "./pages/symptomChecker";
 import HealthInterviewPage from "./healthInterview/HealthInterview";
 import HealthTimeline from "./healthTimeline/HealthTimeline";
 // --- Profile ---
@@ -57,9 +56,6 @@ function App() {
 
       case "timeline":
         return <HealthTimeline />;
-
-      case "symptom":
-        return <SymptomCheckerPage userLanguage={userLanguage} />;
 
       case "interview":
         return (
