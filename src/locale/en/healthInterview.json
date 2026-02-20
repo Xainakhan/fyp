@@ -1,0 +1,90 @@
+{
+  "header": {
+    "title": "Health Interview",
+    "subtitle": "Answer a few structured questions to prepare a clean summary for your doctor."
+  },
+  "steps": {
+    "basic": "Basic Info",
+    "current": "Current Issue",
+    "history": "Medical History",
+    "lifestyle": "Lifestyle & Mental Health",
+    "summary": "Summary"
+  },
+  "common": {
+    "select": "Select",
+    "tap": "Tap"
+  },
+  "basic": {
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Your full name",
+    "age": "Age (years)",
+    "gender": "Gender",
+    "male": "Male",
+    "female": "Female",
+    "other": "Other",
+    "city": "City / Area",
+    "cityPlaceholder": "e.g. Lahore, Faisalabad",
+    "phone": "Contact number (optional)",
+    "phonePlaceholder": "Phone / WhatsApp number"
+  },
+  "current": {
+    "mainConcern": "What is the main problem or reason you want to talk to a doctor?",
+    "mainConcernPlaceholder": "Example: I have had chest pain and shortness of breath when walking.",
+    "duration": "Since when is this problem?",
+    "durationPlaceholder": "e.g. 3 days, 2 weeks, 6 months",
+    "pattern": "Is it getting better, worse, or staying the same?",
+    "patternPlaceholder": "e.g. Worse in last 2 days, slowly improving, no change",
+    "worseWhen": "When does it get worse? (e.g. at night, during exercise, after food)",
+    "otherSymptoms": "Any other symptoms along with this?",
+    "otherSymptomsPlaceholder": "Example: fever, cough, weight loss, vomiting, dizziness etc."
+  },
+  "history": {
+    "chronicLabel": "Do you have any of these long-term conditions? (tick all that apply)",
+    "otherConditions": "Any other important past illness, surgery, or hospital admission?",
+    "medicines": "Medicines you are currently taking (regular or as needed)",
+    "medicinesPlaceholder": "Example: Panadol 500mg, once daily. Blood pressure tablet (don't remember name).",
+    "allergies": "Allergies to any medicine, food, or other things?"
+  },
+  "lifestyle": {
+    "smoking": "Smoking / tobacco use",
+    "never": "Never",
+    "past": "Used in past",
+    "current": "Currently using",
+    "alcohol": "Alcohol or other substances",
+    "none": "None",
+    "occasionally": "Occasionally",
+    "regular": "Regularly",
+    "exercise": "Physical activity / exercise",
+    "exerciseNone": "Very little / none",
+    "exercise12": "1–2 days a week",
+    "exercise3plus": "3 or more days a week",
+    "sleep": "Average sleep per night (hours)",
+    "sleepPlaceholder": "e.g. 5–6",
+    "stress": "How is your stress level in general?",
+    "low": "Low",
+    "moderate": "Moderate",
+    "high": "High",
+    "moodNotes": "Anything about mood, anxiety, sadness, or sleep that you want the doctor to know?"
+  },
+  "summary": {
+    "hint": "Review this summary. You can show or send it to your doctor.",
+    "aiTitle": "AI Triage Summary",
+    "possibleCondition": "Possible condition",
+    "riskLevel": "Risk level",
+    "recommendation": "Recommendation",
+    "precautions": "General precautions",
+    "download": "Download Interview Summary",
+    "submit": "Submit to RoboDoc AI",
+    "submitting": "Submitting...",
+    "disclaimer": "This summary is only to help communicate with your doctor. It is not a medical certificate or diagnosis."
+  },
+  "nav": {
+    "back": "Back",
+    "next": "Next"
+  },
+  "errors": {
+    "noName": "Please enter your full name before submitting.",
+    "noSymptoms": "Please mention at least one symptom in the current problem section.",
+    "generic": "Something went wrong while submitting. Please try again."
+  }
+}

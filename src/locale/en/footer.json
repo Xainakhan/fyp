@@ -1,0 +1,30 @@
+{
+  "brand": {
+    "tagline": "Your Virtual Health"
+  },
+  "sections": {
+    "quickLinks": "Quick Links",
+    "resources": "Resources",
+    "support": "Support"
+  },
+  "quickLinks": {
+    "dashboard": "Dashboard",
+    "manageUsers": "Manage Users",
+    "manageDoctors": "Manage Doctors",
+    "manageAppointments": "Manage Appointments"
+  },
+  "resources": {
+    "articles": "Articles",
+    "faq": "FAQ",
+    "terms": "Terms of Service",
+    "privacy": "Privacy Policy"
+  },
+  "support": {
+    "contact": "Contact Us",
+    "helpCenter": "Help Center",
+    "feedback": "Feedback"
+  },
+  "bottom": {
+    "copyright": ". All rights reserved."
+  }
+}

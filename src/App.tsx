@@ -4,14 +4,14 @@ import "./App.css";
 // --- Page modules ---
 import VoiceConversation from "./pages/voiceConversation";
 import HealthTriageModule from "./pages/heathTriage";
-import Doc from "./pages/doctorsData";
+import Doc from "./doctors/doctors";
 // --- Layout components ---
 import Navbar from "./pages/navBar";
 import Footer from "./pages/footer";
 import HomePage from "./pages/homePage";
 import SymptomCheckerPage from "./pages/symptomChecker";
-import HealthInterviewPage from "./pages/healthInterview";
-import HealthTimeline from "./pages/healthTimeline";
+import HealthInterviewPage from "./healthInterview/HealthInterview";
+import HealthTimeline from "./healthTimeline/HealthTimeline";
 // --- Profile ---
 import PatientProfile from "./profile/patientProfile" ;
 // --- Background Wrapper ---

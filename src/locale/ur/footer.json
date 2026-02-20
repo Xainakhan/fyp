@@ -1,0 +1,30 @@
+{
+  "brand": {
+    "tagline": "آپ کی ورچوئل صحت"
+  },
+  "sections": {
+    "quickLinks": "فوری لنکس",
+    "resources": "وسائل",
+    "support": "سہارا"
+  },
+  "quickLinks": {
+    "dashboard": "ڈیش بورڈ",
+    "manageUsers": "صارفین کا انتظام",
+    "manageDoctors": "ڈاکٹرز کا انتظام",
+    "manageAppointments": "ملاقاتوں کا انتظام"
+  },
+  "resources": {
+    "articles": "مضامین",
+    "faq": "اکثر پوچھے گئے سوالات",
+    "terms": "سروس کی شرائط",
+    "privacy": "رازداری کی پالیسی"
+  },
+  "support": {
+    "contact": "ہم سے رابطہ کریں",
+    "helpCenter": "مدد مرکز",
+    "feedback": "رائے"
+  },
+  "bottom": {
+    "copyright": "۔ تمام حقوق محفوظ ہیں۔"
+  }
+}

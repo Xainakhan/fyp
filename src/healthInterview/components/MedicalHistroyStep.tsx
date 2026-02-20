@@ -1,0 +1,69 @@
+// healthInterview/components/MedicalHistoryStep.tsx
+import React from "react";
+import { useTranslation } from "react-i18next";
+import { CHRONIC_OPTIONS } from "./Constants";
+import type { FormData } from "./types";
+
+interface Props {
+  form: FormData;
+  setForm: React.Dispatch<React.SetStateAction<FormData>>;
+}
+
+const MedicalHistoryStep: React.FC<Props> = ({ form, setForm }) => {
+  const { t } = useTranslation("healthInterview");
+
+  const toggleChronic = (item: string) => {
+    setForm((prev) => ({
+      ...prev,
+      chronicConditions: prev.chronicConditions.includes(item)
+        ? prev.chronicConditions.filter((x) => x !== item)
+        : [...prev.chronicConditions, item],
+    }));
+  };
+
+  const setText = (key: keyof FormData) => (e: React.ChangeEvent<HTMLTextAreaElement>) =>
+    setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-xs font-semibold text-gray-600 mb-2">{t("history.chronicLabel")}</p>
+        <div className="grid md:grid-cols-2 gap-2">
+          {CHRONIC_OPTIONS.map((item) => {
+            const checked = form.chronicConditions.includes(item);
+            return (
+              <button type="button" key={item} onClick={() => toggleChronic(item)}
+                className={`flex items-center justify-between px-3 py-2 rounded-lg border text-xs text-left ${
+                  checked ? "bg-green-50 border-green-500 text-green-700" : "border-gray-200 hover:border-green-400"
+                }`}>
+                <span>{item}</span>
+                <span className="text-[10px]">{checked ? "✓" : t("common.tap")}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">{t("history.otherConditions")}</label>
+        <textarea value={form.otherConditions} onChange={setText("otherConditions")} rows={3}
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500" />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">{t("history.medicines")}</label>
+        <textarea value={form.currentMedicines} onChange={setText("currentMedicines")} rows={3}
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
+          placeholder={t("history.medicinesPlaceholder")} />
+      </div>
+
+      <div>
+        <label className="block text-xs font-semibold text-gray-600 mb-1">{t("history.allergies")}</label>
+        <textarea value={form.allergies} onChange={setText("allergies")} rows={2}
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500" />
+      </div>
+    </div>
+  );
+};
+
+export default MedicalHistoryStep;

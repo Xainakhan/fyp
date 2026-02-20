@@ -1,0 +1,99 @@
+{
+  "header": {
+    "title": "ہیلتھ کیئر ماہرین تلاش کریں",
+    "subtitle": "پاکستان بھر میں قابل ڈاکٹرز سے رابطہ کریں"
+  },
+  "filters": {
+    "title": "ڈاکٹرز کو سرچ اور فلٹر کریں",
+    "filters": "فلٹرز",
+    "searchPlaceholder": "ڈاکٹر کے نام، ہسپتال، یا تخصص کے ذریعے تلاش کریں...",
+    "specialty": "طبی تخصص",
+    "allSpecialties": "تمام تخصصات",
+    "location": "مقام/شہر",
+    "allCities": "تمام شہر",
+    "sortBy": "ترتیب دیں",
+    "sort": {
+      "rating": "سب سے زیادہ ریٹنگ",
+      "distance": "سب سے قریب پہلے",
+      "experience": "سب سے زیادہ تجربہ کار",
+      "priceLow": "کم سے کم فیس",
+      "priceHigh": "سب سے زیادہ فیس",
+      "reviews": "سب سے زیادہ جائزے"
+    },
+    "feeRange": "مشاورے کی فیس کی حد",
+    "to": "سے",
+    "additionalFilters": "اضافی فلٹرز",
+    "onlineOnly": "آن لائن مشاورہ دستیاب",
+    "verifiedOnly": "صرف تصدیق شدہ ڈاکٹرز",
+    "availableToday": "آج دستیاب"
+  },
+  "location": {
+    "findNearest": "قریب ترین ڈاکٹرز تلاش کریں",
+    "enabled": "مقام فعال ہے - قریب ترین ڈاکٹرز دکھائے جا رہے ہیں",
+    "disabled": "اپنے قریب کے ڈاکٹرز تلاش کرنے کے لیے مقام کو فعال کریں",
+    "useMyLocation": "میرا مقام استعمال کریں",
+    "getting": "مقام حاصل کر رہے ہیں...",
+    "hideMap": "نقشہ چھپائیں",
+    "showMap": "نقشہ دکھائیں",
+    "radius": "دائرہ",
+    "nearbyCount": "آپ کے قریب ڈاکٹرز ({{count}})",
+    "withinRadius": "{{radius}} کلومیٹر کے اندر",
+    "viewAll": "تمام {{count}} قریبی ڈاکٹرز دیکھیں"
+  },
+  "map": {
+    "title": "انٹرایکٹو نقشہ",
+    "center": "نقشہ کا مرکز",
+    "yourLocation": "آپ کا مقام",
+    "note": "حقیقی implementation میں، یہ ڈاکٹر کے مقامات کے ساتھ ایک interactive map دکھائے گا"
+  },
+  "card": {
+    "verified": "تصدیق شدہ",
+    "reviews": "جائزے",
+    "onlineAvailable": "آن لائن دستیاب",
+    "experience": "تجربہ",
+    "kmAway": "کلومیٹر دور",
+    "consultation": "مشاورہ",
+    "specializations": "تخصصات",
+    "availableDays": "دستیاب دن",
+    "languages": "زبانیں",
+    "viewProfile": "پروفائل دیکھیں",
+    "callNow": "ابھی کال کریں",
+    "bookAppointment": "ملاقات بک کریں",
+    "onlineConsult": "آن لائن مشاورہ",
+    "getDirections": "سمت حاصل کریں",
+    "view": "دیکھیں"
+  },
+  "results": {
+    "title": "تلاش کے نتائج",
+    "noResults": "کوئی ڈاکٹر نہیں ملا",
+    "noResultsHint": "اپنے تلاش کے معیار یا فلٹرز کو تبدیل کرنے کی کوشش کریں"
+  },
+  "specialty": {
+    "browseTitle": "طبی تخصص کے ذریعے براؤز کریں",
+    "doctors": "ڈاکٹرز"
+  },
+  "emergency": {
+    "title": "ایمرجنسی طبی رابطے",
+    "services": "ایمرجنسی سروسز",
+    "247": "24/7 ایمرجنسی",
+    "poison": "زہر کنٹرول",
+    "poisonHelp": "زہر مدد",
+    "ambulance": "ایمبولینس",
+    "medTransport": "طبی نقل و حمل",
+    "police": "پولیس",
+    "emergencyPolice": "ایمرجنسی پولیس"
+  },
+  "modal": {
+    "title": "ڈاکٹر پروفائل",
+    "qualification": "قابلیت",
+    "experience": "تجربہ",
+    "hospital": "ہسپتال",
+    "location": "مقام",
+    "fee": "فیس",
+    "phone": "فون",
+    "online": "آن لائن",
+    "address": "پتہ",
+    "available": "دستیاب",
+    "notAvailable": "دستیاب نہیں"
+  }
+}

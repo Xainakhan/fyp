@@ -1,0 +1,101 @@
+{
+  "header": {
+    "title": "Health Timeline",
+    "subtitle": "Track your symptoms over time and see pattern-based insights (not diagnosis)."
+  },
+  "aiAnalysis": {
+    "title": "AI Health Analysis",
+    "recommendation": "Recommendation:"
+  },
+  "risk": {
+    "low": "LOW RISK",
+    "medium": "MEDIUM RISK",
+    "high": "HIGH RISK"
+  },
+  "prediction": {
+    "noSymptoms": "No symptoms added yet. Add entries to see pattern and risk.",
+    "noSymptomsRecommendation": "If you feel unwell, you should still talk to a real doctor.",
+    "severeMessage": "Your timeline includes at least one severe symptom over about {{days}} day(s).",
+    "moderateMessage": "You have multiple moderate or long-lasting symptoms over about {{days}} day(s).",
+    "mildMessage": "Current symptoms appear mild with limited duration (about {{days}} day(s)).",
+    "highRecommendation": "Seek urgent medical care or call emergency services if symptoms worsen.",
+    "mediumRecommendation": "Consult a General Physician within 24–48 hours for proper examination.",
+    "lowRecommendation": "If symptoms persist, get a routine check-up with your doctor."
+  },
+  "possibleConditions": {
+    "title": "Possible Conditions (Not a Diagnosis)",
+    "disclaimer": "These suggestions are generated from simple rules based on your symptom timeline. They are only for education and must NOT replace a real doctor's opinion.",
+    "likely": {
+      "low": "LOW LIKELY",
+      "medium": "MEDIUM LIKELY",
+      "high": "HIGH LIKELY"
+    }
+  },
+  "diseases": {
+    "viral": {
+      "name": "Viral infection (flu-like illness)",
+      "reason": "Fever with body aches over a few days can fit a viral infection pattern.",
+      "urgencyNote": "If fever is high, continues more than 3 days, or you feel very weak, you should see a doctor urgently."
+    },
+    "headache": {
+      "name": "Headache disorder (tension / migraine type)",
+      "reason": "Isolated headache without other red-flag signs can fit a primary headache pattern.",
+      "urgencyNote": "If headache is sudden, worst-ever, or with weakness, confusion or vision changes, treat as emergency."
+    },
+    "cardiac": {
+      "name": "Possible heart-related chest pain (angina type)",
+      "reason": "Chest pain together with shortness of breath is concerning for heart or lung causes.",
+      "urgencyNote": "If pain is severe, crushing, or with sweating/nausea, seek emergency help immediately (e.g. 1122)."
+    },
+    "anxiety": {
+      "name": "Stress / anxiety component",
+      "reason": "Reported anxiety alongside physical symptoms can amplify how symptoms feel.",
+      "urgencyNote": "Mental health support plus proper medical review is usually most helpful."
+    },
+    "unspecified": {
+      "name": "Non-specific symptom pattern",
+      "reason": "This combination of symptoms is too general for even a rough guess inside the app.",
+      "urgencyNote": "A proper in-person doctor assessment is needed to decide what this might be."
+    }
+  },
+  "timeline": {
+    "title": "Symptom Timeline",
+    "addButton": "Add New Symptom",
+    "closeForm": "Close Form",
+    "noSymptoms": "No symptoms added yet. Click \"Add New Symptom\" to start your timeline.",
+    "location": "Location:",
+    "relatedSymptoms": "Related Symptoms:"
+  },
+  "form": {
+    "editingNotice": "Editing existing symptom. Make changes and click",
+    "updateButton": "Update Symptom",
+    "cancelEdit": "Cancel edit",
+    "symptomName": "Symptom name",
+    "symptomPlaceholder": "e.g. Chest pain, Headache",
+    "severity": "Severity",
+    "mild": "Mild",
+    "moderate": "Moderate",
+    "severe": "Severe",
+    "date": "Date",
+    "duration": "Duration",
+    "durationPlaceholder": "e.g. 2 days",
+    "bodyPart": "Body part / area",
+    "bodyPartPlaceholder": "e.g. chest, head",
+    "relatedSymptoms": "Related symptoms (comma separated)",
+    "relatedPlaceholder": "e.g. shortness of breath, dizziness",
+    "saveButton": "Save Symptom"
+  },
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "stats": {
+    "totalSymptoms": "Total Symptoms",
+    "timelineDuration": "Timeline Duration",
+    "severityTrend": "Severity Trend",
+    "worsening": "↑ Worsening",
+    "improving": "↓ Improving",
+    "stable": "→ Stable",
+    "notEnoughData": "Not enough data"
+  }
+}

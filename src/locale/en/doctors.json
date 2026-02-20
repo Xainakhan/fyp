@@ -1,0 +1,99 @@
+{
+  "header": {
+    "title": "Find Healthcare Specialists",
+    "subtitle": "Connect with qualified doctors across Pakistan"
+  },
+  "filters": {
+    "title": "Search & Filter Doctors",
+    "filters": "Filters",
+    "searchPlaceholder": "Search by doctor name, hospital, or specialization...",
+    "specialty": "Medical Specialty",
+    "allSpecialties": "All Specialties",
+    "location": "Location/City",
+    "allCities": "All Cities",
+    "sortBy": "Sort By",
+    "sort": {
+      "rating": "Highest Rating",
+      "distance": "Nearest First",
+      "experience": "Most Experienced",
+      "priceLow": "Lowest Fee",
+      "priceHigh": "Highest Fee",
+      "reviews": "Most Reviews"
+    },
+    "feeRange": "Consultation Fee Range",
+    "to": "to",
+    "additionalFilters": "Additional Filters",
+    "onlineOnly": "Online Consultation Available",
+    "verifiedOnly": "Verified Doctors Only",
+    "availableToday": "Available Today"
+  },
+  "location": {
+    "findNearest": "Find Nearest Doctors",
+    "enabled": "Location enabled - showing nearest doctors",
+    "disabled": "Enable location to find doctors near you",
+    "useMyLocation": "Use My Location",
+    "getting": "Getting Location...",
+    "hideMap": "Hide Map",
+    "showMap": "Show Map",
+    "radius": "Radius",
+    "nearbyCount": "Doctors Near You ({{count}})",
+    "withinRadius": "Within {{radius}} km",
+    "viewAll": "View all {{count}} nearby doctors"
+  },
+  "map": {
+    "title": "Interactive Map View",
+    "center": "Map Center",
+    "yourLocation": "Your Location",
+    "note": "In a real implementation, this would show an interactive map with doctor locations"
+  },
+  "card": {
+    "verified": "Verified",
+    "reviews": "reviews",
+    "onlineAvailable": "Online Available",
+    "experience": "experience",
+    "kmAway": "km away",
+    "consultation": "consultation",
+    "specializations": "Specializations",
+    "availableDays": "Available Days",
+    "languages": "Languages",
+    "viewProfile": "View Profile",
+    "callNow": "Call Now",
+    "bookAppointment": "Book Appointment",
+    "onlineConsult": "Online Consult",
+    "getDirections": "Get Directions",
+    "view": "View"
+  },
+  "results": {
+    "title": "Search Results",
+    "noResults": "No doctors found",
+    "noResultsHint": "Try adjusting your search criteria or filters"
+  },
+  "specialty": {
+    "browseTitle": "Browse by Medical Specialty",
+    "doctors": "doctors"
+  },
+  "emergency": {
+    "title": "Emergency Medical Contacts",
+    "services": "Emergency Services",
+    "247": "24/7 Emergency",
+    "poison": "Poison Control",
+    "poisonHelp": "Poison Help",
+    "ambulance": "Ambulance",
+    "medTransport": "Medical Transport",
+    "police": "Police",
+    "emergencyPolice": "Emergency Police"
+  },
+  "modal": {
+    "title": "Doctor Profile",
+    "qualification": "Qualification",
+    "experience": "Experience",
+    "hospital": "Hospital",
+    "location": "Location",
+    "fee": "Fee",
+    "phone": "Phone",
+    "online": "Online",
+    "address": "Address",
+    "available": "Available",
+    "notAvailable": "Not Available"
+  }
+}

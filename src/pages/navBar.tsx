@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { APP_MODULES } from "../data/navbarData";
 import { Hospital, Menu, X, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface NavbarProps {
   currentModule: string;
@@ -17,6 +18,7 @@ const Navbar: React.FC<NavbarProps> = ({
   setUserLanguage,
 }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const { i18n } = useTranslation("navbar"); // ✅ gives us i18n.changeLanguage
   const isUrdu = userLanguage === "ur";
 
   const toggleMobile = () => setIsMobileOpen((prev) => !prev);
@@ -39,6 +41,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const handleLanguageToggle = (closeMobile = false) => {
     const newLang = userLanguage === "en" ? "ur" : "en";
     setUserLanguage(newLang);
+    i18n.changeLanguage(newLang); // ✅ THIS was the missing line
     document.documentElement.dir = newLang === "ur" ? "rtl" : "ltr";
     document.documentElement.lang = newLang;
     if (closeMobile) setIsMobileOpen(false);
@@ -96,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({
               🚨 {isUrdu ? "ایمرجنسی" : "1122"}
             </a>
 
-            {/* Language Toggle — compact icon button */}
+            {/* Language Toggle */}
             <button
               onClick={() => handleLanguageToggle()}
               className="hidden sm:flex items-center justify-center px-3 h-9 bg-white/70 hover:bg-white/90 rounded-full text-sm font-bold text-gray-800 transition-all shadow-sm"
