@@ -5,7 +5,7 @@ import {
   APP_FEATURES,
   APP_STATISTICS,
   APP_TEXT,
-} from "../pages/navbarData";
+} from "../data/navbarData";
 
 import { MdPsychology, MdRecordVoiceOver } from "react-icons/md";
 import { Search, MapPin, ChevronDown } from "lucide-react";

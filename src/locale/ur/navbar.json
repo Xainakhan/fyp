@@ -1,0 +1,15 @@
+{
+  "brand": {
+    "name": "سیہت ہب",
+    "tagline": "آواز پر مبنی صحت"
+  },
+  "language": {
+    "switchToUrdu": "اردو",
+    "switchToEnglish": "English"
+  },
+  "buttons": {
+    "emergency": "ایمرجنسی 1122",
+    "profile": "پروفائل"
+  },
+  "mobileHelper": "کسی بھی فیچر پر جانے کے لیے اوپر سے منتخب کریں"
+}

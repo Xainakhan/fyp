@@ -1,0 +1,15 @@
+{
+  "brand": {
+    "name": "SehatHub",
+    "tagline": "Voice-First Health"
+  },
+  "language": {
+    "switchToUrdu": "اردو",
+    "switchToEnglish": "English"
+  },
+  "buttons": {
+    "emergency": "Emergency 1122",
+    "profile": "Profile"
+  },
+  "mobileHelper": "Select any feature above to navigate"
+}

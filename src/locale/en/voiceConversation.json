@@ -1,0 +1,65 @@
+{
+  "header": {
+    "title": "Voice Health Assistant",
+    "subtitle": "Talk to me using your voice. I'll give basic health guidance, track emotional tone, and help you navigate the app."
+  },
+  "empty": {
+    "prompt": "Press the microphone button to start talking.",
+    "hint": "You can say: \"Open symptom checker\", \"Find doctor in Lahore\", \"Scroll down\"."
+  },
+  "status": {
+    "listening": "🎤 Listening...",
+    "speaking": "🔊 Speaking...",
+    "processing": "⏳ Processing...",
+    "idle": "Press the microphone to start talking.",
+    "thinking": "Thinking...",
+    "listeningInline": "Listening..."
+  },
+  "emotion": {
+    "title": "Your Overall Emotional Tone",
+    "disclaimer": "This is an approximate emotional analysis, not a clinical diagnosis.",
+    "initial": "I'm still learning your emotional tone. You can talk freely and I'll adapt.",
+    "learning": "I'm still learning your emotional tone. Keep talking, and I'll adapt.",
+    "positive": "Overall you sound relatively hopeful and positive.",
+    "anxious": "You seem a little worried. I'll keep things calm and reassuring.",
+    "sad": "Your tone sounds a bit low or sad. I'll respond gently with support.",
+    "angry": "You sound frustrated. I'll stay calm and help you through it.",
+    "neutral": "Your tone seems mostly neutral. I'll keep explanations clear and balanced."
+  },
+  "commands": {
+    "title": "Example Voice Commands",
+    "disclaimer": "This feature is for general information and app navigation only. Always consult a qualified doctor for diagnosis and treatment."
+  },
+  "ai": {
+    "greeting": "Hi, I'm your AI health assistant. How can I support you today?",
+    "howAreYou": "I'm doing well, thank you! I'm here to help you with any health-related questions.",
+    "fever": "You mentioned fever, which can be concerning. If your fever lasts more than 3 days, is very high, or you have trouble breathing, chest pain, severe weakness, or confusion, you should contact a doctor or visit emergency services. At home, stay hydrated, rest, and avoid starting any new medicine without medical advice.",
+    "pain": "You mentioned pain. To understand it properly, we usually look at the location, intensity, duration, and associated symptoms. If the pain is very severe, sudden, or affects your breathing, speech, or movement, please seek emergency medical care immediately.",
+    "headache": "Headaches can have many causes like tension, lack of sleep, dehydration, or migraine. If the headache is sudden and very severe, or comes with blurred vision, difficulty speaking, numbness, or fever, please see a doctor urgently.",
+    "mentalHealth": "You've mentioned your emotional state, which is very important. If you are feeling ongoing anxiety, sadness, or stress, speaking with a mental health professional or counselor can really help. You're not alone, and these feelings are common and treatable. If you ever feel at risk of harming yourself, please contact a trusted person or an emergency helpline immediately.",
+    "symptom": "Please tell me when the problem started, where you feel it, how intense it is, and if it has happened before. The more details you share, the better general guidance I can give — but remember, I can't replace a real doctor for diagnosis.",
+    "fallback": "I'm trying to understand your situation. Please describe your condition, symptoms, or question in a bit more detail and I'll guide you with general information and next steps. Remember, I cannot replace a real doctor for diagnosis or treatment."
+  },
+  "navigation": {
+    "openingSymptom": "Opening the symptom checker.",
+    "openingDoctor": "Opening the doctor finder.",
+    "openingInterview": "Starting the health interview.",
+    "openingTriage": "Opening the health triage module.",
+    "goingHome": "Going back to the home screen.",
+    "scrollDown": "Scrolling down.",
+    "scrollUp": "Scrolling up.",
+    "stopped": "Okay, I've stopped now."
+  },
+  "errors": {
+    "noSpeech": "No speech detected. Please try again.",
+    "audioCapture": "Microphone not available. Please check permissions.",
+    "notAllowed": "Microphone access denied. Please allow microphone access.",
+    "generic": "Speech recognition error:",
+    "notInitialized": "Speech recognition not initialized",
+    "failedStart": "Failed to start listening",
+    "failedInit": "Failed to initialize speech recognition",
+    "noSynthesis": "Speech synthesis is not supported in this browser",
+    "noRecognition": "Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari over HTTPS.",
+    "failedProcess": "Failed to process your message. Please try again."
+  }
+}
