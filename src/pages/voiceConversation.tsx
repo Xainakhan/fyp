@@ -27,17 +27,41 @@ interface VoiceConversationProps {
 
 const detectEmotionFromText = (text: string): EmotionLabel => {
   const t = text.toLowerCase();
-  const positiveWords = ["thank", "good", "great", "relieved", "better", "fine", "okay", "shukar"];
-  const anxiousWords = ["worried", "scared", "anxious", "nervous", "panic", "tension"];
+  const positiveWords = [
+    "thank",
+    "good",
+    "great",
+    "relieved",
+    "better",
+    "fine",
+    "okay",
+    "shukar",
+  ];
+  const anxiousWords = [
+    "worried",
+    "scared",
+    "anxious",
+    "nervous",
+    "panic",
+    "tension",
+  ];
   const sadWords = ["sad", "depressed", "crying", "hopeless", "down", "dukhi"];
-  const angryWords = ["angry", "upset", "frustrated", "annoyed", "gussa", "irritated"];
+  const angryWords = [
+    "angry",
+    "upset",
+    "frustrated",
+    "annoyed",
+    "gussa",
+    "irritated",
+  ];
 
   if (positiveWords.some((w) => t.includes(w))) return "positive";
   if (anxiousWords.some((w) => t.includes(w))) return "anxious";
   if (sadWords.some((w) => t.includes(w))) return "sad";
   if (angryWords.some((w) => t.includes(w))) return "angry";
   if (t.includes("?")) return "anxious";
-  if (t.includes("pain") || t.includes("hurt") || t.includes("dard")) return "sad";
+  if (t.includes("pain") || t.includes("hurt") || t.includes("dard"))
+    return "sad";
   return "neutral";
 };
 
@@ -68,7 +92,9 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
 
   useEffect(() => {
     initializeSpeechServices();
-    return () => { cleanup(); };
+    return () => {
+      cleanup();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userLanguage]);
 
@@ -87,11 +113,18 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
     }
     const lastTen = emotionHistory.slice(-10);
     const counts: Record<EmotionLabel, number> = {
-      positive: 0, negative: 0, neutral: 0, anxious: 0, sad: 0, angry: 0,
+      positive: 0,
+      negative: 0,
+      neutral: 0,
+      anxious: 0,
+      sad: 0,
+      angry: 0,
     };
-    lastTen.forEach((e) => { counts[e] = (counts[e] || 0) + 1; });
+    lastTen.forEach((e) => {
+      counts[e] = (counts[e] || 0) + 1;
+    });
     const dominant = (Object.keys(counts) as EmotionLabel[]).reduce((a, b) =>
-      counts[b] > counts[a] ? b : a
+      counts[b] > counts[a] ? b : a,
     );
     setEmotionalSummary(t(`emotion.${dominant}`));
   }, [emotionHistory, t]);
@@ -100,7 +133,8 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
 
   const initializeSpeechServices = () => {
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      (window as any).SpeechRecognition ||
+      (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setError(t("errors.noRecognition"));
@@ -115,15 +149,21 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
       recognition.lang = userLanguage === "ur" ? "ur-PK" : "en-US";
       recognition.maxAlternatives = 1;
 
-      recognition.onstart = () => { setIsListening(true); setError(null); };
+      recognition.onstart = () => {
+        setIsListening(true);
+        setError(null);
+      };
 
       recognition.onresult = (event: any) => {
         let finalTranscript = "";
         let interimTranscript = "";
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) { finalTranscript += transcript; }
-          else { interimTranscript += transcript; }
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
         }
         if (finalTranscript) {
           setCurrentTranscript("");
@@ -136,14 +176,19 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
       recognition.onerror = (event: any) => {
         console.error("Speech recognition error:", event.error);
         if (event.error === "no-speech") setError(t("errors.noSpeech"));
-        else if (event.error === "audio-capture") setError(t("errors.audioCapture"));
-        else if (event.error === "not-allowed") setError(t("errors.notAllowed"));
+        else if (event.error === "audio-capture")
+          setError(t("errors.audioCapture"));
+        else if (event.error === "not-allowed")
+          setError(t("errors.notAllowed"));
         else setError(`${t("errors.generic")} ${event.error}`);
         setIsListening(false);
         setCurrentTranscript("");
       };
 
-      recognition.onend = () => { setIsListening(false); setCurrentTranscript(""); };
+      recognition.onend = () => {
+        setIsListening(false);
+        setCurrentTranscript("");
+      };
     } catch (err) {
       console.error("Error initializing speech recognition:", err);
       setError(t("errors.failedInit"));
@@ -156,7 +201,11 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
 
   const cleanup = () => {
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch (err) { console.log(err); }
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        console.log(err);
+      }
     }
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
   };
@@ -164,7 +213,10 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
   // ---------------- LISTEN / SPEAK CONTROL ----------------
 
   const startListening = () => {
-    if (!recognitionRef.current) { setError(t("errors.notInitialized")); return; }
+    if (!recognitionRef.current) {
+      setError(t("errors.notInitialized"));
+      return;
+    }
     if (isListening) return;
     try {
       setCurrentTranscript("");
@@ -174,7 +226,9 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
       console.error("Error starting recognition:", err);
       if (err.message && err.message.includes("already started")) {
         recognitionRef.current.stop();
-        setTimeout(() => { recognitionRef.current.start(); }, 100);
+        setTimeout(() => {
+          recognitionRef.current.start();
+        }, 100);
       } else {
         setError(t("errors.failedStart"));
       }
@@ -183,13 +237,20 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
 
   const stopListening = () => {
     if (recognitionRef.current && isListening) {
-      try { recognitionRef.current.stop(); } catch (err) { console.error(err); }
+      try {
+        recognitionRef.current.stop();
+      } catch (err) {
+        console.error(err);
+      }
     }
   };
 
   const speakText = async (text: string, language: string): Promise<void> => {
     return new Promise((resolve, reject) => {
-      if (!("speechSynthesis" in window)) { reject(new Error("Speech synthesis not available")); return; }
+      if (!("speechSynthesis" in window)) {
+        reject(new Error("Speech synthesis not available"));
+        return;
+      }
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language === "ur" ? "ur-PK" : "en-US";
@@ -197,14 +258,26 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => { setIsSpeaking(false); resolve(); };
-      utterance.onerror = (event) => { console.error(event); setIsSpeaking(false); reject(new Error("Speech synthesis error")); };
-      setTimeout(() => { window.speechSynthesis.speak(utterance); }, 100);
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        resolve();
+      };
+      utterance.onerror = (event) => {
+        console.error(event);
+        setIsSpeaking(false);
+        reject(new Error("Speech synthesis error"));
+      };
+      setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+      }, 100);
     });
   };
 
   const stopSpeaking = () => {
-    if ("speechSynthesis" in window) { window.speechSynthesis.cancel(); setIsSpeaking(false); }
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
   };
 
   // ---------------- VOICE COMMANDS ----------------
@@ -217,7 +290,11 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
       await speakText(t("navigation.openingSymptom"), userLanguage);
       return true;
     }
-    if (tl.includes("find doctor") || tl.includes("doctor in") || tl.includes("open doctor")) {
+    if (
+      tl.includes("find doctor") ||
+      tl.includes("doctor in") ||
+      tl.includes("open doctor")
+    ) {
       setCurrentModule && setCurrentModule("doctor");
       await speakText(t("navigation.openingDoctor"), userLanguage);
       return true;
@@ -227,7 +304,11 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
       await speakText(t("navigation.openingInterview"), userLanguage);
       return true;
     }
-    if (tl.includes("start triage") || tl.includes("chatbot") || tl.includes("assessment")) {
+    if (
+      tl.includes("start triage") ||
+      tl.includes("chatbot") ||
+      tl.includes("assessment")
+    ) {
       setCurrentModule && setCurrentModule("triage");
       await speakText(t("navigation.openingTriage"), userLanguage);
       return true;
@@ -262,19 +343,43 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
     await new Promise((resolve) => setTimeout(resolve, 600));
     const tl = userText.toLowerCase();
 
-    if (tl.includes("hello") || tl.includes("hi") || tl.includes("salam") || tl.includes("assalam") || tl.includes("aoa"))
+    if (
+      tl.includes("hello") ||
+      tl.includes("hi") ||
+      tl.includes("salam") ||
+      tl.includes("assalam") ||
+      tl.includes("aoa")
+    )
       return t("ai.greeting");
-    if (tl.includes("how are you") || tl.includes("kese ho") || tl.includes("how r u"))
+    if (
+      tl.includes("how are you") ||
+      tl.includes("kese ho") ||
+      tl.includes("how r u")
+    )
       return t("ai.howAreYou");
     if (tl.includes("fever") || tl.includes("bukhār") || tl.includes("bukhar"))
       return t("ai.fever");
     if (tl.includes("pain") || tl.includes("dard") || tl.includes("hurt"))
       return t("ai.pain");
-    if (tl.includes("headache") || tl.includes("sar dard") || tl.includes("migraine"))
+    if (
+      tl.includes("headache") ||
+      tl.includes("sar dard") ||
+      tl.includes("migraine")
+    )
       return t("ai.headache");
-    if (tl.includes("anxious") || tl.includes("anxiety") || tl.includes("depressed") || tl.includes("sad") || tl.includes("tension"))
+    if (
+      tl.includes("anxious") ||
+      tl.includes("anxiety") ||
+      tl.includes("depressed") ||
+      tl.includes("sad") ||
+      tl.includes("tension")
+    )
       return t("ai.mentalHealth");
-    if (tl.includes("symptom") || tl.includes("problem") || tl.includes("issue"))
+    if (
+      tl.includes("symptom") ||
+      tl.includes("problem") ||
+      tl.includes("issue")
+    )
       return t("ai.symptom");
 
     return t("ai.fallback");
@@ -300,7 +405,10 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
 
     try {
       const commandHandled = await handleVoiceCommands(text);
-      if (commandHandled) { setIsProcessing(false); return; }
+      if (commandHandled) {
+        setIsProcessing(false);
+        return;
+      }
 
       const aiResponse = await getAIResponse(text);
       const aiMessage: Message = {
@@ -341,10 +449,8 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
     <div className="min-h-screen w-full bg-gradient-to-b from-sky-50 via-green-50 to-indigo-100">
       <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6 py-6 sm:py-10">
         <div className="grid gap-6 lg:grid-cols-[2.1fr,1.1fr]">
-
           {/* LEFT: Conversation Card */}
           <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-xl border border-white/60 flex flex-col min-h-[480px] sm:min-h-[560px] transition-shadow duration-200 hover:shadow-2xl">
-
             {/* Header */}
             <div className="px-5 sm:px-7 py-4 sm:py-5 border-b border-green-50 bg-gradient-to-r from-green-600 to-indigo-600 text-white rounded-t-3xl">
               <h2 className="text-lg sm:text-xl font-semibold mb-1 flex items-center gap-2">
@@ -371,17 +477,26 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
                   <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-100 text-green-600 mb-4 shadow-inner animate-pulse">
                     <Mic className="w-8 h-8" />
                   </div>
-                  <p className="mb-2 text-sm sm:text-base">{t("empty.prompt")}</p>
-                  <p className="text-[11px] sm:text-xs text-gray-400">{t("empty.hint")}</p>
+                  <p className="mb-2 text-sm sm:text-base">
+                    {t("empty.prompt")}
+                  </p>
+                  <p className="text-[11px] sm:text-xs text-gray-400">
+                    {t("empty.hint")}
+                  </p>
                 </div>
               ) : (
                 messages.map((message) => (
-                  <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[80%] sm:max-w-sm lg:max-w-md px-4 py-3 rounded-2xl text-sm sm:text-[15px] leading-relaxed transition-all duration-150 ${
-                      message.isUser
-                        ? "bg-green-600 text-white shadow-md translate-y-[1px]"
-                        : "bg-white text-gray-800 border border-gray-100 shadow-sm"
-                    }`}>
+                  <div
+                    key={message.id}
+                    className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[80%] sm:max-w-sm lg:max-w-md px-4 py-3 rounded-2xl text-sm sm:text-[15px] leading-relaxed transition-all duration-150 ${
+                        message.isUser
+                          ? "bg-green-600 text-white shadow-md translate-y-[1px]"
+                          : "bg-white text-gray-800 border border-gray-100 shadow-sm"
+                      }`}
+                    >
                       <p className="whitespace-pre-line">{message.text}</p>
                       <p className="text-[10px] opacity-70 mt-1">
                         {message.timestamp.toLocaleTimeString()}
@@ -396,7 +511,9 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
                 <div className="flex justify-end">
                   <div className="max-w-[80%] sm:max-w-sm lg:max-w-md px-4 py-3 rounded-2xl bg-green-100 text-green-900 border-2 border-green-300 shadow-sm">
                     <p className="text-sm italic">{currentTranscript}</p>
-                    <p className="text-[11px] opacity-70 mt-1">{t("status.listeningInline")}</p>
+                    <p className="text-[11px] opacity-70 mt-1">
+                      {t("status.listeningInline")}
+                    </p>
                   </div>
                 </div>
               )}
@@ -417,7 +534,6 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
             {/* Controls */}
             <div className="px-4 sm:px-6 py-4 border-t bg-white/80 rounded-b-3xl">
               <div className="flex items-center justify-center gap-3 sm:gap-4">
-
                 {/* Mic */}
                 <button
                   onClick={isListening ? stopListening : startListening}
@@ -428,7 +544,11 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
                       : "bg-green-600 hover:bg-green-700 shadow-[0_10px_25px_rgba(37,99,235,0.35)]"
                   }`}
                 >
-                  {isListening ? <Square className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                  {isListening ? (
+                    <Square className="w-6 h-6" />
+                  ) : (
+                    <Mic className="w-6 h-6" />
+                  )}
                 </button>
 
                 {/* Stop Speaking */}
@@ -458,10 +578,10 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
                   {isListening
                     ? t("status.listening")
                     : isSpeaking
-                    ? t("status.speaking")
-                    : isProcessing
-                    ? t("status.processing")
-                    : t("status.idle")}
+                      ? t("status.speaking")
+                      : isProcessing
+                        ? t("status.processing")
+                        : t("status.idle")}
                 </p>
               </div>
             </div>
@@ -469,15 +589,18 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
 
           {/* RIGHT: Emotion + Tips */}
           <div className="space-y-4 lg:space-y-5">
-
             {/* Emotion Summary */}
             <div className="bg-green-50/80 border border-green-100 rounded-2xl p-4 sm:p-5 shadow-sm">
               <h3 className="text-sm sm:text-base font-semibold text-green-900 mb-1.5 flex items-center gap-2">
                 <Info className="w-4 h-4 text-green-500" />
                 {t("emotion.title")}
               </h3>
-              <p className="text-xs sm:text-sm text-green-800 leading-relaxed">{emotionalSummary}</p>
-              <p className="text-[10px] sm:text-[11px] text-green-500 mt-2">{t("emotion.disclaimer")}</p>
+              <p className="text-xs sm:text-sm text-green-800 leading-relaxed">
+                {emotionalSummary}
+              </p>
+              <p className="text-[10px] sm:text-[11px] text-green-500 mt-2">
+                {t("emotion.disclaimer")}
+              </p>
             </div>
 
             {/* Instructions */}
@@ -487,13 +610,15 @@ const VoiceConversation: React.FC<VoiceConversationProps> = ({
                 {t("commands.title")}
               </h3>
               <ul className="space-y-1.5 text-xs sm:text-sm text-gray-700">
-                <li>• "Open symptom checker"</li>
-                <li>• "Find doctor in Lahore"</li>
-                <li>• "Start interview"</li>
-                <li>• "Scroll down" / "Scroll up"</li>
-                <li>• "Stop" / "Ruk jao"</li>
+                <li>• "{t("commands.list.symptom")}"</li>
+                <li>• "{t("commands.list.doctor")}"</li>
+                <li>• "{t("commands.list.interview")}"</li>
+                <li>• "{t("commands.list.scroll")}"</li>
+                <li>• "{t("commands.list.stop")}"</li>
               </ul>
-              <p className="mt-3 text-[11px] text-gray-500">{t("commands.disclaimer")}</p>
+              <p className="mt-3 text-[11px] text-gray-500">
+                {t("commands.disclaimer")}
+              </p>
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import { Menu, Stethoscope, Activity, UserRound } from "lucide-react";
 import type { Diagnosis } from "../types/Types";
 
@@ -17,6 +18,8 @@ export const ChatTopBar: React.FC<ChatTopBarProps> = ({
   onViewReport,
   onNavigateToDoctor,
 }) => {
+  const { t } = useTranslation("healthTriage");
+
   return (
     <div className="h-14 border-b border-gray-200 flex items-center justify-between px-4 bg-white">
       <div className="flex items-center space-x-3">
@@ -32,8 +35,8 @@ export const ChatTopBar: React.FC<ChatTopBarProps> = ({
             <Stethoscope className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-gray-900">RoboDoc</h1>
-            <p className="text-xs text-gray-500">AI Medical Assistant</p>
+            <h1 className="text-sm font-semibold text-gray-900">{t("appName")}</h1>
+            <p className="text-xs text-gray-500">{t("subtitle")}</p>
           </div>
         </div>
       </div>
@@ -45,7 +48,7 @@ export const ChatTopBar: React.FC<ChatTopBarProps> = ({
             className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm flex items-center space-x-1.5"
           >
             <Activity className="w-4 h-4" />
-            <span>View Report</span>
+            <span>{t("topBar.viewReport")}</span>
           </button>
 
           <button
@@ -53,7 +56,7 @@ export const ChatTopBar: React.FC<ChatTopBarProps> = ({
             className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition text-sm flex items-center space-x-1.5"
           >
             <UserRound className="w-4 h-4" />
-            <span>Find Doctor</span>
+            <span>{t("topBar.findDoctor")}</span>
           </button>
         </div>
       )}

@@ -28,6 +28,13 @@
   },
   "commands": {
     "title": "Example Voice Commands",
+    "list": {
+      "symptom": "Open symptom checker",
+      "doctor": "Find doctor in Lahore",
+      "interview": "Start interview",
+      "scroll": "Scroll down / Scroll up",
+      "stop": "Stop / Ruk jao"
+    },
     "disclaimer": "This feature is for general information and app navigation only. Always consult a qualified doctor for diagnosis and treatment."
   },
   "ai": {

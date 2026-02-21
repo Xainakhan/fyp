@@ -1,4 +1,5 @@
 import React, { type ChangeEvent, type KeyboardEvent, type FormEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Send } from "lucide-react";
 
 interface ChatInputProps {
@@ -16,6 +17,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({
   onInputChange,
   onSubmit,
 }) => {
+  const { t } = useTranslation("healthTriage");
+
   return (
     <div className="border-t border-gray-200 bg-white">
       <div className="max-w-3xl mx-auto px-4 py-4">
@@ -32,10 +35,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 onSubmit(e as any);
               }
             }}
-            placeholder="Message RoboDoc..."
+            placeholder={t("chat.placeholder")}
             rows={1}
-            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none text-[15px]"
-            style={{ minHeight: "52px", maxHeight: "200px" }}
+            className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 resize-none text-[15px] min-h-[52px] max-h-[200px] overflow-y-auto"
           />
           <button
             type="submit"
@@ -46,7 +48,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
           </button>
         </form>
         <p className="text-xs text-center text-gray-500 mt-3">
-          RoboDoc can make mistakes. Check important info.
+          {t("chat.disclaimer")}
         </p>
       </div>
     </div>
