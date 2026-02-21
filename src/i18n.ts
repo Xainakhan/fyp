@@ -10,6 +10,7 @@ import enHealthInterview   from "./locale/en/healthInterview.json";
 import enHealthTimeline    from "./locale/en/healthTimeline.json";
 import enHome              from "./locale/en/home.json";
 import enProfile           from "./locale/en/profile.json";
+import enHealthTriage      from "./locale/en/healthTriage.json";
 
 import urNavbar            from "./locale/ur/navbar.json";
 import urFooter            from "./locale/ur/footer.json";
@@ -19,6 +20,7 @@ import urHealthInterview   from "./locale/ur/healthInterview.json";
 import urHealthTimeline    from "./locale/ur/healthTimeline.json";
 import urHome              from "./locale/ur/home.json";
 import urProfile           from "./locale/ur/profile.json";
+import urHealthTriage      from "./locale/ur/healthTriage.json";
 
 i18n
   .use(LanguageDetector)
@@ -34,6 +36,7 @@ i18n
         healthTimeline:    enHealthTimeline,
         home:              enHome,
         profile:           enProfile,
+        healthTriage:      enHealthTriage,
       },
       ur: {
         navbar:            urNavbar,
@@ -44,6 +47,7 @@ i18n
         healthTimeline:    urHealthTimeline,
         home:              urHome,
         profile:           urProfile,
+        healthTriage:      urHealthTriage,
       },
     },
     lng: "en",
@@ -58,6 +62,7 @@ i18n
       "healthTimeline",
       "home",
       "profile",
+      "healthTriage",
     ],
     defaultNS: "navbar",
   });

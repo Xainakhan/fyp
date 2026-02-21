@@ -1,7 +1,3 @@
-// components/HomePage/index.tsx
-// All text comes from i18n  →  locales/en/home.json  |  locales/ur/home.json
-// Import this page normally; make sure i18n.ts is imported once in main.tsx / App.tsx
-
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { MdPsychology, MdRecordVoiceOver } from "react-icons/md";

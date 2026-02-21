@@ -3,7 +3,7 @@ import { useState } from "react";
 import "./App.css";
 // --- Page modules ---
 import VoiceConversation from "./pages/voiceConversation";
-import HealthTriageModule from "./pages/heathTriage";
+import HealthTriageModule from "./healthTriage/RobodocChatbot";
 import Doc from "./doctors/doctors";
 // --- Layout components ---
 import Navbar from "./pages/navBar";
