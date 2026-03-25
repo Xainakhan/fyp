@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { FormData, TriageResponse } from "./components/types";
-import { STEPS, API_BASE } from "./components/Constants";
+import { STEPS, API_BASE } from "./components/constants";
 import { buildSymptomsArray, buildMedicalHistoryText, buildLifestyleText, parseDurationToDays } from "./components/Helpers";
 
 import StepIndicator from "./components/StepIndicator";
@@ -74,6 +74,50 @@ const HealthInterviewPage: React.FC = () => {
     }
   };
 
+  /** Build a JSON report and trigger a .json download */
+  const handleDownload = () => {
+    const report = {
+      generated_at: new Date().toISOString(),
+      basic_info: {
+        full_name: form.fullName,
+        age: form.age,
+        gender: form.gender,
+        city: form.city,
+        phone: form.phone,
+      },
+      current_problem: {
+        main_concern: form.mainConcern,
+        duration: form.symptomDuration,
+        pattern: form.symptomPattern,
+        worse_when: form.symptomWorseWhen,
+        associated_symptoms: form.associatedSymptoms,
+      },
+      medical_history: {
+        chronic_conditions: form.chronicConditions,
+        other_conditions: form.otherConditions,
+        current_medicines: form.currentMedicines,
+        allergies: form.allergies,
+      },
+      lifestyle: {
+        smoking: form.smokingStatus,
+        alcohol: form.alcoholUse,
+        exercise: form.exercise,
+        sleep_hours: form.sleepHours,
+        stress_level: form.stressLevel,
+        mood_notes: form.moodNotes,
+      },
+      triage_result: triageResult ?? null,
+    };
+
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `health-interview-${form.fullName.replace(/\s+/g, "_") || "report"}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="max-w-5xl mx-auto px-4 py-10">
       {/* Header */}
@@ -102,9 +146,14 @@ const HealthInterviewPage: React.FC = () => {
         {currentStep.id === "history"   && <MedicalHistoryStep form={form} setForm={setForm} />}
         {currentStep.id === "lifestyle" && <LifestyleStep form={form} setForm={setForm} />}
         {currentStep.id === "summary"   && (
-          <SummaryStep form={form} triageResult={triageResult}
-            submitError={submitError} submitting={submitting}
-            onSubmit={handleSubmitInterview} />
+          <SummaryStep
+            form={form}
+            triageResult={triageResult}
+            submitError={submitError}
+            submitting={submitting}
+            onSubmit={handleSubmitInterview}
+            onDownload={handleDownload}
+          />
         )}
 
         {/* Navigation */}

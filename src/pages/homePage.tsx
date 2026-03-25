@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { MdPsychology, MdRecordVoiceOver } from "react-icons/md";
-import { Search, MapPin, ChevronDown } from "lucide-react";
+import { Search, MapPin, ChevronDown, Mic, MicOff } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface HomePageProps {
@@ -10,20 +10,12 @@ interface HomePageProps {
   setCurrentModule: (module: string) => void;
 }
 
-// ─── Static data (non-translatable / structural) ──────────────────────────────
+// ─── Static data ──────────────────────────────────────────────────────────────
 const CITY_OPTIONS = [
-  "Islamabad",
-  "Lahore",
-  "Karachi",
-  "Rawalpindi",
-  "Faisalabad",
-  "Peshawar",
-  "Quetta",
-  "Multan",
-  "Other",
+  "Islamabad", "Lahore", "Karachi", "Rawalpindi",
+  "Faisalabad", "Peshawar", "Quetta", "Multan", "Other",
 ];
 
-// reason.key maps to both the i18n key and the English query stored in session
 const POPULAR_REASONS = [
   { id: "fever",     i18nKey: "popularReasons.fever",     enQuery: "Fever & Flu" },
   { id: "chestPain", i18nKey: "popularReasons.chestPain", enQuery: "Chest Pain" },
@@ -41,53 +33,225 @@ const APP_FEATURES = [
 ];
 
 const APP_STATISTICS = [
-  { value: "500+",  i18nKey: "stats.doctors",   color: "text-green-600" },
-  { value: "20+",   i18nKey: "stats.cities",    color: "text-blue-600" },
-  { value: "2",     i18nKey: "stats.languages", color: "text-purple-600" },
-  { value: "24/7",  i18nKey: "stats.available", color: "text-teal-600" },
+  { value: "500+", i18nKey: "stats.doctors",   color: "text-green-600" },
+  { value: "20+",  i18nKey: "stats.cities",    color: "text-blue-600" },
+  { value: "2",    i18nKey: "stats.languages", color: "text-purple-600" },
+  { value: "24/7", i18nKey: "stats.available", color: "text-teal-600" },
 ];
 
-// ══════════════════════════════════════════════════════════════════════════════
-// SUB-COMPONENTS
-// ══════════════════════════════════════════════════════════════════════════════
+// ─── Voice commands map ───────────────────────────────────────────────────────
+// Maps spoken phrases → module names
+const VOICE_COMMANDS: Record<string, string> = {
+  "symptom checker": "triage",
+  "symptom":         "triage",
+  "triage":          "triage",
+  "find doctor":     "findDoctor",
+  "doctor":          "findDoctor",
+  "interview":       "interview",
+  "health interview":"interview",
+  "voice":           "tts",
+  "voice assistant": "tts",
+  "timeline":        "healthTimeline",
+  "health timeline": "healthTimeline",
+  // Urdu
+  "علامات":          "triage",
+  "ڈاکٹر":           "findDoctor",
+  "انٹرویو":         "interview",
+  "وائس":            "tts",
+  "ٹائم لائن":       "healthTimeline",
+};
 
-// ─── LanguageToggle ────────────────────────────────────────────────────────
-const LanguageToggle: React.FC<{
-  userLanguage: string;
-  setUserLanguage: (l: string) => void;
-}> = ({ userLanguage, setUserLanguage }) => {
-  const { i18n } = useTranslation("home");
+// ══════════════════════════════════════════════════════════════════════════════
+// VOICE MODE HOOK
+// ══════════════════════════════════════════════════════════════════════════════
+const useVoiceMode = (
+  enabled: boolean,
+  userLanguage: string,
+  setCurrentModule: (m: string) => void
+) => {
+  const recognitionRef = useRef<any>(null);
+  const [transcript, setTranscript] = useState("");
+  const [voiceStatus, setVoiceStatus] = useState<"idle" | "listening" | "recognized">("idle");
+  const { t } = useTranslation("home");
 
-  const handleChange = (lang: string) => {
-    setUserLanguage(lang);
-    i18n.changeLanguage(lang);
+  const speak = (text: string) => {
+    if (!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = userLanguage === "ur" ? "ur-PK" : "en-US";
+    u.rate = 0.95;
+    window.speechSynthesis.speak(u);
   };
 
+  const handleCommand = (text: string) => {
+    const lower = text.toLowerCase().trim();
+    for (const [phrase, module] of Object.entries(VOICE_COMMANDS)) {
+      if (lower.includes(phrase)) {
+        setVoiceStatus("recognized");
+        setTranscript(text);
+        speak(t("voiceMode.navigating"));
+        setTimeout(() => {
+          setCurrentModule(module);
+          setVoiceStatus("idle");
+          setTranscript("");
+        }, 1000);
+        return;
+      }
+    }
+    // Not recognized — keep listening
+    setTranscript(text);
+    speak(t("voiceMode.notUnderstood"));
+    setTimeout(() => { setTranscript(""); setVoiceStatus("listening"); }, 1500);
+  };
+
+  useEffect(() => {
+    if (!enabled) {
+      recognitionRef.current?.stop();
+      setTranscript("");
+      setVoiceStatus("idle");
+      return;
+    }
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = userLanguage === "ur" ? "ur-PK" : "en-US";
+
+    recognition.onstart = () => setVoiceStatus("listening");
+    recognition.onresult = (event: any) => {
+      const last = event.results[event.results.length - 1];
+      if (last.isFinal) handleCommand(last[0].transcript.trim());
+    };
+    recognition.onerror = () => setVoiceStatus("idle");
+    recognition.onend = () => {
+      if (enabled) recognition.start(); // keep alive
+    };
+
+    speak(t("voiceMode.activated"));
+    recognition.start();
+
+    return () => {
+      recognition.onend = null;
+      recognition.stop();
+    };
+  }, [enabled, userLanguage]);
+
+  return { transcript, voiceStatus };
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VOICE MODE BANNER
+// ══════════════════════════════════════════════════════════════════════════════
+const VoiceModeBanner: React.FC<{
+  transcript: string;
+  voiceStatus: "idle" | "listening" | "recognized";
+}> = ({ transcript, voiceStatus }) => {
+  const { t } = useTranslation("home");
+
   return (
-    <div className="flex justify-end mb-6 sm:mb-8">
-      <div className="inline-flex bg-white rounded-full p-1 shadow-lg border border-gray-200">
-        {[
-          { code: "en", label: "English" },
-          { code: "ur", label: "اردو" },
-        ].map(({ code, label }) => (
-          <button
-            key={code}
-            onClick={() => handleChange(code)}
-            className={`px-5 sm:px-7 py-2.5 rounded-full text-sm sm:text-base font-medium transition-all ${
-              userLanguage === code
-                ? "bg-green-600 text-white shadow-md"
-                : "text-gray-700 hover:bg-gray-50"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90vw] max-w-md">
+      <div className={`rounded-2xl px-5 py-4 shadow-2xl border flex items-center gap-4 transition-all duration-300 ${
+        voiceStatus === "recognized"
+          ? "bg-green-600 border-green-500 text-white"
+          : "bg-gray-900/95 border-gray-700 text-white backdrop-blur-md"
+      }`}>
+        {/* Mic icon with pulse */}
+        <div className={`relative flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+          voiceStatus === "listening" ? "bg-red-500 animate-pulse" : "bg-green-600"
+        }`}>
+          <Mic className="w-5 h-5 text-white" />
+          {voiceStatus === "listening" && (
+            <span className="absolute inset-0 rounded-full bg-red-400 animate-ping opacity-50" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold opacity-70 mb-0.5">
+            {voiceStatus === "listening"
+              ? t("voiceMode.listening")
+              : voiceStatus === "recognized"
+              ? t("voiceMode.recognized")
+              : t("voiceMode.ready")}
+          </p>
+          <p className="text-sm font-medium truncate">
+            {transcript || t("voiceMode.sayCommand")}
+          </p>
+        </div>
       </div>
     </div>
   );
 };
 
-// ─── HeroBadge ────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// VOICE MODE TOGGLE BUTTON
+// ══════════════════════════════════════════════════════════════════════════════
+const VoiceModeToggle: React.FC<{
+  voiceModeOn: boolean;
+  onToggle: () => void;
+}> = ({ voiceModeOn, onToggle }) => {
+  const { t } = useTranslation("home");
+
+  return (
+    <button
+      onClick={onToggle}
+      className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold border-2 transition-all shadow-md ${
+        voiceModeOn
+          ? "bg-red-500 border-red-400 text-white hover:bg-red-600"
+          : "bg-white border-green-300 text-green-700 hover:bg-green-50"
+      }`}
+    >
+      {voiceModeOn ? (
+        <>
+          <MicOff className="w-4 h-4" />
+          {t("voiceMode.disable")}
+        </>
+      ) : (
+        <>
+          <Mic className="w-4 h-4" />
+          {t("voiceMode.enable")}
+        </>
+      )}
+    </button>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SUB-COMPONENTS (unchanged)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const LanguageToggle: React.FC<{
+  userLanguage: string;
+  setUserLanguage: (l: string) => void;
+}> = ({ userLanguage, setUserLanguage }) => {
+  const { i18n } = useTranslation("home");
+  const handleChange = (lang: string) => {
+    setUserLanguage(lang);
+    i18n.changeLanguage(lang);
+  };
+  return (
+    <div className="inline-flex bg-white rounded-full p-1 shadow-lg border border-gray-200">
+      {[{ code: "en", label: "English" }, { code: "ur", label: "اردو" }].map(({ code, label }) => (
+        <button
+          key={code}
+          onClick={() => handleChange(code)}
+          className={`px-5 sm:px-7 py-2.5 rounded-full text-sm sm:text-base font-medium transition-all ${
+            userLanguage === code
+              ? "bg-green-600 text-white shadow-md"
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
 const HeroBadge: React.FC = () => {
   const { t } = useTranslation("home");
   return (
@@ -100,26 +264,19 @@ const HeroBadge: React.FC = () => {
   );
 };
 
-// ─── SearchCard ───────────────────────────────────────────────────────────
-const SearchCard: React.FC<{
-  onSearch: (city: string, query: string) => void;
-}> = ({ onSearch }) => {
+const SearchCard: React.FC<{ onSearch: (city: string, query: string) => void }> = ({ onSearch }) => {
   const { t } = useTranslation("home");
-
   const [city, setCity] = useState<string>(() => {
-    try { return sessionStorage.getItem("sehatHub-findDoctor-city") || "Islamabad"; }
-    catch { return "Islamabad"; }
+    try { return sessionStorage.getItem("sehatHub-findDoctor-city") || "Islamabad"; } catch { return "Islamabad"; }
   });
   const [isCityOpen, setIsCityOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState<string>(() => {
-    try { return sessionStorage.getItem("sehatHub-findDoctor-query") || ""; }
-    catch { return ""; }
+    try { return sessionStorage.getItem("sehatHub-findDoctor-query") || ""; } catch { return ""; }
   });
 
   useEffect(() => {
     try { sessionStorage.setItem("sehatHub-findDoctor-city", city); } catch { /* ignore */ }
   }, [city]);
-
   useEffect(() => {
     try { sessionStorage.setItem("sehatHub-findDoctor-query", searchTerm); } catch { /* ignore */ }
   }, [searchTerm]);
@@ -134,13 +291,8 @@ const SearchCard: React.FC<{
 
   return (
     <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 sm:p-8">
-      {/* Label */}
-      <p className="text-sm sm:text-base text-gray-600 mb-5 text-left font-medium">
-        {t("hero.searchLabel")}
-      </p>
-
+      <p className="text-sm sm:text-base text-gray-600 mb-5 text-left font-medium">{t("hero.searchLabel")}</p>
       <div className="flex flex-col lg:flex-row gap-3 sm:gap-4">
-        {/* City Dropdown */}
         <div className="lg:w-1/4 relative">
           <button
             type="button"
@@ -151,11 +303,8 @@ const SearchCard: React.FC<{
               <MapPin className="w-5 h-5 text-green-600" />
               <span>{city || t("hero.cityPlaceholder")}</span>
             </span>
-            <ChevronDown
-              className={`w-5 h-5 text-gray-500 transition-transform ${isCityOpen ? "rotate-180" : ""}`}
-            />
+            <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${isCityOpen ? "rotate-180" : ""}`} />
           </button>
-
           {isCityOpen && (
             <>
               <div className="fixed inset-0 z-10" onClick={() => setIsCityOpen(false)} />
@@ -165,9 +314,7 @@ const SearchCard: React.FC<{
                     key={c}
                     type="button"
                     onClick={() => { setCity(c); setIsCityOpen(false); }}
-                    className={`w-full text-left px-4 py-3 text-sm sm:text-base hover:bg-green-50 transition-colors font-medium ${
-                      c === city ? "bg-green-50 text-green-700" : "text-gray-700"
-                    }`}
+                    className={`w-full text-left px-4 py-3 text-sm sm:text-base hover:bg-green-50 transition-colors font-medium ${c === city ? "bg-green-50 text-green-700" : "text-gray-700"}`}
                   >
                     {c}
                   </button>
@@ -176,8 +323,6 @@ const SearchCard: React.FC<{
             </>
           )}
         </div>
-
-        {/* Search Input */}
         <div className="flex-1 flex items-center bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-3.5">
           <Search className="w-5 h-5 text-gray-400 mr-3 flex-shrink-0" />
           <input
@@ -189,8 +334,6 @@ const SearchCard: React.FC<{
             placeholder={t("hero.searchPlaceholder")}
           />
         </div>
-
-        {/* Find Doctor Button */}
         <button
           onClick={() => commitSearch(searchTerm)}
           className="lg:w-auto w-full bg-green-600 hover:bg-green-700 text-white text-sm sm:text-base font-bold rounded-xl px-6 sm:px-8 py-3.5 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all transform hover:scale-105 whitespace-nowrap"
@@ -199,21 +342,14 @@ const SearchCard: React.FC<{
           {t("hero.findDoctorBtn")}
         </button>
       </div>
-
-      {/* Popular Reasons */}
       <div className="mt-6">
-        <p className="text-xs sm:text-sm text-gray-600 mb-3 text-left font-medium">
-          {t("hero.quickReasonsLabel")}
-        </p>
+        <p className="text-xs sm:text-sm text-gray-600 mb-3 text-left font-medium">{t("hero.quickReasonsLabel")}</p>
         <div className="flex flex-wrap gap-2">
           {POPULAR_REASONS.map((r) => (
             <button
               key={r.id}
               type="button"
-              onClick={() => {
-                setSearchTerm(r.enQuery); // always store English query value
-                commitSearch(r.enQuery);
-              }}
+              onClick={() => { setSearchTerm(r.enQuery); commitSearch(r.enQuery); }}
               className="px-4 py-2 rounded-full bg-green-50 hover:bg-green-100 border border-green-200 text-xs sm:text-sm text-green-700 font-medium hover:text-green-800 transition-all hover:shadow-md"
             >
               {t(r.i18nKey)}
@@ -225,20 +361,13 @@ const SearchCard: React.FC<{
   );
 };
 
-// ─── FeaturesGrid ─────────────────────────────────────────────────────────
-const FeaturesGrid: React.FC<{
-  setCurrentModule: (m: string) => void;
-}> = ({ setCurrentModule }) => {
+const FeaturesGrid: React.FC<{ setCurrentModule: (m: string) => void }> = ({ setCurrentModule }) => {
   const { t } = useTranslation("home");
-
   return (
     <section className="mb-12 sm:mb-16">
       <div className="text-center mb-8">
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-2">
-          {t("howWeHelp.heading")}
-        </h2>
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 mb-2">{t("howWeHelp.heading")}</h2>
       </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {APP_FEATURES.map((feature) => (
           <button
@@ -246,15 +375,9 @@ const FeaturesGrid: React.FC<{
             onClick={() => setCurrentModule(feature.module)}
             className="bg-white w-full text-center p-6 sm:p-7 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 cursor-pointer border border-gray-100 group"
           >
-            <div className="text-4xl sm:text-5xl mb-4 transform group-hover:scale-110 transition-transform flex justify-center">
-              {feature.icon}
-            </div>
-            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
-              {t(`${feature.i18nKey}.title`)}
-            </h3>
-            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-              {t(`${feature.i18nKey}.desc`)}
-            </p>
+            <div className="text-4xl sm:text-5xl mb-4 transform group-hover:scale-110 transition-transform flex justify-center">{feature.icon}</div>
+            <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">{t(`${feature.i18nKey}.title`)}</h3>
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{t(`${feature.i18nKey}.desc`)}</p>
           </button>
         ))}
       </div>
@@ -262,22 +385,13 @@ const FeaturesGrid: React.FC<{
   );
 };
 
-// ─── QuickStartCTA ────────────────────────────────────────────────────────
-const QuickStartCTA: React.FC<{
-  setCurrentModule: (m: string) => void;
-}> = ({ setCurrentModule }) => {
+const QuickStartCTA: React.FC<{ setCurrentModule: (m: string) => void }> = ({ setCurrentModule }) => {
   const { t } = useTranslation("home");
-
   return (
     <section className="mb-12 sm:mb-16">
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-8 sm:p-10 text-center">
-        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">
-          {t("quickStart.heading")}
-        </h3>
-        <p className="text-sm sm:text-base text-gray-600 mb-6">
-          {t("moduleHelperText")}
-        </p>
-
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">{t("quickStart.heading")}</h3>
+        <p className="text-sm sm:text-base text-gray-600 mb-6">{t("moduleHelperText")}</p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <button
             onClick={() => setCurrentModule("interview")}
@@ -286,7 +400,6 @@ const QuickStartCTA: React.FC<{
             <MdPsychology className="text-2xl" />
             {t("quickStart.startInterviewBtn")}
           </button>
-
           <button
             onClick={() => setCurrentModule("tts")}
             className="bg-teal-600 hover:bg-teal-700 text-white px-8 sm:px-10 py-4 rounded-xl text-base sm:text-lg font-bold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center gap-3 w-full sm:w-auto"
@@ -300,22 +413,16 @@ const QuickStartCTA: React.FC<{
   );
 };
 
-// ─── StatsSection ─────────────────────────────────────────────────────────
 const StatsSection: React.FC = () => {
   const { t } = useTranslation("home");
-
   return (
     <section className="mb-12 sm:mb-16">
       <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-100 p-8 sm:p-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
           {APP_STATISTICS.map((stat, index) => (
             <div key={index} className="space-y-2">
-              <div className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight ${stat.color}`}>
-                {stat.value}
-              </div>
-              <div className="text-xs sm:text-sm text-gray-700 font-semibold">
-                {t(stat.i18nKey)}
-              </div>
+              <div className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight ${stat.color}`}>{stat.value}</div>
+              <div className="text-xs sm:text-sm text-gray-700 font-semibold">{t(stat.i18nKey)}</div>
             </div>
           ))}
         </div>
@@ -324,22 +431,16 @@ const StatsSection: React.FC = () => {
   );
 };
 
-// ─── Disclaimer ───────────────────────────────────────────────────────────
 const Disclaimer: React.FC = () => {
   const { t } = useTranslation("home");
-
   return (
     <section className="mb-8">
       <div className="bg-yellow-50 border-2 border-yellow-300 rounded-2xl shadow-lg p-6 sm:p-8">
         <div className="flex items-start gap-4">
           <div className="text-yellow-600 text-2xl sm:text-3xl flex-shrink-0">⚠️</div>
           <div>
-            <h4 className="font-bold text-yellow-900 mb-2 text-base sm:text-lg">
-              {t("disclaimer.title")}
-            </h4>
-            <p className="text-sm sm:text-base text-yellow-900 leading-relaxed">
-              {t("disclaimer.content")}
-            </p>
+            <h4 className="font-bold text-yellow-900 mb-2 text-base sm:text-lg">{t("disclaimer.title")}</h4>
+            <p className="text-sm sm:text-base text-yellow-900 leading-relaxed">{t("disclaimer.content")}</p>
           </div>
         </div>
       </div>
@@ -350,53 +451,56 @@ const Disclaimer: React.FC = () => {
 // ══════════════════════════════════════════════════════════════════════════════
 // MAIN PAGE COMPONENT
 // ══════════════════════════════════════════════════════════════════════════════
-const HomePage: React.FC<HomePageProps> = ({
-  userLanguage,
-  setUserLanguage,
-  setCurrentModule,
-}) => {
+const HomePage: React.FC<HomePageProps> = ({ userLanguage, setUserLanguage, setCurrentModule }) => {
   const { t } = useTranslation("home");
+  const [voiceModeOn, setVoiceModeOn] = useState(false);
+  const { transcript, voiceStatus } = useVoiceMode(voiceModeOn, userLanguage, setCurrentModule);
 
-  const handleSearch = (_city: string, _query: string) => {
-    setCurrentModule("findDoctor");
-  };
+  const handleSearch = (_city: string, _query: string) => setCurrentModule("findDoctor");
 
   return (
     <main className="w-full px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-      {/* Language Toggle */}
-      <LanguageToggle userLanguage={userLanguage} setUserLanguage={setUserLanguage} />
+
+      {/* Top bar: Language + Voice Mode toggle */}
+      <div className="flex justify-between items-center mb-6 sm:mb-8">
+        <LanguageToggle userLanguage={userLanguage} setUserLanguage={setUserLanguage} />
+        <VoiceModeToggle voiceModeOn={voiceModeOn} onToggle={() => setVoiceModeOn((v) => !v)} />
+      </div>
 
       <div className="max-w-5xl mx-auto">
+
+        {/* Voice mode info banner (inline, when active) */}
+        {voiceModeOn && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl px-5 py-4 flex items-start gap-3">
+            <Mic className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0 animate-pulse" />
+            <div>
+              <p className="text-sm font-semibold text-green-800">{t("voiceMode.activeTitle")}</p>
+              <p className="text-xs text-green-700 mt-0.5">{t("voiceMode.activeHint")}</p>
+            </div>
+          </div>
+        )}
 
         {/* ── HERO ── */}
         <section className="text-center mb-12 sm:mb-16">
           <HeroBadge />
-
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4 leading-tight tracking-tight">
             {t("appName")}
           </h1>
-
           <p className="text-base sm:text-lg lg:text-xl text-gray-700 max-w-3xl mx-auto mb-8 sm:mb-10 leading-relaxed font-medium">
             {t("tagline")}
           </p>
-
           <SearchCard onSearch={handleSearch} />
         </section>
 
-        {/* ── HOW CAN WE HELP ── */}
         <FeaturesGrid setCurrentModule={setCurrentModule} />
-
-        {/* ── QUICK START CTA ── */}
         <QuickStartCTA setCurrentModule={setCurrentModule} />
-
-        {/* ── STATS ── */}
         <StatsSection />
-
-        {/* ── DISCLAIMER ── */}
         <Disclaimer />
       </div>
 
-      {/* Custom scrollbar for city dropdown */}
+      {/* Floating voice mode status banner */}
+      {voiceModeOn && <VoiceModeBanner transcript={transcript} voiceStatus={voiceStatus} />}
+
       <style>{`
         .overflow-y-auto::-webkit-scrollbar { width: 6px; }
         .overflow-y-auto::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }

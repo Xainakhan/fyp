@@ -61,5 +61,17 @@
   "disclaimer": {
     "title": "Medical Disclaimer",
     "content": "SehatHub is an AI-assisted triage tool for informational purposes only. It does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical concerns."
-  }
+  },
+  "voiceMode": {
+  "enable": "Enable Voice Mode",
+  "disable": "Disable Voice Mode",
+  "activeTitle": "Voice Mode is Active",
+  "activeHint": "Say a command like: \"symptom checker\", \"find doctor\", \"interview\", \"timeline\", \"voice assistant\"",
+  "listening": "Listening...",
+  "recognized": "Command recognized!",
+  "ready": "Ready",
+  "sayCommand": "Say a command to navigate...",
+  "navigating": "Navigating, please wait.",
+  "notUnderstood": "Sorry, I didn't catch that. Please try again."
+}
 }

@@ -1,4 +1,3 @@
-// App.tsx
 import { useState } from "react";
 import "./App.css";
 // --- Page modules ---
@@ -6,15 +5,15 @@ import VoiceConversation from "./pages/voiceConversation";
 import HealthTriageModule from "./healthTriage/RobodocChatbot";
 import Doc from "./doctors/doctors";
 // --- Layout components ---
-import Navbar from "./pages/navBar";
-import Footer from "./pages/footer";
-import HomePage from "./pages/homePage";
+import Navbar from "./components/navBar";
+import Footer from "./components/footer";
+import HomePage from "./homePage/homePage";
 import HealthInterviewPage from "./healthInterview/HealthInterview";
 import HealthTimeline from "./healthTimeline/HealthTimeline";
 // --- Profile ---
 import PatientProfile from "./profile/patientProfile" ;
 // --- Background Wrapper ---
-import BackgroundWrapper from "./components/wrapperbg";
+import BackgroundWrapper from "./../src/components/wrapperbg";
 
 type Module =
   | "home"
@@ -83,7 +82,7 @@ function App() {
   };
 
   return (
-    <BackgroundWrapper overlay={true} overlayIntensity="medium">
+    <BackgroundWrapper>
       <div className="min-h-screen">
         {/* ✅ Navbar hidden only on home */}
         {currentModule !== "home" && (
