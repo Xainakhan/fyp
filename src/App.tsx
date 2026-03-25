@@ -1,113 +1,47 @@
-import { useState } from "react";
-import "./App.css";
-// --- Page modules ---
-import VoiceConversation from "./pages/voiceConversation";
-import HealthTriageModule from "./healthTriage/RobodocChatbot";
-import Doc from "./doctors/doctors";
-// --- Layout components ---
+import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Navbar from "./components/navBar";
 import Footer from "./components/footer";
 import HomePage from "./homePage/homePage";
+import VoiceConversation from "./pages/voiceConversation";
 import HealthInterviewPage from "./healthInterview/HealthInterview";
+import HealthTriageModule from "./healthTriage/RobodocChatbot";
+import Doc from "./doctors/doctors";
 import HealthTimeline from "./healthTimeline/HealthTimeline";
-// --- Profile ---
-import PatientProfile from "./profile/patientProfile" ;
-// --- Background Wrapper ---
-import BackgroundWrapper from "./../src/components/wrapperbg";
-
-type Module =
-  | "home"
-  | "tts"
-  | "interview"
-  | "doctor"
-  | "triage"
-  | "specialty"
-  | "symptom"
-  | "timeline"
-  | "profile";
+import PatientProfile from "./profile/patientProfile";
+import BackgroundWrapper from "./components/wrapperbg";
 
 function App() {
-  const [currentModule, setCurrentModule] = useState<Module>("home");
   const [userLanguage, setUserLanguage] = useState<"en" | "ur">("en");
-
-  // Helper to cast string → Module safely
-  const navigate = (module: string) => setCurrentModule(module as Module);
-
-  const renderCurrentModule = () => {
-    switch (currentModule) {
-      case "tts":
-        return (
-          <VoiceConversation
-            userLanguage={userLanguage}
-            setCurrentModule={navigate}
-          />
-        );
-
-      case "doctor":
-        return <Doc />;
-
-      case "triage":
-        return (
-          <HealthTriageModule
-            onNavigateToDoctor={() => setCurrentModule("doctor")}
-          />
-        );
-
-      case "timeline":
-        return <HealthTimeline />;
-
-      case "interview":
-        return (
-          <div className="w-full min-h-screen p-8">
-            <HealthInterviewPage userLanguage={userLanguage as "en" | "ur"} />
-          </div>
-        );
-
-      // ✅ Profile case added
-      case "profile":
-        return <PatientProfile />;
-
-      case "home":
-      default:
-        return (
-          <HomePage
-            userLanguage={userLanguage}
-            setUserLanguage={(lang: string) =>
-              setUserLanguage(lang as "en" | "ur")
-            }
-            setCurrentModule={navigate}
-          />
-        );
-    }
-  };
+  const [voiceModeOn, setVoiceModeOn] = useState(false);
 
   return (
-    <BackgroundWrapper>
-      <div className="min-h-screen">
-        {/* ✅ Navbar hidden only on home */}
-        {currentModule !== "home" && (
-          <Navbar
-            currentModule={currentModule}
-            setCurrentModule={navigate}
-            userLanguage={userLanguage}
-            setUserLanguage={(lang: string) =>
-              setUserLanguage(lang as "en" | "ur")
-            }
-          />
-        )}
+    <Router>
+      <BackgroundWrapper>
+        {/* ✅ Navbar rendered ONCE here only — never inside page components */}
+        <Navbar
+          userLanguage={userLanguage}
+          setUserLanguage={setUserLanguage}
+          voiceModeOn={voiceModeOn}
+          onToggleVoice={() => setVoiceModeOn((v) => !v)}
+        />
 
-        {/* Main content */}
-        <main className="w-full">{renderCurrentModule()}</main>
+        <main style={{ minHeight: "100vh" }}>
+          <Routes>
+            <Route path="/" element={<HomePage userLanguage={userLanguage} setUserLanguage={setUserLanguage} />} />
+            <Route path="/tts" element={<VoiceConversation userLanguage={userLanguage} />} />
+            <Route path="/interview" element={<HealthInterviewPage userLanguage={userLanguage} />} />
+            <Route path="/triage" element={<HealthTriageModule onNavigateToDoctor={() => { window.history.pushState({}, "", "/doctor"); }} />} />
+            <Route path="/doctor" element={<Doc />} />
+            <Route path="/timeline" element={<HealthTimeline />} />
+            <Route path="/profile" element={<PatientProfile />} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </main>
 
-        {/* ✅ Footer hidden only on home */}
-        {currentModule !== "home" && (
-          <Footer
-            setCurrentModule={navigate}
-            userLanguage={userLanguage}
-          />
-        )}
-      </div>
-    </BackgroundWrapper>
+        <Footer userLanguage={userLanguage} />
+      </BackgroundWrapper>
+    </Router>
   );
 }
 

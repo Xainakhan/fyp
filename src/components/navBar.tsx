@@ -1,30 +1,36 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Mic, MicOff, ChevronDown, User, Menu, X, Phone, AlertCircle } from "lucide-react";
+import { Mic, MicOff, ChevronDown, User, Menu, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface NavbarProps {
   userLanguage: string;
   setUserLanguage: (l: string) => void;
-  setCurrentModule: (m: string) => void;
   voiceModeOn: boolean;
   onToggleVoice: () => void;
 }
 
 const SYMPTOM_CHECKER_ITEMS = [
-  { label: "Health Triage", module: "triage" },
-  { label: "Health Timeline", module: "timeline" },
-  { label: "Disease Library", module: "triage" },
+  { label: "Health Triage", path: "/triage" },
+  { label: "Health Timeline", path: "/timeline" },
+  { label: "Disease Library", path: "/triage" },
 ];
 
 /* ─── Desktop Nav Link ─── */
-const NavLink: React.FC<{ label: string; onClick: () => void }> = ({ label, onClick }) => (
+const NavLink: React.FC<{
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+}> = ({ label, onClick, active }) => (
   <button
     onClick={onClick}
     style={{
       padding: "6px 14px",
       borderRadius: 8,
-      border: "1px solid rgba(255,255,255,0.25)",
-      background: "rgba(255,255,255,0.08)",
+      border: active
+        ? "1px solid rgba(255,255,255,0.25)"
+        : "1px solid transparent",
+      background: active ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)",
       color: "white",
       fontSize: 14,
       fontWeight: 500,
@@ -33,23 +39,36 @@ const NavLink: React.FC<{ label: string; onClick: () => void }> = ({ label, onCl
       transition: "all 0.2s",
       whiteSpace: "nowrap",
     }}
-    onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.18)")}
-    onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.08)")}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.background = "rgba(255,255,255,0.18)";
+      e.currentTarget.style.border = "1px solid rgba(255,255,255,0.25)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.background = active
+        ? "rgba(255,255,255,0.22)"
+        : "rgba(255,255,255,0.08)";
+      e.currentTarget.style.border = active
+        ? "1px solid rgba(255,255,255,0.25)"
+        : "1px solid transparent";
+    }}
   >
     {label}
   </button>
 );
 
 /* ─── Symptom Checker Dropdown (desktop) ─── */
-const SymptomCheckerDropdown: React.FC<{ setCurrentModule: (m: string) => void }> = ({
-  setCurrentModule,
-}) => {
+const SymptomCheckerDropdown: React.FC<{
+  navigate: (path: string) => void;
+}> = ({ navigate }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const location = useLocation();
+  const active = ["/triage", "/timeline"].includes(location.pathname);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -65,18 +84,45 @@ const SymptomCheckerDropdown: React.FC<{ setCurrentModule: (m: string) => void }
           gap: 6,
           padding: "6px 14px",
           borderRadius: 8,
-          border: "1px solid rgba(255,255,255,0.25)",
-          background: open ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)",
+          border:
+            open || active
+              ? "1px solid rgba(255,255,255,0.25)"
+              : "1px solid transparent",
+          background:
+            open || active
+              ? "rgba(255,255,255,0.22)"
+              : "rgba(255,255,255,0.08)",
           color: "white",
           fontSize: 14,
           fontWeight: 600,
           backdropFilter: "blur(8px)",
           cursor: "pointer",
           whiteSpace: "nowrap",
+          transition: "all 0.2s",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "rgba(255,255,255,0.18)";
+          e.currentTarget.style.border = "1px solid rgba(255,255,255,0.25)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background =
+            open || active
+              ? "rgba(255,255,255,0.22)"
+              : "rgba(255,255,255,0.08)";
+          e.currentTarget.style.border =
+            open || active
+              ? "1px solid rgba(255,255,255,0.25)"
+              : "1px solid transparent";
         }}
       >
         Symptom Checker
-        <ChevronDown size={13} style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "0.2s" }} />
+        <ChevronDown
+          size={13}
+          style={{
+            transform: open ? "rotate(180deg)" : "rotate(0deg)",
+            transition: "0.2s",
+          }}
+        />
       </button>
 
       {open && (
@@ -95,8 +141,11 @@ const SymptomCheckerDropdown: React.FC<{ setCurrentModule: (m: string) => void }
         >
           {SYMPTOM_CHECKER_ITEMS.map((item, i) => (
             <button
-              key={item.module + i}
-              onClick={() => { setCurrentModule(item.module); setOpen(false); }}
+              key={i}
+              onClick={() => {
+                navigate(item.path);
+                setOpen(false);
+              }}
               style={{
                 width: "100%",
                 textAlign: "left",
@@ -105,9 +154,14 @@ const SymptomCheckerDropdown: React.FC<{ setCurrentModule: (m: string) => void }
                 background: "white",
                 fontSize: 14,
                 cursor: "pointer",
-                borderBottom: i !== SYMPTOM_CHECKER_ITEMS.length - 1 ? "1px solid #eee" : "none",
+                borderBottom:
+                  i !== SYMPTOM_CHECKER_ITEMS.length - 1
+                    ? "1px solid #eee"
+                    : "none",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f4f6")}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.background = "#f3f4f6")
+              }
               onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
             >
               {item.label}
@@ -121,9 +175,9 @@ const SymptomCheckerDropdown: React.FC<{ setCurrentModule: (m: string) => void }
 
 /* ─── Drawer Symptom Checker Accordion ─── */
 const SymptomAccordion: React.FC<{
-  setCurrentModule: (m: string) => void;
+  navigate: (path: string) => void;
   closeDrawer: () => void;
-}> = ({ setCurrentModule, closeDrawer }) => {
+}> = ({ navigate, closeDrawer }) => {
   const [open, setOpen] = useState(false);
 
   return (
@@ -147,7 +201,9 @@ const SymptomAccordion: React.FC<{
           textAlign: "left",
           transition: "background 0.15s",
         }}
-        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+        onMouseEnter={(e) =>
+          (e.currentTarget.style.background = "rgba(255,255,255,0.06)")
+        }
         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       >
         Symptom Checker
@@ -172,7 +228,10 @@ const SymptomAccordion: React.FC<{
         {SYMPTOM_CHECKER_ITEMS.map((item, i) => (
           <button
             key={i}
-            onClick={() => { setCurrentModule(item.module); closeDrawer(); }}
+            onClick={() => {
+              navigate(item.path);
+              closeDrawer();
+            }}
             style={{
               display: "block",
               width: "100%",
@@ -187,7 +246,9 @@ const SymptomAccordion: React.FC<{
               transition: "color 0.15s",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.color = "rgba(255,255,255,0.55)")
+            }
           >
             {item.label}
           </button>
@@ -203,12 +264,18 @@ const SymptomAccordion: React.FC<{
 const Navbar: React.FC<NavbarProps> = ({
   userLanguage,
   setUserLanguage,
-  setCurrentModule,
   voiceModeOn,
   onToggleVoice,
 }) => {
   const { i18n } = useTranslation("home");
+  const router = useNavigate();
+  const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const navigate = (path: string) => {
+    router(path);
+    setDrawerOpen(false);
+  };
 
   const handleLanguageToggle = () => {
     const newLang = userLanguage === "en" ? "ur" : "en";
@@ -222,14 +289,8 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const closeDrawer = () => setDrawerOpen(false);
 
-  const navigate = (module: string) => {
-    setCurrentModule(module);
-    setTimeout(() => setDrawerOpen(false), 10);
-  };
-
   return (
     <>
-      {/* ─── Inject responsive styles ─── */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap');
 
@@ -241,7 +302,6 @@ const Navbar: React.FC<NavbarProps> = ({
           .sh-mobile  { display: flex  !important; }
         }
 
-        /* Drawer slide-in */
         .sh-drawer {
           position: fixed;
           top: 0; right: 0;
@@ -260,9 +320,7 @@ const Navbar: React.FC<NavbarProps> = ({
           padding: 20px 18px 32px;
           gap: 4px;
         }
-        .sh-drawer.open {
-          transform: translateX(0);
-        }
+        .sh-drawer.open { transform: translateX(0); }
 
         .sh-overlay {
           position: fixed;
@@ -273,10 +331,7 @@ const Navbar: React.FC<NavbarProps> = ({
           pointer-events: none;
           transition: opacity 0.3s;
         }
-        .sh-overlay.open {
-          opacity: 1;
-          pointer-events: all;
-        }
+        .sh-overlay.open { opacity: 1; pointer-events: all; }
 
         .sh-drawer-link {
           display: flex;
@@ -300,19 +355,13 @@ const Navbar: React.FC<NavbarProps> = ({
           color: #fff;
         }
 
-        .sh-drawer-section {
-          margin-top: 6px;
-          padding-top: 14px;
-          border-top: 1px solid rgba(255,255,255,0.07);
+        /* Icon & login buttons: no border by default, shows on hover */
+        .sh-icon-btn {
+          border: 1px solid transparent !important;
+          transition: border-color 0.2s, background 0.2s !important;
         }
-
-        .sh-drawer-label {
-          font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 1.5px;
-          color: rgba(255,255,255,0.3);
-          text-transform: uppercase;
-          padding: 0 14px 8px;
+        .sh-icon-btn:hover {
+          border-color: rgba(255,255,255,0.25) !important;
         }
 
         @keyframes sh-pulse {
@@ -329,28 +378,13 @@ const Navbar: React.FC<NavbarProps> = ({
         @keyframes sh-mic-ring {
           0%  { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
           70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
-          100%{ box-shadow: 0 0 0 0 rgba(34,197,94,0);   }
+          100%{ box-shadow: 0 0 0 0 rgba(34,197,94,0); }
         }
-        .sh-mic-active {
-          animation: sh-mic-ring 1.1s ease-out infinite;
-        }
+        .sh-mic-active { animation: sh-mic-ring 1.1s ease-out infinite; }
       `}</style>
 
       {/* ════ DESKTOP NAVBAR ════ */}
-      <nav
-        className="sh-desktop"
-        style={{
-          background: "rgba(15, 23, 42, 0.45)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom: "1px solid rgba(255,255,255,0.08)",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.25)",
-          position: "sticky",
-          top: 0,
-          width: "100%",
-          zIndex: 100,
-        }}
-      >
+      <nav className="sh-desktop fixed top-0 w-full z-50 border-b border-white/20 backdrop-blur bg-gray-900/60 shadow-lg">
         <div
           style={{
             maxWidth: 1200,
@@ -362,80 +396,154 @@ const Navbar: React.FC<NavbarProps> = ({
             gap: 10,
           }}
         >
+          {/* Logo */}
           <button
-            onClick={() => setCurrentModule("home")}
-            style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer" }}
+            onClick={() => navigate("/")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
           >
-            <img src="src/assets/logo.png" alt="SehatHub" style={{ height: 49, objectFit: "contain" }} />
+            <img
+              src="src/assets/logo.png"
+              alt="SehatHub"
+              style={{ height: 49, objectFit: "contain" }}
+            />
           </button>
 
+          {/* Nav Links */}
           <div style={{ display: "flex", gap: 8, marginLeft: 20, flex: 1 }}>
-            <NavLink label="Talk Bot" onClick={() => setCurrentModule("tts")} />
-            <NavLink label="Health Interview" onClick={() => setCurrentModule("interview")} />
-            <SymptomCheckerDropdown setCurrentModule={setCurrentModule} />
-            <NavLink label="Find Doctor" onClick={() => setCurrentModule("doctor")} />
+            <NavLink
+              label="Talk Bot"
+              active={location.pathname === "/tts"}
+              onClick={() => navigate("/tts")}
+            />
+            <NavLink
+              label="Health Interview"
+              active={location.pathname === "/interview"}
+              onClick={() => navigate("/interview")}
+            />
+            <SymptomCheckerDropdown navigate={navigate} />
+            <NavLink
+              label="Find Doctor"
+              active={location.pathname === "/doctor"}
+              onClick={() => navigate("/doctor")}
+            />
           </div>
 
+          {/* Right controls */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {/* Language toggle — fixed width label so layout never shifts */}
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div
                 onClick={handleLanguageToggle}
                 style={{
-                  width: 36, height: 18, borderRadius: 10,
+                  width: 36,
+                  height: 18,
+                  borderRadius: 10,
                   background: userLanguage === "en" ? "#22c55e" : "#4b5563",
-                  position: "relative", cursor: "pointer",
+                  position: "relative",
+                  cursor: "pointer",
+                  flexShrink: 0,
                 }}
               >
-                <div style={{
-                  position: "absolute", top: 2,
-                  left: userLanguage === "en" ? 18 : 2,
-                  width: 14, height: 14, borderRadius: "50%",
-                  background: "white", transition: "0.2s",
-                }} />
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 2,
+                    left: userLanguage === "en" ? 18 : 2,
+                    width: 14,
+                    height: 14,
+                    borderRadius: "50%",
+                    background: "white",
+                    transition: "left 0.2s",
+                  }}
+                />
               </div>
-              <span style={{ color: "white", fontSize: 13 }}>
+              {/* width: 52px holds both "English" and "اردو" without shifting */}
+              <span
+                style={{
+                  color: "white",
+                  fontSize: 13,
+                  display: "inline-block",
+                  width: 52,
+                  textAlign: "left",
+                }}
+              >
                 {userLanguage === "en" ? "English" : "اردو"}
               </span>
             </div>
 
-            <a href="tel:1122" style={{
-              background: "#ef4444", color: "white",
-              padding: "5px 14px", borderRadius: 20,
-              fontSize: 13, fontWeight: 600, textDecoration: "none",
-            }}>
+            <a
+              href="tel:1122"
+              style={{
+                background: "#ef4444",
+                color: "white",
+                padding: "5px 14px",
+                borderRadius: 20,
+                fontSize: 13,
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
               Emergency
             </a>
 
-            <button style={{
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.25)",
-              color: "white", padding: "5px 14px",
-              borderRadius: 20, fontSize: 13, cursor: "pointer",
-            }}>
-              Login / Sign up
-            </button>
-
+            {/* Login — no border until hover */}
             <button
-              onClick={onToggleVoice}
-              className={voiceModeOn ? "sh-mic-active" : ""}
+              className="sh-icon-btn"
+              onClick={() => navigate("/profile")}
               style={{
-                width: 32, height: 32, borderRadius: "50%",
-                background: voiceModeOn ? "#ef4444" : "rgba(255,255,255,0.1)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                display: "flex", alignItems: "center", justifyContent: "center",
+                background: "rgba(255,255,255,0.08)",
+                color: "white",
+                padding: "5px 14px",
+                borderRadius: 20,
+                fontSize: 13,
                 cursor: "pointer",
               }}
             >
-              {voiceModeOn ? <MicOff size={14} color="white" /> : <Mic size={14} color="white" />}
+              Login / Sign up
             </button>
 
+            {/* Mic — no border until hover (unless active) */}
             <button
-              onClick={() => setCurrentModule("profile")}
+              onClick={onToggleVoice}
+              className={`sh-icon-btn${voiceModeOn ? " sh-mic-active" : ""}`}
               style={{
-                width: 32, height: 32, borderRadius: "50%",
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                background: voiceModeOn ? "#ef4444" : "rgba(255,255,255,0.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+            >
+              {voiceModeOn ? (
+                <MicOff size={14} color="white" />
+              ) : (
+                <Mic size={14} color="white" />
+              )}
+            </button>
+
+            {/* Profile — no border until hover */}
+            <button
+              onClick={() => navigate("/profile")}
+              className="sh-icon-btn"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
                 background: "linear-gradient(135deg,#a78bfa,#7c3aed)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                border: "none", cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
               }}
             >
               <User size={14} color="white" />
@@ -466,12 +574,15 @@ const Navbar: React.FC<NavbarProps> = ({
           boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
         }}
       >
-        {/* Left: Logo */}
         <button
-          onClick={() => setCurrentModule("home")}
+          onClick={() => navigate("/")}
           style={{
-            display: "flex", alignItems: "center", gap: 8,
-            background: "none", border: "none", cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: "none",
+            border: "none",
+            cursor: "pointer",
             padding: 0,
           }}
         >
@@ -482,12 +593,13 @@ const Navbar: React.FC<NavbarProps> = ({
           />
         </button>
 
-        {/* Right: Emergency + Mic + Hamburger */}
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <a
             href="tel:1122"
             style={{
-              display: "flex", alignItems: "center", gap: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
               background: "#e03030",
               color: "white",
               padding: "7px 14px",
@@ -496,43 +608,52 @@ const Navbar: React.FC<NavbarProps> = ({
               fontWeight: 700,
               textDecoration: "none",
               boxShadow: "0 2px 10px rgba(224,48,48,0.5)",
-              letterSpacing: 0.2,
             }}
           >
-            <span
-              className="sh-emergency-dot"
-              style={{ width: 7, height: 7, borderRadius: "50%", background: "#fff", flexShrink: 0 }}
-            />
+            <span className="sh-emergency-dot" />
             Emergency
           </a>
 
           <button
             onClick={onToggleVoice}
             className={voiceModeOn ? "sh-mic-active" : ""}
-            title={voiceModeOn ? "Mic On" : "Mic Off"}
             style={{
-              width: 36, height: 36, borderRadius: "50%",
-              background: voiceModeOn ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.06)",
-              border: voiceModeOn ? "1.5px solid #22c55e" : "1.5px solid rgba(255,255,255,0.14)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", transition: "all 0.2s",
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background: voiceModeOn
+                ? "rgba(34,197,94,0.2)"
+                : "rgba(255,255,255,0.06)",
+              border: voiceModeOn
+                ? "1.5px solid #22c55e"
+                : "1.5px solid transparent",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "all 0.2s",
               flexShrink: 0,
             }}
           >
-            {voiceModeOn
-              ? <Mic size={16} color="#22c55e" />
-              : <Mic size={16} color="rgba(255,255,255,0.7)" />
-            }
+            <Mic
+              size={16}
+              color={voiceModeOn ? "#22c55e" : "rgba(255,255,255,0.7)"}
+            />
           </button>
 
           <button
             onClick={() => setDrawerOpen(true)}
             style={{
-              width: 36, height: 36, borderRadius: 10,
+              width: 36,
+              height: 36,
+              borderRadius: 10,
               background: "rgba(255,255,255,0.06)",
-              border: "1.5px solid rgba(255,255,255,0.12)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", flexShrink: 0,
+              border: "1.5px solid transparent",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              flexShrink: 0,
             }}
           >
             <Menu size={18} color="rgba(255,255,255,0.85)" />
@@ -540,17 +661,13 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* ════ MOBILE SPACER — pushes page content below the fixed pill navbar ════ */}
+      {/* Mobile spacer */}
       <div
         className="sh-mobile"
-        style={{
-          height: 80, // 14px top offset + ~54px navbar height + 12px breathing room
-          flexShrink: 0,
-          pointerEvents: "none",
-        }}
+        style={{ height: 80, flexShrink: 0, pointerEvents: "none" }}
       />
 
-      {/* ════ MOBILE DRAWER OVERLAY ════ */}
+      {/* Overlay */}
       <div
         className={`sh-overlay${drawerOpen ? " open" : ""}`}
         onMouseDown={closeDrawer}
@@ -559,20 +676,27 @@ const Navbar: React.FC<NavbarProps> = ({
 
       {/* ════ MOBILE DRAWER ════ */}
       <div className={`sh-drawer${drawerOpen ? " open" : ""}`}>
-        <div style={{
-          display: "flex", alignItems: "center",
-          justifyContent: "flex-end",
-          marginBottom: 20,
-          paddingBottom: 16,
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-        }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            marginBottom: 20,
+            paddingBottom: 16,
+            borderBottom: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
           <button
             onClick={closeDrawer}
             style={{
-              width: 30, height: 30, borderRadius: 8,
+              width: 30,
+              height: 30,
+              borderRadius: 8,
               background: "rgba(255,255,255,0.06)",
               border: "1px solid rgba(255,255,255,0.1)",
-              display: "flex", alignItems: "center", justifyContent: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               cursor: "pointer",
             }}
           >
@@ -580,39 +704,70 @@ const Navbar: React.FC<NavbarProps> = ({
           </button>
         </div>
 
-        <button className="sh-drawer-link" onClick={() => navigate("tts")}>
+        <button className="sh-drawer-link" onClick={() => navigate("/tts")}>
           Talk Bot
         </button>
-        <button className="sh-drawer-link" onClick={() => navigate("interview")}>
+        <button
+          className="sh-drawer-link"
+          onClick={() => navigate("/interview")}
+        >
           Health Interview
         </button>
-
-        <SymptomAccordion setCurrentModule={(m) => navigate(m)} closeDrawer={closeDrawer} />
-
-        <button className="sh-drawer-link" onClick={() => navigate("doctor")}>
+        <SymptomAccordion navigate={navigate} closeDrawer={closeDrawer} />
+        <button className="sh-drawer-link" onClick={() => navigate("/doctor")}>
           Find Doctor
         </button>
 
         <div style={{ flex: 1 }} />
 
-        <div style={{ padding: "0 14px 16px", borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+        <div
+          style={{
+            padding: "16px 14px 0",
+            borderTop: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 14,
+            }}
+          >
             <div
               onClick={handleLanguageToggle}
               style={{
-                width: 40, height: 22, borderRadius: 11,
+                width: 40,
+                height: 22,
+                borderRadius: 11,
                 background: userLanguage === "en" ? "#22c55e" : "#4b5563",
-                position: "relative", cursor: "pointer", flexShrink: 0,
+                position: "relative",
+                cursor: "pointer",
+                flexShrink: 0,
               }}
             >
-              <div style={{
-                position: "absolute", top: 3,
-                left: userLanguage === "en" ? 21 : 3,
-                width: 16, height: 16, borderRadius: "50%",
-                background: "white", transition: "0.2s",
-              }} />
+              <div
+                style={{
+                  position: "absolute",
+                  top: 3,
+                  left: userLanguage === "en" ? 21 : 3,
+                  width: 16,
+                  height: 16,
+                  borderRadius: "50%",
+                  background: "white",
+                  transition: "left 0.2s",
+                }}
+              />
             </div>
-            <span style={{ color: "#c8dece", fontSize: 14 }}>
+            {/* Fixed width keeps layout stable */}
+            <span
+              style={{
+                color: "#c8dece",
+                fontSize: 14,
+                display: "inline-block",
+                width: 52,
+              }}
+            >
               {userLanguage === "en" ? "English" : "اردو"}
             </span>
           </div>
@@ -622,7 +777,9 @@ const Navbar: React.FC<NavbarProps> = ({
               href="tel:1122"
               style={{
                 flex: 1,
-                display: "flex", alignItems: "center", justifyContent: "center",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 background: "#e03030",
                 color: "white",
                 padding: "9px 0",
@@ -636,11 +793,11 @@ const Navbar: React.FC<NavbarProps> = ({
               Emergency
             </a>
             <button
-              onClick={() => navigate("profile")}
+              onClick={() => navigate("/profile")}
               style={{
                 flex: 1,
                 background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.15)",
+                border: "1px solid transparent",
                 color: "white",
                 padding: "9px 0",
                 borderRadius: 20,
@@ -650,7 +807,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 fontFamily: "inherit",
               }}
             >
-              Login/ Sign up
+              Login / Sign up
             </button>
           </div>
         </div>
