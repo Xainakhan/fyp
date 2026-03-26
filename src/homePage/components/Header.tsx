@@ -2,7 +2,7 @@ import React from "react";
 
 const HeroGlassCard: React.FC = () => {
   return (
-    <div className="w-full px-4 md:px-8 pt-22 md:pt-28 pb-10 text-white">
+    <div className="w-full px-4 md:px-8 pt-1 md:pt-13 pb-10 text-white">
       {/* MAIN WRAPPER */}
       <div className="relative w-full max-w-[1300px] mx-auto 
                       bg-white/10 backdrop-blur-xl border border-white/20 

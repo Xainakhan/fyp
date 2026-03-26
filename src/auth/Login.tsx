@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-interface LoginProps {
-  onNavigate?: (page: "register" | "forgot-password") => void;
+interface LoginModalProps {
+  open: boolean;
+  onClose: () => void;
+  onSwitchToRegister: () => void; // ← opens RegisterModal instead of navigating
 }
 
-export default function Login({ onNavigate }: LoginProps) {
+export default function LoginModal({ open, onClose, onSwitchToRegister }: LoginModalProps) {
+  const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -18,131 +22,285 @@ export default function Login({ onNavigate }: LoginProps) {
     setLoading(false);
   };
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    if (open) document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  if (!open) return null;
+
   return (
-    <div className="min-h-screen bg-[#0d1a14] flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Background leaf texture overlay */}
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap');
+
+        .lm-root * {
+          font-family: 'Instrument Sans', sans-serif !important;
+          box-sizing: border-box;
+        }
+
+        .lm-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 9998;
+          background: rgba(0, 0, 0, 0.08);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
+        }
+        @media (min-width: 481px) {
+          .lm-backdrop {
+            background: rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+          }
+        }
+
+        @keyframes lmSlideDown {
+          from { opacity: 0; transform: translateY(-14px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .lm-card {
+          position: fixed;
+          top: 68px;
+          right: 20px;
+          width: 420px;
+          min-height: 520px;
+          z-index: 9999;
+          background: rgba(14, 26, 18, 0.45);
+          backdrop-filter: blur(32px);
+          -webkit-backdrop-filter: blur(32px);
+          border: 0.5px solid rgba(255, 255, 255, 0.12);
+          border-radius: 18px;
+          padding: 48px 36px 40px;
+          box-shadow:
+            -4px 4px 4px 0px rgba(0, 0, 0, 0.15),
+            0 24px 60px rgba(0, 0, 0, 0.35);
+          animation: lmSlideDown 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .lm-close {
+          position: absolute;
+          top: 14px; right: 14px;
+          width: 26px; height: 26px;
+          border-radius: 6px;
+          background: rgba(255,255,255,0.08);
+          border: 0.5px solid rgba(255,255,255,0.13);
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          color: rgba(255,255,255,0.50);
+          transition: background 0.15s, color 0.15s;
+        }
+        .lm-close:hover { background: rgba(255,255,255,0.14); color: white; }
+
+        .lm-label {
+          color: rgba(255,255,255,0.80);
+          font-size: 11.5px;
+          font-weight: 600;
+          letter-spacing: 0.07em;
+          text-transform: uppercase;
+          margin-bottom: 2px;
+        }
+
+        .lm-input {
+          width: 100%;
+          background: transparent;
+          border: none;
+          border-bottom: 1px solid rgba(255,255,255,0.22);
+          padding: 10px 0;
+          color: white;
+          font-size: 14px;
+          outline: none;
+          transition: border-color 0.2s;
+          font-family: 'Instrument Sans', sans-serif !important;
+          -webkit-text-fill-color: white;
+          caret-color: white;
+        }
+        .lm-input:-webkit-autofill,
+        .lm-input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0 1000px transparent inset;
+          -webkit-text-fill-color: white;
+          transition: background-color 9999s ease;
+        }
+        .lm-input::placeholder { color: rgba(255,255,255,0.25); }
+        .lm-input:focus { border-bottom-color: rgba(255,255,255,0.55); }
+
+        .lm-btn {
+          width: 100%;
+          background: #0a0a0a;
+          border: none;
+          color: white;
+          font-weight: 600;
+          font-size: 15px;
+          padding: 16px 0;
+          border-radius: 50px;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.15s;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          font-family: 'Instrument Sans', sans-serif !important;
+          letter-spacing: 0.01em;
+          margin-top: 8px;
+        }
+        .lm-btn:hover:not(:disabled) { background: #1c1c1c; transform: translateY(-1px); }
+        .lm-btn:disabled { background: #2a2a2a; cursor: not-allowed; }
+
+        .lm-eye {
+          position: absolute; right: 0; top: 50%;
+          transform: translateY(-50%);
+          background: none; border: none;
+          color: rgba(255,255,255,0.35);
+          cursor: pointer; display: flex; padding: 4px;
+          transition: color 0.15s; z-index: 1;
+        }
+        .lm-eye:hover { color: rgba(255,255,255,0.75); }
+
+        @keyframes lm-spin { to { transform: rotate(360deg); } }
+        .lm-spin { animation: lm-spin 0.8s linear infinite; }
+
+        @media (max-width: 480px) {
+          .lm-card { right: 12px; left: 12px; width: auto; top: 76px; min-height: auto; }
+        }
+      `}</style>
+
       <div
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2322c55e' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
+        className="lm-backdrop"
+        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
       />
 
-      {/* Radial glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-emerald-900/20 blur-3xl pointer-events-none" />
+      <div className="lm-card lm-root">
 
-      {/* Card */}
-      <div className="relative w-full max-w-sm bg-[#111c16]/90 border border-emerald-900/40 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-sm p-8 animate-fade-in">
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1L10 6H15L11 9.5L12.5 15L8 11.5L3.5 15L5 9.5L1 6H6L8 1Z" fill="#0d1a14" />
-            </svg>
-          </div>
-          <span className="text-white font-bold text-lg tracking-wide">SehatHub</span>
-        </div>
+        <button className="lm-close" onClick={onClose} aria-label="Close">
+          <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
 
-        <h2 className="text-white text-2xl font-bold mb-1">Welcome Back</h2>
-        <p className="text-emerald-400/70 text-sm mb-7">Please enter your details.</p>
+        <h2 style={{
+          color: "white", fontSize: 26, fontWeight: 700,
+          margin: "0 0 8px", textAlign: "center", letterSpacing: "-0.01em",
+        }}>
+          Welcome Back
+        </h2>
+        <p style={{
+          color: "rgba(255,255,255,0.45)", fontSize: 13.5,
+          margin: "0 0 36px", textAlign: "center",
+        }}>
+          Please enter your details.
+        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Phone */}
-          <div>
-            <label className="block text-emerald-300/80 text-xs font-semibold mb-1.5 tracking-wider uppercase">
-              Phone No
-            </label>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label className="lm-label">Phone No</label>
             <input
               type="tel"
+              className="lm-input"
               placeholder="Enter your registered mobile number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full bg-[#0d1a14] border border-emerald-900/60 rounded-lg px-4 py-2.5 text-white text-sm placeholder-emerald-900/70 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all"
+              autoComplete="tel"
             />
           </div>
 
-          {/* Password */}
-          <div>
-            <label className="block text-emerald-300/80 text-xs font-semibold mb-1.5 tracking-wider uppercase">
-              Password
-            </label>
-            <div className="relative">
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <label className="lm-label">Password</label>
+            <div style={{ position: "relative" }}>
               <input
                 type={showPassword ? "text" : "password"}
+                className="lm-input"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#0d1a14] border border-emerald-900/60 rounded-lg px-4 py-2.5 text-white text-sm placeholder-emerald-900/70 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all pr-10"
+                style={{ paddingRight: 32 }}
+                autoComplete="current-password"
               />
-              <button
-                type="button"
+              <button type="button" className="lm-eye"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-700 hover:text-emerald-400 transition-colors"
-              >
+                aria-label={showPassword ? "Hide password" : "Show password"}>
                 {showPassword ? (
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                    <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
                   </svg>
                 ) : (
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z" />
+                    <circle cx="12" cy="12" r="3" />
                   </svg>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Remember + Forgot */}
-          <div className="flex items-center justify-between">
-            <label className="flex items-center gap-2 cursor-pointer">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
               <input
                 type="checkbox"
                 checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
-                className="w-4 h-4 rounded border-emerald-900 bg-[#0d1a14] accent-emerald-500 cursor-pointer"
+                style={{ width: 15, height: 15, accentColor: "#22c55e", cursor: "pointer" }}
               />
-              <span className="text-emerald-400/70 text-xs">Remember Me</span>
+              <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>Remember Me</span>
             </label>
             <button
               type="button"
-              onClick={() => onNavigate?.("forgot-password")}
-              className="text-xs text-emerald-400 hover:text-emerald-300 transition-colors"
+              onClick={() => { onClose(); navigate("/forgot-password"); }}
+              style={{
+                background: "none", border: "none",
+                color: "rgba(255,255,255,0.55)", fontSize: 13,
+                cursor: "pointer", fontFamily: "'Instrument Sans', sans-serif",
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "white")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}
             >
               Forgot Password
             </button>
           </div>
 
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40"
-          >
+          <button type="submit" disabled={loading} className="lm-btn">
             {loading ? (
               <>
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                <svg className="lm-spin" width="15" height="15" fill="none" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" strokeOpacity="0.25" />
+                  <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
                 Signing in...
               </>
-            ) : (
-              "Proceed"
-            )}
+            ) : "Proceed"}
           </button>
         </form>
 
-        <p className="text-center text-emerald-900 text-xs mt-6">
+        <div style={{ minHeight: 24 }} />
+
+        <p style={{
+          textAlign: "center", color: "rgba(255,255,255,0.35)",
+          fontSize: 12.5, marginTop: 28,
+        }}>
           Don't Have an Account?{" "}
+          {/* ← closes login, opens register modal */}
           <button
-            onClick={() => onNavigate?.("register")}
-            className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors"
+            onClick={() => { onClose(); onSwitchToRegister(); }}
+            style={{
+              background: "none", border: "none",
+              color: "white", fontWeight: 600, fontSize: 12.5,
+              cursor: "pointer", fontFamily: "'Instrument Sans', sans-serif",
+              textDecoration: "underline", textUnderlineOffset: 2,
+            }}
           >
             Register Here.
           </button>
         </p>
+
       </div>
-    </div>
+    </>
   );
 }
