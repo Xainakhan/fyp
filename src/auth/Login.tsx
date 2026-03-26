@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface LoginModalProps {
   open: boolean;
   onClose: () => void;
-  onSwitchToRegister: () => void; // ← opens RegisterModal instead of navigating
+  onSwitchToRegister: () => void;
+  onSwitchToForgot: () => void;
 }
 
-export default function LoginModal({ open, onClose, onSwitchToRegister }: LoginModalProps) {
-  const navigate = useNavigate();
+export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitchToForgot }: LoginModalProps) {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -252,7 +251,7 @@ export default function LoginModal({ open, onClose, onSwitchToRegister }: LoginM
             </label>
             <button
               type="button"
-              onClick={() => { onClose(); navigate("/forgot-password"); }}
+onClick={() => { onClose(); onSwitchToForgot(); }}
               style={{
                 background: "none", border: "none",
                 color: "rgba(255,255,255,0.55)", fontSize: 13,

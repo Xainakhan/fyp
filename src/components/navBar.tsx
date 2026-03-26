@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
 import LoginModal from "../auth/Login";
 import RegisterModal from "../auth/Register";
+import ForgotPassword from "../auth/ForgotPassword";
+import ResetPassword from "../auth/ResetPassword";
 
 interface NavbarProps {
   userLanguage: string;
@@ -157,9 +159,12 @@ const Navbar: React.FC<NavbarProps> = ({
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // ── Modal states ──
-  const [loginOpen, setLoginOpen] = useState(false);
+const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetPhone, setResetPhone] = useState("");  // ── Modal states ──
+  
 
   // ── Auth state — replace with your real auth context ──
   const [isLoggedIn] = useState(false);
@@ -178,9 +183,10 @@ const Navbar: React.FC<NavbarProps> = ({
   const closeDrawer = () => setDrawerOpen(false);
 
   // Helpers to open/switch between modals
-  const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setLoginOpen(true); };
-  const openRegister = () => { setDrawerOpen(false); setLoginOpen(false); setRegisterOpen(true); };
-
+const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setForgotOpen(false); setResetOpen(false); setLoginOpen(true); };
+  const openRegister = () => { setDrawerOpen(false); setLoginOpen(false); setForgotOpen(false); setLoginOpen(false); setRegisterOpen(true); };
+  const openForgot   = () => { setLoginOpen(false); setRegisterOpen(false); setResetOpen(false); setForgotOpen(true); };
+  const openReset    = (phone: string) => { setForgotOpen(false); setResetPhone(phone); setResetOpen(true); };
   return (
     <>
       <style>{`
@@ -479,15 +485,28 @@ const Navbar: React.FC<NavbarProps> = ({
       </div>
 
       {/* ── MODALS ── */}
-      <LoginModal
+<LoginModal
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
         onSwitchToRegister={openRegister}
+        onSwitchToForgot={openForgot}
       />
       <RegisterModal
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
         onSwitchToLogin={openLogin}
+      />
+      <ForgotPassword
+        open={forgotOpen}
+        onClose={() => setForgotOpen(false)}
+        onSwitchToLogin={openLogin}
+        onSwitchToReset={(phone) => openReset(phone)}
+      />
+      <ResetPassword
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        onSwitchToLogin={openLogin}
+        phoneNumber={resetPhone}
       />
     </>
   );

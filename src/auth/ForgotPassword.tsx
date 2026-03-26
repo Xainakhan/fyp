@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ForgotPasswordProps {
-  onNavigate?: (page: "login" | "reset-password") => void;
+  open: boolean;
+  onClose: () => void;
+  onSwitchToLogin: () => void;
+ onSwitchToReset: (phone: string) => void;
 }
 
-type Step = "input" | "sent";
-
-export default function ForgotPassword({ onNavigate }: ForgotPasswordProps) {
+export default function ForgotPassword({ open, onClose, onSwitchToLogin, onSwitchToReset }: ForgotPasswordProps) {
   const [phone, setPhone] = useState("");
-  const [step, setStep] = useState<Step>("input");
+  const [step, setStep] = useState<"input" | "sent">("input");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,111 +21,259 @@ export default function ForgotPassword({ onNavigate }: ForgotPasswordProps) {
     setStep("sent");
   };
 
-  return (
-    <div className="min-h-screen bg-[#0d1a14] flex items-center justify-center px-4 relative overflow-hidden">
-      {/* Ambient glow */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-80 h-80 bg-emerald-900/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-emerald-800/10 rounded-full blur-3xl" />
-      </div>
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    if (open) document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
 
-      <div className="relative w-full max-w-sm bg-[#111c16]/90 border border-emerald-900/40 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-sm p-8">
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1L10 6H15L11 9.5L12.5 15L8 11.5L3.5 15L5 9.5L1 6H6L8 1Z" fill="#0d1a14" />
-            </svg>
-          </div>
-          <span className="text-white font-bold text-lg tracking-wide">SehatHub</span>
-        </div>
+  useEffect(() => {
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap');
+
+        .fp-root * {
+          font-family: 'Instrument Sans', sans-serif !important;
+          box-sizing: border-box;
+        }
+
+        .fp-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 9998;
+          background: rgba(0, 0, 0, 0.08);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
+        }
+        @media (min-width: 481px) {
+          .fp-backdrop {
+            background: rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+          }
+        }
+
+        @keyframes fpSlideDown {
+          from { opacity: 0; transform: translateY(-14px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .fp-card {
+          position: fixed;
+          top: 68px;
+          right: 20px;
+          width: 420px;
+          z-index: 9999;
+          background: rgba(14, 26, 18, 0.45);
+          backdrop-filter: blur(32px);
+          -webkit-backdrop-filter: blur(32px);
+          border: 0.5px solid rgba(255, 255, 255, 0.12);
+          border-radius: 18px;
+          padding: 28px 36px 28px;
+          box-shadow:
+            -4px 4px 4px 0px rgba(0, 0, 0, 0.15),
+            0 24px 60px rgba(0, 0, 0, 0.35);
+          animation: fpSlideDown 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .fp-close {
+          position: absolute;
+          top: 14px; right: 14px;
+          width: 26px; height: 26px;
+          border-radius: 6px;
+          background: rgba(255,255,255,0.08);
+          border: 0.5px solid rgba(255,255,255,0.13);
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          color: rgba(255,255,255,0.50);
+          transition: background 0.15s, color 0.15s;
+        }
+        .fp-close:hover { background: rgba(255,255,255,0.14); color: white; }
+
+        .fp-label {
+          display: block;
+          color: rgba(255,255,255,0.80);
+          font-size: 11.5px;
+          font-weight: 600;
+          letter-spacing: 0.07em;
+          text-transform: uppercase;
+          margin-bottom: 6px;
+        }
+
+        .fp-input {
+          width: 100%;
+          background: transparent;
+          border: none;
+          border-bottom: 1px solid rgba(255,255,255,0.22);
+          padding: 10px 0;
+          color: white;
+          font-size: 14px;
+          outline: none;
+          transition: border-color 0.2s;
+          font-family: 'Instrument Sans', sans-serif !important;
+          -webkit-text-fill-color: white;
+          caret-color: white;
+        }
+        .fp-input:-webkit-autofill,
+        .fp-input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0 1000px transparent inset;
+          -webkit-text-fill-color: white;
+          transition: background-color 9999s ease;
+        }
+        .fp-input::placeholder { color: rgba(255,255,255,0.25); }
+        .fp-input:focus { border-bottom-color: rgba(255,255,255,0.55); }
+
+        .fp-btn {
+          width: 100%;
+          background: #0a0a0a;
+          border: none;
+          color: white;
+          font-weight: 600;
+          font-size: 15px;
+          padding: 16px 0;
+          border-radius: 50px;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.15s;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          font-family: 'Instrument Sans', sans-serif !important;
+          letter-spacing: 0.01em;
+          margin-top: 8px;
+        }
+        .fp-btn:hover:not(:disabled) { background: #1c1c1c; transform: translateY(-1px); }
+        .fp-btn:disabled { background: #2a2a2a; cursor: not-allowed; opacity: 0.6; }
+
+        @keyframes fp-spin { to { transform: rotate(360deg); } }
+        .fp-spin { animation: fp-spin 0.8s linear infinite; }
+
+        @media (max-width: 480px) {
+          .fp-card { right: 12px; left: 12px; width: auto; top: 76px; }
+        }
+      `}</style>
+
+      <div
+        className="fp-backdrop"
+        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      />
+
+      <div className="fp-card fp-root">
+        <button className="fp-close" onClick={onClose} aria-label="Close">
+          <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
 
         {step === "input" ? (
           <>
-            {/* Lock icon */}
-            <div className="w-14 h-14 bg-emerald-900/40 border border-emerald-800/40 rounded-2xl flex items-center justify-center mb-6">
-              <svg width="24" height="24" fill="none" stroke="#4ade80" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </div>
-
-            <h2 className="text-white text-2xl font-bold mb-1">Forgot Password?</h2>
-            <p className="text-emerald-400/70 text-sm mb-7">
-              No worries. Enter your registered phone number and we'll send you a reset code.
+            <h2 style={{
+              color: "white", fontSize: 26, fontWeight: 700,
+              margin: "0 0 8px", textAlign: "center", letterSpacing: "-0.01em",
+            }}>
+              Forgot Password?
+            </h2>
+            <p style={{
+              color: "rgba(255,255,255,0.45)", fontSize: 13.5,
+              margin: "0 0 20px", textAlign: "center", lineHeight: 1.5,
+            }}>
+              Enter your registered phone number and we'll send you a reset code.
             </p>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               <div>
-                <label className="block text-emerald-300/80 text-xs font-semibold mb-1.5 tracking-wider uppercase">
-                  Phone No
-                </label>
+                <label className="fp-label">Phone No</label>
                 <input
                   type="tel"
+                  className="fp-input"
                   placeholder="Enter your registered mobile number"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-[#0d1a14] border border-emerald-900/60 rounded-lg px-4 py-2.5 text-white text-sm placeholder-emerald-900/70 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all"
+                  autoComplete="tel"
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={loading || !phone}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40"
-              >
+              <button type="submit" disabled={loading || !phone} className="fp-btn">
                 {loading ? (
                   <>
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    <svg className="fp-spin" width="15" height="15" fill="none" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" strokeOpacity="0.25" />
+                      <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                     Sending...
                   </>
-                ) : (
-                  "Send Reset Code"
-                )}
+                ) : "Send Reset Code"}
               </button>
             </form>
           </>
         ) : (
-          /* Success state */
-          <div className="text-center py-4">
-            <div className="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-5">
-              <svg width="28" height="28" fill="none" stroke="#4ade80" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-white text-xl font-bold mb-2">Code Sent!</h2>
-            <p className="text-emerald-400/70 text-sm mb-8 leading-relaxed">
-              We've sent a reset code to <span className="text-emerald-400 font-medium">{phone}</span>. Check your SMS.
+          <>
+            <h2 style={{
+              color: "white", fontSize: 26, fontWeight: 700,
+              margin: "0 0 8px", textAlign: "center", letterSpacing: "-0.01em",
+            }}>
+              Code Sent!
+            </h2>
+            <p style={{
+              color: "rgba(255,255,255,0.45)", fontSize: 13.5,
+              margin: "0 0 20px", textAlign: "center", lineHeight: 1.5,
+            }}>
+              We've sent a reset code to{" "}
+              <span style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>{phone}</span>.
+              {" "}Check your SMS.
             </p>
-            <button
-              onClick={() => onNavigate?.("reset-password")}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-emerald-900/40"
-            >
-              Enter Reset Code
-            </button>
-            <button
-              onClick={() => setStep("input")}
-              className="w-full mt-3 text-emerald-500/70 hover:text-emerald-400 text-sm transition-colors py-2"
-            >
-              Try a different number
-            </button>
-          </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <button
+                className="fp-btn"
+                style={{ marginTop: 0 }}
+onClick={() => { onClose(); onSwitchToReset(phone); }}
+              >
+                Enter Reset Code
+              </button>
+              <button
+                onClick={() => setStep("input")}
+                style={{
+                  background: "none", border: "none",
+                  color: "rgba(255,255,255,0.40)", fontSize: 13,
+                  cursor: "pointer", fontFamily: "'Instrument Sans', sans-serif",
+                  padding: "8px 0", textAlign: "center",
+                  transition: "color 0.15s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.color = "rgba(255,255,255,0.70)")}
+                onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.40)")}
+              >
+                Try a different number
+              </button>
+            </div>
+          </>
         )}
 
-        <div className="mt-6 pt-5 border-t border-emerald-900/30">
+        <div style={{ minHeight: 8 }} />
+
+        <p style={{
+          textAlign: "center", color: "rgba(255,255,255,0.35)",
+          fontSize: 12.5, marginTop: 12,
+        }}>
+          Remember your password?{" "}
           <button
-            onClick={() => onNavigate?.("login")}
-            className="flex items-center gap-1.5 text-emerald-500/70 hover:text-emerald-400 text-xs transition-colors mx-auto"
+            onClick={() => { onClose(); onSwitchToLogin(); }}
+            style={{
+              background: "none", border: "none",
+              color: "white", fontWeight: 600, fontSize: 12.5,
+              cursor: "pointer", fontFamily: "'Instrument Sans', sans-serif",
+              textDecoration: "underline", textUnderlineOffset: 2,
+            }}
           >
-            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Login
+            Sign In.
           </button>
-        </div>
+        </p>
       </div>
-    </div>
+    </>
   );
 }

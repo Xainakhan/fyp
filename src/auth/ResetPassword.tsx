@@ -1,16 +1,19 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface ResetPasswordProps {
-  onNavigate?: (page: "login") => void;
+  open: boolean;
+  onClose: () => void;
+  onSwitchToLogin: () => void;
   phoneNumber?: string;
 }
 
-export default function ResetPassword({ onNavigate, phoneNumber = "0311-xxx-xxxx" }: ResetPasswordProps) {
+export default function ResetPassword({ open, onClose, onSwitchToLogin, phoneNumber = "0311-xxx-xxxx" }: ResetPasswordProps) {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [step, setStep] = useState<"otp" | "new-password" | "success">("otp");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -57,43 +60,217 @@ export default function ResetPassword({ onNavigate, phoneNumber = "0311-xxx-xxxx
   };
 
   const strengthLabels = ["", "Weak", "Fair", "Good", "Strong"];
-  const strengthColors = ["", "bg-red-500", "bg-yellow-500", "bg-blue-500", "bg-emerald-500"];
+  const strengthColors = ["", "#ef4444", "#eab308", "#3b82f6", "#22c55e"];
   const strength = passwordStrength();
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    if (open) document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (open) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  if (!open) return null;
+
   return (
-    <div className="min-h-screen bg-[#0d1a14] flex items-center justify-center px-4 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-emerald-900/15 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 left-1/3 w-72 h-72 bg-emerald-800/10 rounded-full blur-3xl" />
-      </div>
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap');
 
-      <div className="relative w-full max-w-sm bg-[#111c16]/90 border border-emerald-900/40 rounded-2xl shadow-2xl shadow-black/60 backdrop-blur-sm p-8">
-        {/* Logo */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1L10 6H15L11 9.5L12.5 15L8 11.5L3.5 15L5 9.5L1 6H6L8 1Z" fill="#0d1a14" />
-            </svg>
-          </div>
-          <span className="text-white font-bold text-lg tracking-wide">SehatHub</span>
-        </div>
+        .rp-root * {
+          font-family: 'Instrument Sans', sans-serif !important;
+          box-sizing: border-box;
+        }
 
-        {/* OTP Step */}
+        .rp-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 9998;
+          background: rgba(0, 0, 0, 0.08);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
+        }
+        @media (min-width: 481px) {
+          .rp-backdrop {
+            background: rgba(0, 0, 0, 0.22);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+          }
+        }
+
+        @keyframes rpSlideDown {
+          from { opacity: 0; transform: translateY(-14px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .rp-card {
+          position: fixed;
+          top: 68px;
+          right: 20px;
+          width: 420px;
+          z-index: 9999;
+          background: rgba(14, 26, 18, 0.45);
+          backdrop-filter: blur(32px);
+          -webkit-backdrop-filter: blur(32px);
+          border: 0.5px solid rgba(255, 255, 255, 0.12);
+          border-radius: 18px;
+          padding: 28px 36px 28px;
+          box-shadow:
+            -4px 4px 4px 0px rgba(0, 0, 0, 0.15),
+            0 24px 60px rgba(0, 0, 0, 0.35);
+          animation: rpSlideDown 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        .rp-close {
+          position: absolute;
+          top: 14px; right: 14px;
+          width: 26px; height: 26px;
+          border-radius: 6px;
+          background: rgba(255,255,255,0.08);
+          border: 0.5px solid rgba(255,255,255,0.13);
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          color: rgba(255,255,255,0.50);
+          transition: background 0.15s, color 0.15s;
+        }
+        .rp-close:hover { background: rgba(255,255,255,0.14); color: white; }
+
+        .rp-label {
+          display: block;
+          color: rgba(255,255,255,0.80);
+          font-size: 11.5px;
+          font-weight: 600;
+          letter-spacing: 0.07em;
+          text-transform: uppercase;
+          margin-bottom: 6px;
+        }
+
+        .rp-input {
+          width: 100%;
+          background: transparent;
+          border: none;
+          border-bottom: 1px solid rgba(255,255,255,0.22);
+          padding: 10px 0;
+          color: white;
+          font-size: 14px;
+          outline: none;
+          transition: border-color 0.2s;
+          font-family: 'Instrument Sans', sans-serif !important;
+          -webkit-text-fill-color: white;
+          caret-color: white;
+        }
+        .rp-input:-webkit-autofill,
+        .rp-input:-webkit-autofill:focus {
+          -webkit-box-shadow: 0 0 0 1000px transparent inset;
+          -webkit-text-fill-color: white;
+          transition: background-color 9999s ease;
+        }
+        .rp-input::placeholder { color: rgba(255,255,255,0.25); }
+        .rp-input:focus { border-bottom-color: rgba(255,255,255,0.55); }
+
+        .rp-otp-input {
+          width: 48px;
+          height: 52px;
+          text-align: center;
+          background: rgba(255,255,255,0.05);
+          border: 1px solid rgba(255,255,255,0.15);
+          border-radius: 10px;
+          color: white;
+          font-size: 20px;
+          font-weight: 700;
+          outline: none;
+          transition: border-color 0.2s, background 0.2s;
+          caret-color: white;
+          font-family: 'Instrument Sans', sans-serif !important;
+        }
+        .rp-otp-input:focus {
+          border-color: rgba(255,255,255,0.55);
+          background: rgba(255,255,255,0.09);
+        }
+
+        .rp-eye {
+          position: absolute; right: 0; top: 50%;
+          transform: translateY(-50%);
+          background: none; border: none;
+          color: rgba(255,255,255,0.35);
+          cursor: pointer; display: flex; padding: 4px;
+          transition: color 0.15s; z-index: 1;
+        }
+        .rp-eye:hover { color: rgba(255,255,255,0.75); }
+
+        .rp-btn {
+          width: 100%;
+          background: #0a0a0a;
+          border: none;
+          color: white;
+          font-weight: 600;
+          font-size: 15px;
+          padding: 16px 0;
+          border-radius: 50px;
+          cursor: pointer;
+          transition: background 0.2s, transform 0.15s;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          font-family: 'Instrument Sans', sans-serif !important;
+          letter-spacing: 0.01em;
+          margin-top: 8px;
+        }
+        .rp-btn:hover:not(:disabled) { background: #1c1c1c; transform: translateY(-1px); }
+        .rp-btn:disabled { background: #2a2a2a; cursor: not-allowed; opacity: 0.6; }
+
+        .rp-strength-bar {
+          display: flex; gap: 4px; margin-top: 8px; margin-bottom: 4px;
+        }
+        .rp-strength-segment {
+          height: 3px; flex: 1; border-radius: 99px;
+          background: rgba(255,255,255,0.10);
+          transition: background 0.3s;
+        }
+
+        @keyframes rp-spin { to { transform: rotate(360deg); } }
+        .rp-spin { animation: rp-spin 0.8s linear infinite; }
+
+        @media (max-width: 480px) {
+          .rp-card { right: 12px; left: 12px; width: auto; top: 76px; }
+          .rp-otp-input { width: 40px; height: 46px; font-size: 18px; }
+        }
+      `}</style>
+
+      <div
+        className="rp-backdrop"
+        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      />
+
+      <div className="rp-card rp-root">
+        <button className="rp-close" onClick={onClose} aria-label="Close">
+          <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+
+        {/* ── OTP Step ── */}
         {step === "otp" && (
           <>
-            <div className="w-14 h-14 bg-emerald-900/40 border border-emerald-800/40 rounded-2xl flex items-center justify-center mb-6">
-              <svg width="24" height="24" fill="none" stroke="#4ade80" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
-
-            <h2 className="text-white text-2xl font-bold mb-1">Enter OTP</h2>
-            <p className="text-emerald-400/70 text-sm mb-7">
-              We sent a 6-digit code to <span className="text-emerald-400 font-medium">{phoneNumber}</span>
+            <h2 style={{
+              color: "white", fontSize: 26, fontWeight: 700,
+              margin: "0 0 8px", textAlign: "center", letterSpacing: "-0.01em",
+            }}>
+              Enter OTP
+            </h2>
+            <p style={{
+              color: "rgba(255,255,255,0.45)", fontSize: 13.5,
+              margin: "0 0 20px", textAlign: "center", lineHeight: 1.5,
+            }}>
+              We sent a 6-digit code to{" "}
+              <span style={{ color: "rgba(255,255,255,0.80)", fontWeight: 600 }}>{phoneNumber}</span>
             </p>
 
-            <form onSubmit={handleOtpSubmit} className="space-y-6">
-              <div className="flex gap-2 justify-between">
+            <form onSubmit={handleOtpSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ display: "flex", gap: 8, justifyContent: "space-between" }}>
                 {otp.map((digit, i) => (
                   <input
                     key={i}
@@ -104,32 +281,34 @@ export default function ResetPassword({ onNavigate, phoneNumber = "0311-xxx-xxxx
                     value={digit}
                     onChange={(e) => handleOtpChange(i, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                    className="w-11 h-12 text-center text-white text-lg font-bold bg-[#0d1a14] border border-emerald-900/60 rounded-lg focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all caret-emerald-400"
+                    className="rp-otp-input"
                   />
                 ))}
               </div>
 
-              <button
-                type="submit"
-                disabled={loading || otp.join("").length < 6}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40"
-              >
+              <button type="submit" disabled={loading || otp.join("").length < 6} className="rp-btn">
                 {loading ? (
                   <>
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    <svg className="rp-spin" width="15" height="15" fill="none" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" strokeOpacity="0.25" />
+                      <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                     Verifying...
                   </>
-                ) : (
-                  "Verify Code"
-                )}
+                ) : "Verify Code"}
               </button>
 
-              <p className="text-center text-emerald-900 text-xs">
+              <p style={{ textAlign: "center", color: "rgba(255,255,255,0.30)", fontSize: 12.5, margin: 0 }}>
                 Didn't receive code?{" "}
-                <button type="button" className="text-emerald-400 hover:text-emerald-300 font-semibold transition-colors">
+                <button
+                  type="button"
+                  style={{
+                    background: "none", border: "none",
+                    color: "white", fontWeight: 600, fontSize: 12.5,
+                    cursor: "pointer", fontFamily: "'Instrument Sans', sans-serif",
+                    textDecoration: "underline", textUnderlineOffset: 2,
+                  }}
+                >
                   Resend
                 </button>
               </p>
@@ -137,73 +316,107 @@ export default function ResetPassword({ onNavigate, phoneNumber = "0311-xxx-xxxx
           </>
         )}
 
-        {/* New Password Step */}
+        {/* ── New Password Step ── */}
         {step === "new-password" && (
           <>
-            <div className="w-14 h-14 bg-emerald-900/40 border border-emerald-800/40 rounded-2xl flex items-center justify-center mb-6">
-              <svg width="24" height="24" fill="none" stroke="#4ade80" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-              </svg>
-            </div>
+            <h2 style={{
+              color: "white", fontSize: 26, fontWeight: 700,
+              margin: "0 0 8px", textAlign: "center", letterSpacing: "-0.01em",
+            }}>
+              New Password
+            </h2>
+            <p style={{
+              color: "rgba(255,255,255,0.45)", fontSize: 13.5,
+              margin: "0 0 20px", textAlign: "center",
+            }}>
+              Create a strong new password for your account.
+            </p>
 
-            <h2 className="text-white text-2xl font-bold mb-1">New Password</h2>
-            <p className="text-emerald-400/70 text-sm mb-7">Create a strong new password for your account.</p>
-
-            <form onSubmit={handlePasswordSubmit} className="space-y-5">
+            <form onSubmit={handlePasswordSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {/* New Password */}
               <div>
-                <label className="block text-emerald-300/80 text-xs font-semibold mb-1.5 tracking-wider uppercase">
-                  New Password
-                </label>
-                <div className="relative">
+                <label className="rp-label">New Password</label>
+                <div style={{ position: "relative" }}>
                   <input
                     type={showPassword ? "text" : "password"}
+                    className="rp-input"
                     placeholder="Min. 8 characters"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full bg-[#0d1a14] border border-emerald-900/60 rounded-lg px-4 py-2.5 text-white text-sm placeholder-emerald-900/70 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all pr-10"
+                    style={{ paddingRight: 32 }}
+                    autoComplete="new-password"
                   />
-                  <button
-                    type="button"
+                  <button type="button" className="rp-eye"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-700 hover:text-emerald-400 transition-colors"
-                  >
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+                    aria-label={showPassword ? "Hide" : "Show"}>
+                    {showPassword ? (
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                        <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
                   </button>
                 </div>
                 {/* Strength bar */}
                 {newPassword && (
-                  <div className="mt-2">
-                    <div className="flex gap-1 mb-1">
+                  <>
+                    <div className="rp-strength-bar">
                       {[1, 2, 3, 4].map((s) => (
                         <div
                           key={s}
-                          className={`h-1 flex-1 rounded-full transition-all duration-300 ${strength >= s ? strengthColors[strength] : "bg-emerald-900/40"}`}
+                          className="rp-strength-segment"
+                          style={{ background: strength >= s ? strengthColors[strength] : undefined }}
                         />
                       ))}
                     </div>
-                    <p className={`text-xs ${strengthColors[strength].replace("bg-", "text-")}`}>
+                    <p style={{ fontSize: 11.5, margin: 0, color: strengthColors[strength] }}>
                       {strengthLabels[strength]}
                     </p>
-                  </div>
+                  </>
                 )}
               </div>
 
+              {/* Confirm Password */}
               <div>
-                <label className="block text-emerald-300/80 text-xs font-semibold mb-1.5 tracking-wider uppercase">
-                  Confirm Password
-                </label>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Re-enter new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-[#0d1a14] border border-emerald-900/60 rounded-lg px-4 py-2.5 text-white text-sm placeholder-emerald-900/70 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all"
-                />
+                <label className="rp-label">Confirm Password</label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type={showConfirm ? "text" : "password"}
+                    className="rp-input"
+                    placeholder="Re-enter new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    style={{ paddingRight: 32 }}
+                    autoComplete="new-password"
+                  />
+                  <button type="button" className="rp-eye"
+                    onClick={() => setShowConfirm(!showConfirm)}
+                    aria-label={showConfirm ? "Hide" : "Show"}>
+                    {showConfirm ? (
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94" />
+                        <path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19" />
+                        <line x1="1" y1="1" x2="23" y2="23" />
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                        <path d="M1 12S5 4 12 4s11 8 11 8-4 8-11 8S1 12 1 12z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {confirmPassword && (
-                  <p className={`text-xs mt-1 ${newPassword === confirmPassword ? "text-emerald-400" : "text-red-400"}`}>
+                  <p style={{
+                    fontSize: 11.5, margin: "4px 0 0",
+                    color: newPassword === confirmPassword ? "#22c55e" : "#ef4444",
+                  }}>
                     {newPassword === confirmPassword ? "✓ Passwords match" : "✗ Passwords do not match"}
                   </p>
                 )}
@@ -212,59 +425,81 @@ export default function ResetPassword({ onNavigate, phoneNumber = "0311-xxx-xxxx
               <button
                 type="submit"
                 disabled={loading || newPassword !== confirmPassword || newPassword.length < 8}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-900 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-emerald-900/40"
+                className="rp-btn"
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    <svg className="rp-spin" width="15" height="15" fill="none" viewBox="0 0 24 24">
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" strokeOpacity="0.25" />
+                      <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
                     Resetting...
                   </>
-                ) : (
-                  "Reset Password"
-                )}
+                ) : "Reset Password"}
               </button>
             </form>
           </>
         )}
 
-        {/* Success Step */}
+        {/* ── Success Step ── */}
         {step === "success" && (
-          <div className="text-center py-6">
-            <div className="w-20 h-20 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg width="36" height="36" fill="none" stroke="#4ade80" viewBox="0 0 24 24">
+          <div style={{ textAlign: "center", padding: "8px 0" }}>
+            <div style={{
+              width: 64, height: 64,
+              borderRadius: "50%",
+              border: "1.5px solid rgba(255,255,255,0.20)",
+              background: "rgba(255,255,255,0.05)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px",
+            }}>
+              <svg width="28" height="28" fill="none" stroke="white" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h2 className="text-white text-2xl font-bold mb-2">Password Reset!</h2>
-            <p className="text-emerald-400/70 text-sm mb-8 leading-relaxed">
+            <h2 style={{
+              color: "white", fontSize: 26, fontWeight: 700,
+              margin: "0 0 8px", letterSpacing: "-0.01em",
+            }}>
+              Password Reset!
+            </h2>
+            <p style={{
+              color: "rgba(255,255,255,0.45)", fontSize: 13.5,
+              margin: "0 0 20px", lineHeight: 1.5,
+            }}>
               Your password has been successfully updated. You can now log in with your new password.
             </p>
             <button
-              onClick={() => onNavigate?.("login")}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 rounded-lg transition-all duration-200 shadow-lg shadow-emerald-900/40"
+              className="rp-btn"
+              style={{ marginTop: 0 }}
+              onClick={() => { onClose(); onSwitchToLogin(); }}
             >
               Back to Login
             </button>
           </div>
         )}
 
+        <div style={{ minHeight: 8 }} />
+
         {step !== "success" && (
-          <div className="mt-6 pt-5 border-t border-emerald-900/30">
+          <p style={{
+            textAlign: "center", color: "rgba(255,255,255,0.35)",
+            fontSize: 12.5, marginTop: 12,
+          }}>
+            Remember your password?{" "}
             <button
-              onClick={() => onNavigate?.("login")}
-              className="flex items-center gap-1.5 text-emerald-500/70 hover:text-emerald-400 text-xs transition-colors mx-auto"
+              onClick={() => { onClose(); onSwitchToLogin(); }}
+              style={{
+                background: "none", border: "none",
+                color: "white", fontWeight: 600, fontSize: 12.5,
+                cursor: "pointer", fontFamily: "'Instrument Sans', sans-serif",
+                textDecoration: "underline", textUnderlineOffset: 2,
+              }}
             >
-              <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Login
+              Sign In.
             </button>
-          </div>
+          </p>
         )}
       </div>
-    </div>
+    </>
   );
 }
