@@ -1,8 +1,10 @@
 // doctors/components/SearchFilters.tsx
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Search, Filter, ChevronDown, ChevronUp } from "lucide-react";
-import { doctorDatabase } from "./Doctordata";
+import {
+  Search, SlidersHorizontal, ChevronDown, ChevronUp, MapPin, Star
+} from "lucide-react";
+import { doctorDatabase } from "./DoctorData";
 import type { SortBy, PriceRange } from "./types";
 
 interface SearchFiltersProps {
@@ -33,107 +35,175 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
   const { t, i18n } = useTranslation("doctors");
   const lang = i18n.language as "en" | "ur";
 
-  const sanitizeFee = (v: string) => v.replace(/[^\d]/g, "").replace(/^0+(?=\d)/, "");
+  const sanitizeFee = (v: string) =>
+    v.replace(/[^\d]/g, "").replace(/^0+(?=\d)/, "");
 
   return (
-    <div className="bg-white/90 backdrop-blur-xl p-5 sm:p-6 rounded-3xl shadow-lg border border-slate-100 mb-8">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800">{t("filters.title")}</h2>
-        <button onClick={() => setShowFilters(!showFilters)}
-          className="self-start sm:self-auto flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
-          <Filter size={18} />
+    <div className="glass-card p-6 mb-6 text-white">
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+        <h2 className="text-lg font-bold text-white">
+          {t("filters.title")}
+        </h2>
+
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition
+            ${showFilters
+              ? "bg-green-500/20 border border-green-400/30 text-green-300"
+              : "bg-white/10 border border-white/20 text-white/80"
+            }`}
+        >
+          <SlidersHorizontal size={15} />
           {t("filters.filters")}
-          {showFilters ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          {showFilters ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
         </button>
       </div>
 
-      {/* Search bar */}
-      <div className="mb-5 sm:mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-          <input type="text"
-            placeholder={t("filters.searchPlaceholder")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-11 pr-4 py-2.5 sm:py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm sm:text-base"
-            dir="auto"
-          />
+      {/* Search */}
+      <div className="relative mb-5">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" size={16} />
+
+        <input
+          type="text"
+          placeholder={t("filters.searchPlaceholder")}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-3 py-3 rounded-xl bg-white/10 border border-white/20 text-sm text-white placeholder-white/50 outline-none focus:border-green-400"
+        />
+      </div>
+
+      {/* Filters Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+        {/* Specialty */}
+        <div>
+          <label className="text-xs font-semibold text-white/60 uppercase mb-1 block">
+            {t("filters.specialty")}
+          </label>
+
+          <div className="relative">
+            <select
+              value={selectedSpecialty}
+              onChange={(e) => setSelectedSpecialty(e.target.value)}
+              className="w-full py-2.5 px-3 rounded-xl bg-white/10 border border-white/20 text-sm text-white outline-none appearance-none"
+            >
+              <option value="" className="text-black">
+                {t("filters.allSpecialties")}
+              </option>
+              {Object.keys(doctorDatabase).map((key) => (
+                <option key={key} value={key} className="text-black">
+                  {doctorDatabase[key].name[lang]}
+                </option>
+              ))}
+            </select>
+
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50" />
+          </div>
+        </div>
+
+        {/* Location */}
+        <div>
+          <label className="text-xs font-semibold text-white/60 uppercase mb-1 block">
+            {t("filters.location")}
+          </label>
+
+          <div className="relative">
+            <MapPin size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
+
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="w-full py-2.5 pl-8 pr-3 rounded-xl bg-white/10 border border-white/20 text-sm text-white outline-none appearance-none"
+            >
+              <option value="" className="text-black">
+                {t("filters.allCities")}
+              </option>
+              {["lahore","karachi","rawalpindi","islamabad","faisalabad","multan","peshawar"].map(c => (
+                <option key={c} value={c} className="text-black">
+                  {c}
+                </option>
+              ))}
+            </select>
+
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50" />
+          </div>
+        </div>
+
+        {/* Sort */}
+        <div>
+          <label className="text-xs font-semibold text-white/60 uppercase mb-1 block">
+            {t("filters.sortBy")}
+          </label>
+
+          <div className="relative">
+            <Star size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50" />
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortBy)}
+              className="w-full py-2.5 pl-8 pr-3 rounded-xl bg-white/10 border border-white/20 text-sm text-white outline-none appearance-none"
+            >
+              <option value="rating" className="text-black">{t("filters.sort.rating")}</option>
+              {hasUserLocation && <option value="distance" className="text-black">{t("filters.sort.distance")}</option>}
+              <option value="experience" className="text-black">{t("filters.sort.experience")}</option>
+              <option value="price_low" className="text-black">{t("filters.sort.priceLow")}</option>
+              <option value="price_high" className="text-black">{t("filters.sort.priceHigh")}</option>
+              <option value="reviews" className="text-black">{t("filters.sort.reviews")}</option>
+            </select>
+
+            <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50" />
+          </div>
         </div>
       </div>
 
-      {/* Basic filters */}
-      <div className="grid md:grid-cols-3 gap-4 mb-6">
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">{t("filters.specialty")}</label>
-          <select value={selectedSpecialty} onChange={(e) => setSelectedSpecialty(e.target.value)}
-            className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm">
-            <option value="">{t("filters.allSpecialties")}</option>
-            {Object.keys(doctorDatabase).map((key) => (
-              <option key={key} value={key}>{doctorDatabase[key].name[lang]}</option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">{t("filters.location")}</label>
-          <select value={selectedLocation} onChange={(e) => setSelectedLocation(e.target.value)}
-            className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm">
-            <option value="">{t("filters.allCities")}</option>
-            <option value="lahore">Lahore</option>
-            <option value="karachi">Karachi</option>
-            <option value="rawalpindi">Rawalpindi</option>
-            <option value="islamabad">Islamabad</option>
-            <option value="faisalabad">Faisalabad</option>
-            <option value="multan">Multan</option>
-            <option value="peshawar">Peshawar</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">{t("filters.sortBy")}</label>
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as SortBy)}
-            className="w-full p-2.5 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm">
-            <option value="rating">{t("filters.sort.rating")}</option>
-            {hasUserLocation && <option value="distance">{t("filters.sort.distance")}</option>}
-            <option value="experience">{t("filters.sort.experience")}</option>
-            <option value="price_low">{t("filters.sort.priceLow")}</option>
-            <option value="price_high">{t("filters.sort.priceHigh")}</option>
-            <option value="reviews">{t("filters.sort.reviews")}</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Advanced filters */}
+      {/* Advanced */}
       {showFilters && (
-        <div className="border-t border-slate-200 pt-5 sm:pt-6 mt-2">
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-3">{t("filters.feeRange")}</label>
-              <div className="flex items-center gap-3">
-                <input type="text" inputMode="numeric" placeholder="Min"
-                  value={priceRange.min}
-                  onChange={(e) => setPriceRange({ ...priceRange, min: sanitizeFee(e.target.value) })}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm" />
-                <span className="text-gray-500 text-xs sm:text-sm">{t("filters.to")}</span>
-                <input type="text" inputMode="numeric" placeholder="Max"
-                  value={priceRange.max}
-                  onChange={(e) => setPriceRange({ ...priceRange, max: sanitizeFee(e.target.value) })}
-                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm" />
-              </div>
+        <div className="mt-5 pt-5 border-t border-white/10 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          {/* Price */}
+          <div>
+            <label className="text-xs font-semibold text-white/60 uppercase mb-1 block">
+              {t("filters.feeRange")}
+            </label>
+
+            <div className="flex items-center gap-2">
+              <input
+                placeholder="Min"
+                value={priceRange.min}
+                onChange={(e) =>
+                  setPriceRange({ ...priceRange, min: sanitizeFee(e.target.value) })
+                }
+                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm outline-none"
+              />
+
+              <span className="text-white/50 text-sm">{t("filters.to")}</span>
+
+              <input
+                placeholder="Max"
+                value={priceRange.max}
+                onChange={(e) =>
+                  setPriceRange({ ...priceRange, max: sanitizeFee(e.target.value) })
+                }
+                className="w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white text-sm outline-none"
+              />
             </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-3">{t("filters.additionalFilters")}</label>
-              <div className="space-y-2.5">
-                <label className="flex items-center text-xs sm:text-sm text-gray-700">
-                  <input type="checkbox" className="mr-2" />{t("filters.onlineOnly")}
+          </div>
+
+          {/* Checkboxes */}
+          <div>
+            <label className="text-xs font-semibold text-white/60 uppercase mb-2 block">
+              {t("filters.additionalFilters")}
+            </label>
+
+            <div className="flex flex-col gap-2 text-sm text-white/80">
+              {[t("filters.onlineOnly"), t("filters.verifiedOnly"), t("filters.availableToday")].map((lbl, i) => (
+                <label key={i} className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" className="accent-green-500" />
+                  {lbl}
                 </label>
-                <label className="flex items-center text-xs sm:text-sm text-gray-700">
-                  <input type="checkbox" className="mr-2" />{t("filters.verifiedOnly")}
-                </label>
-                <label className="flex items-center text-xs sm:text-sm text-gray-700">
-                  <input type="checkbox" className="mr-2" />{t("filters.availableToday")}
-                </label>
-              </div>
+              ))}
             </div>
           </div>
         </div>

@@ -7,26 +7,57 @@ const EmergencyContacts: React.FC = () => {
   const { t } = useTranslation("doctors");
 
   const contacts = [
-    { icon: <Phone size={28} />, label: t("emergency.services"), number: "1122", sub: t("emergency.247") },
-    { icon: <Building size={28} />, label: t("emergency.poison"), number: "1166", sub: t("emergency.poisonHelp") },
-    { icon: <Heart size={28} />, label: t("emergency.ambulance"), number: "115", sub: t("emergency.medTransport") },
-    { icon: <AlertTriangle size={28} />, label: t("emergency.police"), number: "15", sub: t("emergency.emergencyPolice") },
+    { icon: <Phone size={26} />, label: t("emergency.services"), number: "1122", sub: t("emergency.247"), color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
+    { icon: <Building size={26} />, label: t("emergency.poison"), number: "1166", sub: t("emergency.poisonHelp"), color: "#ea580c", bg: "#fff7ed", border: "#fed7aa" },
+    { icon: <Heart size={26} />, label: t("emergency.ambulance"), number: "115", sub: t("emergency.medTransport"), color: "#dc2626", bg: "#fef2f2", border: "#fecaca" },
+    { icon: <AlertTriangle size={26} />, label: t("emergency.police"), number: "15", sub: t("emergency.emergencyPolice"), color: "#b91c1c", bg: "#fef2f2", border: "#fecaca" },
   ];
 
   return (
-    <div className="bg-red-50/90 border border-red-200 p-6 sm:p-8 rounded-3xl mb-8">
-      <h3 className="text-xl sm:text-2xl font-bold text-red-800 mb-5 sm:mb-6 flex items-center justify-center gap-2">
-        <AlertTriangle className="text-red-600" />
+    <div style={{
+      background: "linear-gradient(135deg, #fff1f2 0%, #fef2f2 100%)",
+      border: "1px solid #fecaca",
+      borderRadius: 24,
+      padding: "28px 28px",
+      marginBottom: 28,
+    }}>
+      <h3 style={{
+        display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+        fontSize: 20, fontWeight: 800, color: "#991b1b",
+        margin: "0 0 22px", textAlign: "center",
+      }}>
+        <AlertTriangle size={22} color="#dc2626" />
         {t("emergency.title")}
       </h3>
-      <div className="grid md:grid-cols-4 gap-4 sm:gap-6">
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14 }}>
         {contacts.map((c, i) => (
-          <div key={i} className="bg-white/90 p-5 rounded-2xl border border-red-200 text-center shadow-sm">
-            <div className="flex justify-center mb-2.5 text-red-600">{c.icon}</div>
-            <div className="font-bold text-red-800 mb-0.5 text-sm sm:text-base">{c.label}</div>
-            <div className="text-2xl sm:text-3xl font-bold text-red-600 mb-0.5">{c.number}</div>
-            <div className="text-xs sm:text-sm text-red-600">{c.sub}</div>
-          </div>
+          <a key={i} href={`tel:${c.number}`} style={{
+            background: "white",
+            border: `1px solid ${c.border}`,
+            borderRadius: 16,
+            padding: "20px 14px",
+            textAlign: "center",
+            textDecoration: "none",
+            display: "block",
+            boxShadow: "0 2px 8px rgba(220,38,38,0.07)",
+            transition: "transform 0.15s, box-shadow 0.15s",
+            cursor: "pointer",
+          }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(-3px)";
+              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 8px 24px rgba(220,38,38,0.15)";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLAnchorElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLAnchorElement).style.boxShadow = "0 2px 8px rgba(220,38,38,0.07)";
+            }}
+          >
+            <div style={{ color: c.color, display: "flex", justifyContent: "center", marginBottom: 8 }}>{c.icon}</div>
+            <div style={{ fontWeight: 700, color: "#7f1d1d", fontSize: 13, marginBottom: 4 }}>{c.label}</div>
+            <div style={{ fontSize: 32, fontWeight: 900, color: c.color, lineHeight: 1, marginBottom: 4 }}>{c.number}</div>
+            <div style={{ fontSize: 11.5, color: "#b91c1c" }}>{c.sub}</div>
+          </a>
         ))}
       </div>
     </div>

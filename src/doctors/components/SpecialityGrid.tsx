@@ -1,8 +1,11 @@
 // doctors/components/SpecialtyGrid.tsx
-import React from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Heart, Activity, Brain, Thermometer, AlertTriangle, Stethoscope, User } from "lucide-react";
-import { doctorDatabase } from "./Doctordata";
+import {
+  Heart, Activity, Brain, Thermometer,
+  AlertTriangle, Stethoscope, User, ChevronDown, ChevronUp
+} from "lucide-react";
+import { doctorDatabase } from "./DoctorData";
 
 interface SpecialtyGridProps {
   onSelectSpecialty: (key: string) => void;
@@ -21,34 +24,81 @@ const iconMap: Record<string, React.ComponentType<any>> = {
   generalMedicine: Stethoscope,
 };
 
+const INITIAL_SHOW = 8;
+
 const SpecialtyGrid: React.FC<SpecialtyGridProps> = ({ onSelectSpecialty }) => {
   const { t, i18n } = useTranslation("doctors");
   const lang = i18n.language as "en" | "ur";
 
+  const [showAll, setShowAll] = useState(false);
+
+  const keys = Object.keys(doctorDatabase);
+  const displayed = showAll ? keys : keys.slice(0, INITIAL_SHOW);
+
   return (
-    <div className="bg-white/90 backdrop-blur p-6 sm:p-8 rounded-3xl shadow-lg border border-slate-100 mb-8">
-      <h3 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-5 sm:mb-6 text-center">
+    <div className="glass-card p-6 mb-6 text-white">
+
+      {/* Title */}
+      <h3 className="text-xl font-bold text-center mb-6">
         {t("specialty.browseTitle")}
       </h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        {Object.keys(doctorDatabase).map((key) => {
+
+      {/* Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+        {displayed.map((key) => {
           const specialty = doctorDatabase[key];
           const IconComponent = iconMap[key] || Stethoscope;
+
           return (
-            <button key={key}
+            <button
+              key={key}
               onClick={() => onSelectSpecialty(key)}
-              className="p-4 sm:p-5 bg-gradient-to-br from-green-50 to-green-50 hover:from-green-100 hover:to-green-100 rounded-2xl transition-all text-center group border border-green-100 hover:border-green-200 shadow-sm hover:shadow-md">
-              <IconComponent className="mx-auto mb-2.5 sm:mb-3 text-green-600 group-hover:text-green-700" size={28} />
-              <div className="font-medium text-gray-800 mb-0.5 text-xs sm:text-sm leading-tight">
+              className="flex flex-col items-center gap-2 p-4 rounded-xl 
+                         bg-white/10 border border-white/20 
+                         hover:bg-white/20 transition-all duration-200 
+                         hover:-translate-y-1 hover:shadow-lg"
+            >
+              {/* Icon */}
+              <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
+                <IconComponent size={20} className="text-white" />
+              </div>
+
+              {/* Name */}
+              <div className="text-xs font-semibold text-center text-white">
                 {specialty.name[lang]}
               </div>
-              <div className="text-[11px] sm:text-xs text-green-600 font-medium">
+
+              {/* Count */}
+              <span className="text-[11px] px-2 py-[2px] rounded-full bg-white/10 border border-white/20 text-white/70">
                 {specialty.doctors.length} {t("specialty.doctors")}
-              </div>
+              </span>
             </button>
           );
         })}
       </div>
+
+      {/* View More Button */}
+      {keys.length > INITIAL_SHOW && (
+        <div className="flex justify-center mt-6">
+          <button
+            onClick={() => setShowAll(v => !v)}
+            className="flex items-center gap-2 px-6 py-2 rounded-full 
+                       bg-white/10 border border-white/20 
+                       text-white/80 text-sm font-semibold 
+                       hover:bg-white/20 transition"
+          >
+            {showAll ? (
+              <>
+                <ChevronUp size={16} /> Show Less
+              </>
+            ) : (
+              <>
+                <ChevronDown size={16} /> View More
+              </>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

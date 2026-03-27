@@ -1,7 +1,7 @@
 // doctors/components/LocationPanel.tsx
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { MapPin, Locate, Map, AlertTriangle, Navigation, Star, DollarSign, Route, Phone } from "lucide-react";
+import { MapPin, Locate, Map, AlertTriangle, Navigation, Star, DollarSign, Route, Phone, ChevronDown } from "lucide-react";
 import type { Coordinates, DoctorWithMeta } from "./types";
 
 interface LocationPanelProps {
@@ -31,116 +31,194 @@ const LocationPanel: React.FC<LocationPanelProps> = ({
 
   return (
     <>
-      {/* Location section */}
-      <div className="bg-green-50/90 p-4 sm:p-5 rounded-2xl border border-green-200 mb-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <MapPin className="text-green-600 mt-1" size={24} />
-            <div>
-              <h4 className="font-semibold text-green-800 text-sm sm:text-base">{t("location.findNearest")}</h4>
-              <p className="text-xs sm:text-sm text-green-600">
-                {userLocation ? t("location.enabled") : t("location.disabled")}
-              </p>
-            </div>
+      {/* Location bar */}
+      <div style={{
+        background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+        border: "1px solid #bbf7d0",
+        borderRadius: 20,
+        padding: "20px 24px",
+        marginBottom: 20,
+        display: "flex", flexWrap: "wrap",
+        alignItems: "center", justifyContent: "space-between", gap: 14,
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{
+            width: 44, height: 44, borderRadius: 12,
+            background: "white", border: "1px solid #bbf7d0",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            boxShadow: "0 2px 8px rgba(22,163,74,0.1)",
+          }}>
+            <MapPin size={20} color="#16a34a" />
           </div>
-
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            {!userLocation && (
-              <button onClick={onGetLocation} disabled={isLoadingLocation}
-                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 transition-all text-sm">
-                <Locate size={18} />
-                {isLoadingLocation ? t("location.getting") : t("location.useMyLocation")}
-              </button>
-            )}
-            <button onClick={onToggleMap}
-              className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all text-sm">
-              <Map size={18} />
-              {showMap ? t("location.hideMap") : t("location.showMap")}
-            </button>
-            {userLocation && (
-              <div className="flex items-center gap-2">
-                <label className="text-xs sm:text-sm font-medium text-green-700">{t("location.radius")}:</label>
-                <select value={selectedRadius}
-                  onChange={(e) => onRadiusChange(parseInt(e.target.value, 10))}
-                  className="px-3 py-1.5 border border-green-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-green-500 bg-white">
-                  {[5, 10, 15, 25, 50].map((r) => <option key={r} value={r}>{r} km</option>)}
-                </select>
-              </div>
-            )}
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: "#14532d", margin: 0 }}>{t("location.findNearest")}</p>
+            <p style={{ fontSize: 12.5, color: "#16a34a", margin: 0 }}>
+              {userLocation ? t("location.enabled") : t("location.disabled")}
+            </p>
           </div>
         </div>
 
-        {locationError && (
-          <div className="mt-3 p-3 bg-red-100 border border-red-200 rounded-lg">
-            <p className="text-red-700 text-xs sm:text-sm flex items-center gap-2">
-              <AlertTriangle size={16} />{locationError}
-            </p>
-          </div>
-        )}
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
+          {!userLocation && (
+            <button onClick={onGetLocation} disabled={isLoadingLocation}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "9px 18px", borderRadius: 10,
+                background: "#16a34a", color: "white", border: "none",
+                fontSize: 13, fontWeight: 600, cursor: isLoadingLocation ? "not-allowed" : "pointer",
+                opacity: isLoadingLocation ? 0.7 : 1, transition: "all 0.15s",
+              }}>
+              <Locate size={16} />
+              {isLoadingLocation ? t("location.getting") : t("location.useMyLocation")}
+            </button>
+          )}
+
+          <button onClick={onToggleMap}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              padding: "9px 18px", borderRadius: 10,
+              background: showMap ? "#15803d" : "white",
+              color: showMap ? "white" : "#16a34a",
+              border: "1.5px solid #bbf7d0",
+              fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
+            }}>
+            <Map size={16} />
+            {showMap ? t("location.hideMap") : t("location.showMap")}
+          </button>
+
+          {userLocation && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 12.5, fontWeight: 600, color: "#15803d" }}>{t("location.radius")}:</span>
+              <div style={{ position: "relative" }}>
+                <select value={selectedRadius}
+                  onChange={e => onRadiusChange(parseInt(e.target.value, 10))}
+                  style={{
+                    padding: "8px 32px 8px 12px",
+                    border: "1.5px solid #bbf7d0",
+                    borderRadius: 10, fontSize: 13,
+                    background: "white", color: "#14532d",
+                    fontWeight: 600, outline: "none", cursor: "pointer",
+                    appearance: "none", WebkitAppearance: "none",
+                  }}>
+                  {[5, 10, 15, 25, 50].map(r => <option key={r} value={r}>{r} km</option>)}
+                </select>
+                <ChevronDown size={13} color="#16a34a" style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Map mock */}
+      {/* Error */}
+      {locationError && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: 8,
+          background: "#fef2f2", border: "1px solid #fecaca",
+          borderRadius: 12, padding: "12px 16px", marginBottom: 16,
+        }}>
+          <AlertTriangle size={16} color="#dc2626" />
+          <p style={{ color: "#dc2626", fontSize: 13, margin: 0 }}>{locationError}</p>
+        </div>
+      )}
+
+      {/* Map */}
       {showMap && (
-        <div className="mb-6 bg-white/90 rounded-2xl shadow-md border border-slate-100 p-4">
-          <div className="h-80 sm:h-96 bg-gray-100 rounded-xl relative overflow-hidden flex items-center justify-center">
-            <div className="text-center">
-              <Map className="mx-auto mb-2 text-gray-400" size={48} />
-              <p className="text-gray-600 mb-2 text-sm">{t("map.title")}</p>
-              <p className="text-xs text-gray-500">
-                {t("map.center")}: {mapCenter.lat.toFixed(4)}, {mapCenter.lng.toFixed(4)}
-              </p>
-              {userLocation && (
-                <p className="text-green-600 text-xs font-medium mt-1">
+        <div style={{
+          background: "white", borderRadius: 20,
+          border: "1px solid rgba(0,0,0,0.06)",
+          boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
+          overflow: "hidden", marginBottom: 20,
+        }}>
+          <div style={{
+            height: 320,
+            background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            position: "relative",
+          }}>
+            <Map size={48} color="#86efac" style={{ marginBottom: 12 }} />
+            <p style={{ color: "#15803d", fontWeight: 600, fontSize: 15, margin: "0 0 4px" }}>{t("map.title")}</p>
+            <p style={{ color: "#16a34a", fontSize: 13, margin: "0 0 4px" }}>
+              {t("map.center")}: {mapCenter.lat.toFixed(4)}, {mapCenter.lng.toFixed(4)}
+            </p>
+            {userLocation && (
+              <>
+                <p style={{ color: "#15803d", fontSize: 12.5, fontWeight: 600, margin: "0 0 4px" }}>
                   {t("map.yourLocation")}: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
                 </p>
-              )}
-              <p className="text-[11px] text-gray-400 mt-2">{t("map.note")}</p>
-            </div>
-            {userLocation && (
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <div className="bg-green-600 w-4 h-4 rounded-full border-4 border-white shadow-lg animate-pulse"></div>
-              </div>
+                <div style={{
+                  position: "absolute", top: "50%", left: "50%",
+                  transform: "translate(-50%,-50%)",
+                  width: 18, height: 18, borderRadius: "50%",
+                  background: "#16a34a", border: "4px solid white",
+                  boxShadow: "0 0 0 6px rgba(22,163,74,0.2)",
+                  animation: "pulse 2s ease-in-out infinite",
+                }} />
+                <style>{`@keyframes pulse { 0%,100%{box-shadow:0 0 0 6px rgba(22,163,74,0.2)} 50%{box-shadow:0 0 0 12px rgba(22,163,74,0.05)} }`}</style>
+              </>
             )}
+            <p style={{ color: "#86efac", fontSize: 11.5, margin: "8px 0 0" }}>{t("map.note")}</p>
           </div>
         </div>
       )}
 
       {/* Nearby doctors */}
       {userLocation && nearbyDoctors.length > 0 && (
-        <div className="bg-green-50/90 p-5 sm:p-6 rounded-2xl border border-green-200 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-            <h3 className="text-base sm:text-lg font-semibold text-green-800 flex items-center gap-2">
-              <Navigation className="text-green-600" size={20} />
+        <div style={{
+          background: "linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%)",
+          border: "1px solid #bbf7d0",
+          borderRadius: 20, padding: "24px", marginBottom: 20,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
+            <h3 style={{ fontSize: 17, fontWeight: 700, color: "#14532d", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+              <Navigation size={18} color="#16a34a" />
               {t("location.nearbyCount", { count: nearbyDoctors.length })}
             </h3>
-            <span className="text-xs sm:text-sm text-green-700">
+            <span style={{ fontSize: 12.5, color: "#16a34a", fontWeight: 600 }}>
               {t("location.withinRadius", { radius: selectedRadius })}
             </span>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            {nearbyDoctors.slice(0, 4).map((doctor) => (
-              <div key={doctor.id} className="bg-white/90 p-4 rounded-xl border border-green-200 hover:shadow-md transition-all">
-                <h4 className="font-semibold text-gray-800 text-sm mb-1">{doctor.name}</h4>
-                <p className="text-xs text-green-600 font-medium mb-1">{doctor.specialty[lang]}</p>
-                <p className="text-[11px] text-gray-600 mb-2">{doctor.hospital}</p>
-                <div className="flex flex-wrap items-center gap-2 text-[11px] text-gray-500 mb-3">
-                  <div className="flex items-center gap-1"><Route className="text-green-500" size={12} /><span>{doctor.distance} km</span></div>
-                  <div className="flex items-center gap-1"><Star className="text-yellow-500" size={12} /><span>{doctor.rating}</span></div>
-                  <div className="flex items-center gap-1"><DollarSign className="text-gray-400" size={12} /><span>Rs. {doctor.consultationFee}</span></div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 14 }}>
+            {nearbyDoctors.slice(0, 4).map(doctor => (
+              <div key={doctor.id} style={{
+                background: "white", borderRadius: 16,
+                border: "1px solid #dcfce7",
+                padding: "16px",
+                boxShadow: "0 2px 8px rgba(22,163,74,0.07)",
+                transition: "box-shadow 0.15s",
+              }}>
+                <h4 style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: "0 0 2px" }}>{doctor.name}</h4>
+                <p style={{ fontSize: 12, color: "#16a34a", fontWeight: 600, margin: "0 0 2px" }}>{doctor.specialty[lang]}</p>
+                <p style={{ fontSize: 11.5, color: "#6b7280", margin: "0 0 10px" }}>{doctor.hospital}</p>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+                  <Chip icon={<Route size={11} color="#16a34a"/>} text={`${doctor.distance} km`} />
+                  <Chip icon={<Star size={11} color="#f59e0b"/>} text={String(doctor.rating)} />
+                  <Chip icon={<DollarSign size={11} color="#9ca3af"/>} text={`Rs. ${doctor.consultationFee}`} />
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => onViewDoctor(doctor)}
-                    className="flex-1 bg-green-600 text-white py-2 px-3 rounded-lg text-xs font-medium hover:bg-green-700 transition-all">
+
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={() => onViewDoctor(doctor)} style={{
+                    flex: 1, background: "#16a34a", color: "white", border: "none",
+                    borderRadius: 8, padding: "7px 0", fontSize: 12, fontWeight: 600,
+                    cursor: "pointer",
+                  }}>
                     {t("card.view")}
                   </button>
-                  <a href={`tel:${doctor.phone}`}
-                    className="flex items-center justify-center bg-green-600 text-white p-2 rounded-lg hover:bg-green-700 transition-all">
-                    <Phone size={16} />
+                  <a href={`tel:${doctor.phone}`} style={{
+                    background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0",
+                    borderRadius: 8, padding: "7px 10px",
+                    display: "flex", alignItems: "center", textDecoration: "none",
+                  }}>
+                    <Phone size={14} />
                   </a>
-                  <button onClick={() => onGetDirections(doctor)}
-                    className="flex items-center justify-center bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-700 transition-all">
-                    <Navigation size={16} />
+                  <button onClick={() => onGetDirections(doctor)} style={{
+                    background: "#f5f3ff", color: "#7c3aed", border: "1px solid #e9d5ff",
+                    borderRadius: 8, padding: "7px 10px",
+                    display: "flex", alignItems: "center", cursor: "pointer",
+                  }}>
+                    <Navigation size={14} />
                   </button>
                 </div>
               </div>
@@ -148,8 +226,12 @@ const LocationPanel: React.FC<LocationPanelProps> = ({
           </div>
 
           {nearbyDoctors.length > 4 && (
-            <div className="text-center mt-4">
-              <button onClick={onViewAll} className="text-green-700 hover:text-green-800 font-medium text-xs sm:text-sm">
+            <div style={{ textAlign: "center", marginTop: 16 }}>
+              <button onClick={onViewAll} style={{
+                background: "none", border: "none",
+                color: "#16a34a", fontWeight: 600, fontSize: 13.5,
+                cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3,
+              }}>
                 {t("location.viewAll", { count: nearbyDoctors.length })}
               </button>
             </div>
@@ -159,5 +241,15 @@ const LocationPanel: React.FC<LocationPanelProps> = ({
     </>
   );
 };
+
+const Chip: React.FC<{ icon: React.ReactNode; text: string }> = ({ icon, text }) => (
+  <span style={{
+    display: "inline-flex", alignItems: "center", gap: 4,
+    background: "#f9fafb", border: "1px solid #e5e7eb",
+    borderRadius: 8, padding: "3px 8px", fontSize: 11.5, color: "#374151",
+  }}>
+    {icon} {text}
+  </span>
+);
 
 export default LocationPanel;

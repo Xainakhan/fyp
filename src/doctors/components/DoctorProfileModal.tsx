@@ -1,112 +1,115 @@
-// doctors/components/DoctorProfileModal.tsx
+// doctors/components/HeroSection.tsx
 import React from "react";
-import { useTranslation } from "react-i18next";
-import { Star, Navigation, Route, Phone } from "lucide-react";
-import type { DoctorWithMeta } from "./types";
+import { Search, MapPin, ChevronDown } from "lucide-react";
+import type { DoctorDatabase } from "./types";
 
-interface DoctorProfileModalProps {
-  doctor: DoctorWithMeta;
-  onClose: () => void;
-  onGetDirections: (d: DoctorWithMeta) => void;
+interface HeroSectionProps {
+  heroCity: string;
+  setHeroCity: (city: string) => void;
+  heroSpecialty: string;
+  setHeroSpecialty: (key: string) => void;
+  heroQuery: string;
+  setHeroQuery: (q: string) => void;
+  doctorDatabase: DoctorDatabase;
+  lang: "en" | "ur";
+  onSearch: () => void;
 }
 
-const DoctorProfileModal: React.FC<DoctorProfileModalProps> = ({ doctor, onClose, onGetDirections }) => {
-  const { t, i18n } = useTranslation("doctors");
-  const lang = i18n.language as "en" | "ur";
-
+const HeroSection: React.FC<HeroSectionProps> = ({
+  heroCity,
+  setHeroCity,
+  heroSpecialty,
+  setHeroSpecialty,
+  heroQuery,
+  setHeroQuery,
+  doctorDatabase,
+  lang,
+  onSearch,
+}) => {
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-5 sm:p-6">
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h3 className="text-lg sm:text-2xl font-bold text-gray-800">{t("modal.title")}</h3>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
-          </div>
+    <div className="glass-card p-6 mb-6 text-white relative overflow-hidden">
 
-          <div className="space-y-5 sm:space-y-6">
-            {/* Header info */}
-            <div className="text-center">
-              <h4 className="text-lg sm:text-xl font-bold text-gray-800 mb-1.5">{doctor.name}</h4>
-              <p className="text-sm sm:text-base text-green-600 font-medium mb-3">{doctor.specialty[lang]}</p>
-              <div className="flex items-center justify-center mb-3">
-                <Star className="text-yellow-500 mr-1" size={20} />
-                <span className="text-base sm:text-lg font-semibold text-gray-800 mr-1">{doctor.rating}</span>
-                <span className="text-xs sm:text-sm text-gray-600">({doctor.reviews} {t("card.reviews")})</span>
-              </div>
-              {doctor.distance != null && (
-                <div className="flex items-center justify-center text-sm">
-                  <Route className="text-green-500 mr-1" size={16} />
-                  <span className="text-green-600 font-medium">{doctor.distance} {t("card.kmAway")}</span>
-                </div>
+      {/* Overlay effect */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at top left, rgba(255,255,255,0.08), transparent 70%), " +
+            "radial-gradient(circle at bottom right, rgba(0,0,0,0.08), transparent 70%)",
+        }}
+      />
+
+      {/* Hero content */}
+      <div className="relative z-10 text-center max-w-3xl mx-auto">
+        <h1 className="font-extrabold text-3xl sm:text-4xl md:text-5xl mb-2 text-white drop-shadow-lg">
+          Find the best doctors<br />in Pakistan
+        </h1>
+        <p className="text-sm sm:text-base mb-7 text-white drop-shadow-md">
+          Track your heart rate, blood pressure, and more with just your phone's front
+          <br />
+          camera — anytime, anywhere.
+        </p>
+
+        {/* Search bar */}
+        <div className="flex items-center bg-white/95 rounded-lg shadow-md overflow-hidden max-w-2xl mx-auto">
+          
+          {/* City dropdown */}
+          <div className="flex items-center gap-2 border-r border-gray-200 px-3 min-w-[130px] relative">
+            <MapPin size={15} className="text-gray-500" />
+            <select
+              value={heroCity}
+              onChange={(e) => setHeroCity(e.target.value)}
+              className="bg-transparent border-none outline-none text-gray-700 text-sm font-medium pl-1 pr-6 py-3 w-full cursor-pointer appearance-none"
+            >
+              {["Islamabad", "Lahore", "Karachi", "Rawalpindi", "Faisalabad", "Multan", "Peshawar"].map(
+                (c) => (
+                  <option key={c}>{c}</option>
+                )
               )}
-            </div>
-
-            {/* Details */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-              <div className="space-y-2">
-                <p><span className="font-medium">{t("modal.qualification")}:</span> {doctor.qualification}</p>
-                <p><span className="font-medium">{t("modal.experience")}:</span> {doctor.experience}</p>
-                <p><span className="font-medium">{t("modal.hospital")}:</span> {doctor.hospital}</p>
-                <p><span className="font-medium">{t("modal.location")}:</span> {doctor.location}</p>
-              </div>
-              <div className="space-y-2">
-                <p><span className="font-medium">{t("modal.fee")}:</span> Rs. {doctor.consultationFee}</p>
-                <p><span className="font-medium">{t("modal.phone")}:</span> {doctor.phone}</p>
-                <p><span className="font-medium">{t("modal.online")}:</span> {doctor.onlineConsultation ? t("modal.available") : t("modal.notAvailable")}</p>
-                {doctor.address && <p><span className="font-medium">{t("modal.address")}:</span> {doctor.address}</p>}
-              </div>
-            </div>
-
-            {/* Specializations */}
-            <div>
-              <h5 className="font-medium text-gray-800 mb-2 text-sm">{t("card.specializations")}:</h5>
-              <div className="flex flex-wrap gap-1.5">
-                {doctor.specializations.map((spec, idx) => (
-                  <span key={idx} className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">{spec}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Availability */}
-            <div>
-              <h5 className="font-medium text-gray-800 mb-2 text-sm">{t("card.availableDays")}:</h5>
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {doctor.availability.map((day, idx) => (
-                  <span key={idx} className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">{day}</span>
-                ))}
-              </div>
-              <p className="text-xs sm:text-sm text-gray-600">{doctor.timeSlots.join(" | ")}</p>
-            </div>
-
-            {/* Languages */}
-            <div>
-              <h5 className="font-medium text-gray-800 mb-2 text-sm">{t("card.languages")}:</h5>
-              <div className="flex flex-wrap gap-1.5">
-                {doctor.languages.map((l, idx) => (
-                  <span key={idx} className="bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full text-xs">{l}</span>
-                ))}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-              <a href={`tel:${doctor.phone}`}
-                className="flex-1 bg-green-600 text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-green-700 transition-all text-center">
-                {t("card.callNow")}
-              </a>
-              <button className="flex-1 bg-purple-600 text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-purple-700 transition-all">
-                {t("card.bookAppointment")}
-              </button>
-              <button onClick={() => onGetDirections(doctor)}
-                className="flex items-center justify-center bg-gray-100 text-gray-700 py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-all">
-                <Navigation size={18} />
-              </button>
-            </div>
+            </select>
+            <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
           </div>
+
+          {/* Specialty dropdown */}
+          <div className="flex items-center gap-2 border-r border-gray-200 px-3 min-w-[130px] relative">
+            <select
+              value={heroSpecialty}
+              onChange={(e) => setHeroSpecialty(e.target.value)}
+              className={`bg-transparent border-none outline-none text-sm font-medium pl-1 pr-6 py-3 w-full cursor-pointer appearance-none ${
+                heroSpecialty ? "text-gray-700" : "text-gray-400"
+              }`}
+            >
+              <option value="">Specialities</option>
+              {Object.keys(doctorDatabase).map((key) => (
+                <option key={key} value={key}>
+                  {doctorDatabase[key].name[lang]}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={13} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+          </div>
+
+          {/* Search input */}
+          <input
+            type="text"
+            placeholder="Search by doctor, Speciality, hospital, or disease"
+            value={heroQuery}
+            onChange={(e) => setHeroQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSearch()}
+            className="flex-1 border-none outline-none text-gray-700 text-sm px-3 py-3 bg-transparent"
+          />
+
+          {/* Search button */}
+          <button
+            onClick={onSearch}
+            className="bg-blue-600 hover:bg-blue-700 transition text-white px-5 flex items-center justify-center"
+          >
+            <Search size={18} />
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default DoctorProfileModal;
+export default HeroSection;
