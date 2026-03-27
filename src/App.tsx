@@ -18,6 +18,7 @@ import HealthTimeline from "./healthTimeline/HealthTimeline";
 import PatientProfile from "./profile/patientProfile";
 import BackgroundWrapper from "./components/wrapperbg";
 import NotFound from "./homePage/NotFound";
+import GlobalChatbot from "./components/GlobalChatbot";
 
 // Auth imports
 import { Login, Register, ForgotPassword, ResetPassword } from "./auth/authExports";
@@ -156,6 +157,7 @@ function AppContent() {
           <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       )}
+      <GlobalChatbot />  
     </>
   );
 }
