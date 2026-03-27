@@ -8,10 +8,20 @@ const HeroGlassCard: React.FC = () => {
         className="relative w-full max-w-[1300px] 
                     bg-white/10 backdrop-blur-xl border border-white/20 
                     rounded-2xl p-6 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]
-                    flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16"
+                    flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 overflow-hidden"
       >
-        {/* RIGHT CONTENT */}
-        <div className="max-w-[520px] text-center text-white">
+        {/* BACKGROUND IMAGE */}
+        <img
+          src="/src/assets/dr-hero.png"
+          alt="Doctor"
+          className="absolute inset-0 w-full h-full object-cover opacity-70"
+        />
+
+        {/* OPTIONAL OVERLAY */}
+        <div className="absolute inset-0 bg-black/40"></div>
+
+        {/* CONTENT */}
+        <div className="relative max-w-[520px] text-center text-white">
           <h1 className="text-[28px] sm:text-[34px] md:text-[40px] font-semibold leading-[1.2]">
             Find the best doctors
             <br className="hidden sm:block" /> in Pakistan
