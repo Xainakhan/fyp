@@ -1,10 +1,13 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const ExpertSection: React.FC = () => {
+  const { t, i18n } = useTranslation("home");
+
+  const isUrdu = i18n.language === "ur";
+
   return (
-    <div className="w-full px-4 md:px-8 pt-25 md:pt-20
-     pb-12 text-white">
-      {/* Glass Container */}
+    <div className="w-full px-4 md:px-8 pt-25 md:pt-20 pb-12 text-white">
       <div
         className="relative max-w-[1300px] mx-auto rounded-2xl overflow-hidden
                    bg-white/10 backdrop-blur-xl border border-white/20
@@ -15,26 +18,37 @@ const ExpertSection: React.FC = () => {
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col lg:flex-row items-center gap-10">
-          {/* LEFT CONTENT */}
-          <div className="flex-1 max-w-[520px] text-left">
+        <div
+          className={`relative z-10 flex flex-col lg:flex-row items-center gap-10 ${
+            isUrdu ? "lg:flex-row-reverse" : ""
+          }`}
+        >
+          {/* TEXT CONTENT */}
+          <div
+            className={`flex-1 max-w-[520px] ${
+              isUrdu ? "text-right" : "text-left"
+            }`}
+          >
             <h2 className="text-3xl md:text-4xl font-semibold leading-tight">
-              Care you can trust – Backed by leading experts
+              {t("expertSection.title")}
             </h2>
 
             <p className="mt-4 text-white/80 text-sm md:text-[15px] leading-relaxed">
-              Our team of 120+ technical and medical experts across Pakistan, 
-              as well as our health clinics, are committed to making Pakistan 
-              healthier and happier. With over 10,000+ patients, we blend 
-              compassionate healthcare with cutting-edge Artificial Intelligence technology.
+              {t("expertSection.description")}
             </p>
 
-            <button className="mt-6 bg-blue-600 hover:bg-blue-700 px-5 py-3 rounded-lg text-sm font-medium shadow-lg">
-              Try Free Scan Now
-            </button>
+            <div className="flex">
+              <button
+                className={`mt-6 bg-blue-600 hover:bg-blue-700 px-5 py-3 rounded-lg text-sm font-medium shadow-lg ${
+                  isUrdu ? "ml-auto" : ""
+                }`}
+              >
+                {t("expertSection.cta")}
+              </button>
+            </div>
           </div>
 
-          {/* RIGHT IMAGE */}
+          {/* IMAGE */}
           <div className="flex-1 flex justify-start lg:justify-end">
             <img
               src="src/assets/leading-expert.png"

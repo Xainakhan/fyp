@@ -1,77 +1,38 @@
 {
-  "appName": "SehatHub",
-  "tagline": "Pakistan's first voice-first AI health triage platform. Describe your symptoms in Urdu or English and get instant guidance.",
-  "moduleHelperText": "Not sure where to start? Begin with a quick health interview and our AI will guide you to the right specialist.",
-
-  "badge": "Voice-First Health Triage",
-
-  "hero": {
-    "searchLabel": "Select your city and search for a doctor, specialist, or hospital",
-    "cityPlaceholder": "Select city",
-    "searchPlaceholder": "Search by doctor, specialty, hospital or disease...",
-    "findDoctorBtn": "Find Doctor",
-    "quickReasonsLabel": "Or choose from common health reasons:"
-  },
-
-  "popularReasons": {
-    "fever": "Fever & Flu",
-    "chestPain": "Chest Pain",
-    "bp": "Blood Pressure",
-    "sugar": "Diabetes / Sugar",
-    "stomach": "Stomach Pain",
-    "headache": "Headache / Migraine"
-  },
-
-  "howWeHelp": {
-    "heading": "How can we help you today?"
-  },
-
-  "features": {
-    "interview": {
-      "title": "Health Interview",
-      "desc": "Answer a few questions and get AI-powered triage guidance instantly."
+  "helpSection": {
+    "title": "How can we help you today?",
+    "videoConsultation": {
+      "label": "Video",
+      "title": "Consultation",
+      "subtitle": "PMC Verified Doctors"
     },
-    "findDoctor": {
-      "title": "Find a Doctor",
-      "desc": "Search verified doctors, specialists, and hospitals near you."
+    "search": {
+      "placeholder": "Search doctor, specialty, hospital...",
+      "button": "🔍 Search"
     },
-    "tts": {
-      "title": "Voice Assistant",
-      "desc": "Speak your symptoms in Urdu or English and get spoken guidance."
+    "tags": ["Flu & Fever", "Chest Pain", "Blood Pressure", "Headache", "Diabetes"]
+  },
+  "heroSection": {
+    "title": "Pakistan's First AI Enabled App",
+    "subtitle": "Track your heart rate, blood pressure, and more with just your phone's front camera — anytime, anywhere.",
+    "googlePlay": {
+      "label": "GET IT ON",
+      "title": "Google Play"
     },
-    "healthTimeline": {
-      "title": "Health Timeline",
-      "desc": "Track your medical history, visits, and health records over time."
+    "appStore": {
+      "label": "Download on the",
+      "title": "App Store"
     }
   },
-
-  "quickStart": {
-    "heading": "Get Started Quickly",
-    "startInterviewBtn": "Start Health Interview",
-    "testVoiceBtn": "Test Voice Assistant"
+  "hospitalSection": {
+    "title": "Hospitals In Pakistan"
   },
-
-  "stats": {
-    "doctors": "Doctors",
-    "cities": "Cities",
-    "languages": "Languages",
-    "available": "Available 24/7"
+  "expertSection": {
+    "title": "Care you can trust – Backed by leading experts",
+    "description": "Our team of 120+ technical and medical experts across Pakistan, as well as our health clinics, are committed to making Pakistan healthier and happier. With over 10,000+ patients, we blend compassionate healthcare with cutting-edge Artificial Intelligence technology.",
+    "cta": "Try Free Scan Now"
   },
-
-  "disclaimer": {
-    "title": "Medical Disclaimer",
-    "content": "SehatHub is an AI-assisted triage tool for informational purposes only. It does not replace professional medical advice, diagnosis, or treatment. Always consult a qualified healthcare provider for medical concerns."
-  },
-  "voiceMode": {
-  "enable": "Enable Voice Mode",
-  "disable": "Disable Voice Mode",
-  "activeTitle": "Voice Mode is Active",
-  "activeHint": "Say a command like: \"symptom checker\", \"find doctor\", \"interview\", \"timeline\", \"voice assistant\"",
-  "listening": "Listening...",
-  "recognized": "Command recognized!",
-  "ready": "Ready",
-  "sayCommand": "Say a command to navigate...",
-  "navigating": "Navigating, please wait.",
-  "notUnderstood": "Sorry, I didn't catch that. Please try again."
-}
+  "testimonialSection": {
+    "title": "Your Words are our Proud!"
+  }
 }

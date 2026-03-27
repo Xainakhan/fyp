@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 const hospitals = [
   { name: "Fauji Foundation Hospital", desc: "Northeast Healthcare, Phase 2, Islamabad." },
@@ -14,18 +15,19 @@ const hospitals = [
 ];
 
 const HospitalSection: React.FC = () => {
+  const { t, i18n } = useTranslation("home");
+  const isRTL = i18n.language === "ur";
   const scrollRef = useRef<HTMLDivElement>(null);
   const isHovered = useRef(false);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-
     let animationFrame: number;
 
     const scroll = () => {
       if (!isHovered.current) {
-        el.scrollLeft += 0.6; // 🔥 speed
+        el.scrollLeft += 0.6;
         if (el.scrollLeft >= el.scrollWidth / 2) {
           el.scrollLeft = 0;
         }
@@ -34,22 +36,17 @@ const HospitalSection: React.FC = () => {
     };
 
     scroll();
-
     return () => cancelAnimationFrame(animationFrame);
   }, []);
 
   return (
     <div className="w-full px-4 md:px-8 py-6">
-
-      {/* Container */}
       <div className="bg-[#c7d5ec] rounded-2xl p-6 shadow-xl">
-        
-        {/* Heading */}
-        <h2 className="text-2xl md:text-3xl font-semibold text-black mb-6 text-left">
-          Hospitals In Pakistan
+
+        <h2 className={`text-2xl md:text-3xl font-semibold text-black mb-6 ${isRTL ? "text-right" : "text-left"}`}>
+          {t("hospitalSection.title")}
         </h2>
 
-        {/* Slider */}
         <div
           ref={scrollRef}
           onMouseEnter={() => (isHovered.current = true)}
@@ -61,23 +58,40 @@ const HospitalSection: React.FC = () => {
               key={i}
               className="min-w-[300px] max-w-[300px] bg-white rounded-xl p-4 shadow-md hover:scale-[1.03] transition flex items-center"
             >
-              
-              {/* TEXT (LEFT FIXED) */}
-              <div className="flex-1 text-left">
-                <h3 className="font-semibold text-sm text-black leading-tight text-left">
-                  {h.name}
-                </h3>
-                <p className="text-xs text-gray-600 mt-1 leading-snug text-left">
-                  {h.desc}
-                </p>
-              </div>
-
-              {/* IMAGE */}
-              <img
-                src="src/assets/hospital.png"
-                alt="doctor"
-               className="w-[120px] h-[120px] object-contain ml-4 flex-shrink-0"
-              />
+              {/* In Urdu: image on LEFT, text on RIGHT (matching the screenshot) */}
+              {isRTL ? (
+                <>
+                  <img
+                    src="src/assets/hospital.png"
+                    alt="doctor"
+                    className="w-[120px] h-[120px] object-contain mr-4 flex-shrink-0"
+                  />
+                  <div className="flex-1 text-right">
+                    <h3 className="font-semibold text-sm text-black leading-tight">
+                      {h.name}
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-1 leading-snug">
+                      {h.desc}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex-1 text-left">
+                    <h3 className="font-semibold text-sm text-black leading-tight">
+                      {h.name}
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-1 leading-snug">
+                      {h.desc}
+                    </p>
+                  </div>
+                  <img
+                    src="src/assets/hospital.png"
+                    alt="doctor"
+                    className="w-[120px] h-[120px] object-contain ml-4 flex-shrink-0"
+                  />
+                </>
+              )}
             </div>
           ))}
         </div>
