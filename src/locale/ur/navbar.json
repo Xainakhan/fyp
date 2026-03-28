@@ -1,38 +1,18 @@
 {
-  "brand": {
-    "name": "صحت ہب",
-    "tagline": "آواز پر مبنی صحت"
+  "emergency": "ایمرجنسی",
+  "links": {
+    "talkBot": "ٹاک بوٹ",
+    "healthInterview": "صحت انٹرویو",
+    "symptomChecker": "علامات جانچ",
+    "findDoctor": "ڈاکٹر تلاش کریں"
   },
-  "emergency": {
-    "desktop": "ایمرجنسی",
-    "mobile": "ایمرجنسی 1122"
+  "symptomCheckerItems": {
+    "healthTriage": "ہیلتھ ٹریاج",
+    "healthTimeline": "ہیلتھ ٹائم لائن",
+    "diseaseLibrary": "بیماریوں کی لائبریری"
   },
-  "languageToggle": {
-    "desktop": "اردو",
-    "desktopAlt": "En",
-    "mobile": "🌐 اردو میں بدلیں",
-    "mobileAlt": "🌐 Switch to English",
-    "titleToUrdu": "اردو میں بدلیں",
-    "titleToEnglish": "انگریزی میں بدلیں"
-  },
-  "profile": {
-    "label": "پروفائل",
-    "title": "پروفائل"
-  },
-  "mobileMenu": {
-    "helperText": "کسی بھی فیچر پر جانے کے لیے اوپر سے منتخب کریں",
-    "ariaLabel": "مینو کھولیں"
-  },
-  "modules": {
-    "tts":            "آواز کا معاون",
-    "interview":      "صحت انٹرویو",
-    "symptom":        "علامات چیکر",
-    "triage":         "AI ٹریاج",
-    "doctor":         "ڈاکٹر تلاش کریں",
-    "timeline":       "صحت کا ریکارڈ",
-    "findDoctor":     "ڈاکٹر تلاش کریں",
-    "healthTimeline": "صحت کا ریکارڈ",
-    "doctors":        "ڈاکٹرز",
-    "profile":        "پروفائل"
+  "auth": {
+    "loginSignup": "لاگ ان / سائن اپ",
+    "myProfile": "میری پروفائل"
   }
 }

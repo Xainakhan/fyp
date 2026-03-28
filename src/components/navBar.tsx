@@ -14,11 +14,7 @@ interface NavbarProps {
   onToggleVoice: () => void;
 }
 
-const SYMPTOM_CHECKER_ITEMS = [
-  { label: "Health Triage", path: "/triage" },
-  { label: "Health Timeline", path: "/timeline" },
-  { label: "Disease Library", path: "/triage" },
-];
+// ── Moved INSIDE components so t() works and re-renders on language change ──
 
 const NavLink: React.FC<{ label: string; onClick: () => void; active?: boolean }> = ({
   label, onClick, active,
@@ -26,10 +22,10 @@ const NavLink: React.FC<{ label: string; onClick: () => void; active?: boolean }
   <button
     onClick={onClick}
     style={{
-      padding: "6px 14px", borderRadius: 8,
+      padding: "5px 10px", borderRadius: 8,
       border: active ? "1px solid rgba(255,255,255,0.25)" : "1px solid transparent",
       background: active ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)",
-      color: "white", fontSize: 14, fontWeight: 500, cursor: "pointer",
+      color: "white", fontSize: 13, fontWeight: 500, cursor: "pointer",
       backdropFilter: "blur(8px)", transition: "all 0.2s", whiteSpace: "nowrap",
     }}
     onMouseEnter={(e) => {
@@ -46,10 +42,18 @@ const NavLink: React.FC<{ label: string; onClick: () => void; active?: boolean }
 );
 
 const SymptomCheckerDropdown: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => {
+  const { t } = useTranslation("navbar"); // ── ADDED
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const active = ["/triage", "/timeline"].includes(location.pathname);
+
+  // ── Moved here so t() re-renders on language change ──
+  const SYMPTOM_CHECKER_ITEMS = [
+    { label: t("symptomCheckerItems.healthTriage"),   path: "/triage" },
+    { label: t("symptomCheckerItems.healthTimeline"), path: "/timeline" },
+    { label: t("symptomCheckerItems.diseaseLibrary"), path: "/triage" },
+  ];
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -64,8 +68,8 @@ const SymptomCheckerDropdown: React.FC<{ navigate: (path: string) => void }> = (
       <button
         onClick={() => setOpen((v) => !v)}
         style={{
-          display: "flex", alignItems: "center", gap: 6,
-          padding: "6px 14px", borderRadius: 8,
+          display: "flex", alignItems: "center", gap: 4,
+          padding: "5px 10px", borderRadius: 8,
           border: open || active ? "1px solid rgba(255,255,255,0.25)" : "1px solid transparent",
           background: open || active ? "rgba(255,255,255,0.22)" : "rgba(255,255,255,0.08)",
           color: "white", fontSize: 14, fontWeight: 600,
@@ -81,7 +85,7 @@ const SymptomCheckerDropdown: React.FC<{ navigate: (path: string) => void }> = (
           e.currentTarget.style.border = open || active ? "1px solid rgba(255,255,255,0.25)" : "1px solid transparent";
         }}
       >
-        Symptom Checker
+        {t("links.symptomChecker")} {/* ── CHANGED ── */}
         <ChevronDown size={13} style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "0.2s" }} />
       </button>
       {open && (
@@ -112,7 +116,16 @@ const SymptomCheckerDropdown: React.FC<{ navigate: (path: string) => void }> = (
 const SymptomAccordion: React.FC<{ navigate: (path: string) => void; closeDrawer: () => void }> = ({
   navigate, closeDrawer,
 }) => {
+  const { t } = useTranslation("navbar"); // ── ADDED
   const [open, setOpen] = useState(false);
+
+  // ── Moved here so t() re-renders on language change ──
+  const SYMPTOM_CHECKER_ITEMS = [
+    { label: t("symptomCheckerItems.healthTriage"),   path: "/triage" },
+    { label: t("symptomCheckerItems.healthTimeline"), path: "/timeline" },
+    { label: t("symptomCheckerItems.diseaseLibrary"), path: "/triage" },
+  ];
+
   return (
     <div>
       <button
@@ -127,7 +140,7 @@ const SymptomAccordion: React.FC<{ navigate: (path: string) => void; closeDrawer
         onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       >
-        Symptom Checker
+        {t("links.symptomChecker")} {/* ── CHANGED ── */}
         <ChevronDown size={16} color="rgba(255,255,255,0.45)"
           style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s ease", flexShrink: 0 }} />
       </button>
@@ -154,17 +167,23 @@ const SymptomAccordion: React.FC<{ navigate: (path: string) => void; closeDrawer
 const Navbar: React.FC<NavbarProps> = ({
   userLanguage, setUserLanguage, voiceModeOn, onToggleVoice,
 }) => {
-  const { i18n } = useTranslation("home");
+  const { t, i18n } = useTranslation("navbar");
   const router = useNavigate();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
 
-const [loginOpen, setLoginOpen] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
   const [forgotOpen, setForgotOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
-  const [resetPhone, setResetPhone] = useState("");  // ── Modal states ──
-  
+  const [resetPhone, setResetPhone] = useState("");
 
   // ── Auth state — replace with your real auth context ──
   const [isLoggedIn] = useState(false);
@@ -182,22 +201,15 @@ const [loginOpen, setLoginOpen] = useState(false);
 
   const closeDrawer = () => setDrawerOpen(false);
 
-  // Helpers to open/switch between modals
-const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setForgotOpen(false); setResetOpen(false); setLoginOpen(true); };
-  const openRegister = () => { setDrawerOpen(false); setLoginOpen(false); setForgotOpen(false); setLoginOpen(false); setRegisterOpen(true); };
+  const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setForgotOpen(false); setResetOpen(false); setLoginOpen(true); };
+  const openRegister = () => { setDrawerOpen(false); setLoginOpen(false); setForgotOpen(false); setRegisterOpen(true); };
   const openForgot   = () => { setLoginOpen(false); setRegisterOpen(false); setResetOpen(false); setForgotOpen(true); };
   const openReset    = (phone: string) => { setForgotOpen(false); setResetPhone(phone); setResetOpen(true); };
+
   return (
     <>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap');
-
-        .sh-desktop { display: flex !important; }
-        .sh-mobile  { display: none  !important; }
-        @media (max-width: 768px) {
-          .sh-desktop { display: none  !important; }
-          .sh-mobile  { display: flex  !important; }
-        }
 
         .sh-drawer {
           position: fixed; top: 0; right: 0;
@@ -249,26 +261,39 @@ const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setFo
         .sh-mic-active { animation: sh-mic-ring 1.1s ease-out infinite; }
       `}</style>
 
-      {/* ── DESKTOP NAV ── */}
-      <nav className="sh-desktop fixed top-0 w-full z-50 border-b border-white/20 backdrop-blur bg-gray-900/60 shadow-lg">
-        <div style={{
-          maxWidth: 1200, margin: "0 auto", padding: "0 20px", height: 64,
-          display: "flex", alignItems: "center", gap: 10,
-        }}>
-          <button onClick={() => navigate("/")}
-            style={{ display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", cursor: "pointer" }}>
-            <img src="src/assets/logo.png" alt="SehatHub" style={{ height: 49, objectFit: "contain" }} />
-          </button>
+      {/* ── PILL NAV (all screen sizes) ── */}
+      <div style={{
+        position: "sticky", top: 14,
+        width: "calc(100% - 28px)", maxWidth: isMobile ? 420 : 1100,
+        margin: "14px auto 0",
+        background: "rgba(14, 26, 18, 0.85)",
+        backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid rgba(255,255,255,0.10)", borderRadius: 20,
+        padding: "8px 12px", display: "flex", alignItems: "center",
+        justifyContent: "space-between",
+        zIndex: 100, boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
+        flexShrink: 0,
+      }}>
+        {/* Logo */}
+        <button onClick={() => navigate("/")}
+          style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
+          <img src="src/assets/logo.png" alt="SehatHub" style={{ height: 36, objectFit: "contain" }} />
+        </button>
 
-          <div style={{ display: "flex", gap: 8, marginLeft: 20, flex: 1 }}>
-            <NavLink label="Talk Bot" active={location.pathname === "/tts"} onClick={() => navigate("/tts")} />
-            <NavLink label="Health Interview" active={location.pathname === "/interview"} onClick={() => navigate("/interview")} />
+        {/* Desktop centre nav links — hidden on mobile */}
+        {!isMobile && (
+          <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <NavLink label={t("links.talkBot")} active={location.pathname === "/tts"} onClick={() => navigate("/tts")} />
+            <NavLink label={t("links.healthInterview")} active={location.pathname === "/interview"} onClick={() => navigate("/interview")} />
             <SymptomCheckerDropdown navigate={navigate} />
-            <NavLink label="Find Doctor" active={location.pathname === "/doctor"} onClick={() => navigate("/doctor")} />
+            <NavLink label={t("links.findDoctor")} active={location.pathname === "/doctor"} onClick={() => navigate("/doctor")} />
           </div>
+        )}
 
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {/* Language */}
+        {/* Right-side actions */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+          {/* Language toggle — desktop only */}
+          {!isMobile && (
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div onClick={handleLanguageToggle}
                 style={{
@@ -283,83 +308,36 @@ const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setFo
                   background: "white", transition: "left 0.2s",
                 }} />
               </div>
-              <span style={{ color: "white", fontSize: 13, display: "inline-block", width: 52, textAlign: "left" }}>
+              <span style={{ color: "white", fontSize: 13, display: "inline-block", width: 52 }}>
                 {userLanguage === "en" ? "English" : "اردو"}
               </span>
             </div>
+          )}
 
-            {/* Emergency */}
-            <a href="tel:1122" style={{
-              background: "#ef4444", color: "white", padding: "5px 14px",
-              borderRadius: 20, fontSize: 13, fontWeight: 600, textDecoration: "none",
-            }}>
-              Emergency
-            </a>
-
-            {/* Login — only when logged out */}
-            {!isLoggedIn && (
-              <button className="sh-icon-btn" onClick={openLogin}
-                style={{
-                  background: "rgba(255,255,255,0.08)", color: "white",
-                  padding: "5px 14px", borderRadius: 20, fontSize: 13, cursor: "pointer",
-                }}>
-                Login / Sign up
-              </button>
-            )}
-
-            {/* Mic */}
-            <button onClick={onToggleVoice}
-              className={`sh-icon-btn${voiceModeOn ? " sh-mic-active" : ""}`}
-              style={{
-                width: 32, height: 32, borderRadius: "50%",
-                background: voiceModeOn ? "#ef4444" : "rgba(255,255,255,0.1)",
-                display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-              }}>
-              {voiceModeOn ? <MicOff size={14} color="white" /> : <Mic size={14} color="white" />}
-            </button>
-
-            {/* Profile — only when logged in */}
-            {isLoggedIn && (
-              <button onClick={() => navigate("/profile")} className="sh-icon-btn"
-                style={{
-                  width: 32, height: 32, borderRadius: "50%",
-                  background: "linear-gradient(135deg,#a78bfa,#7c3aed)",
-                  display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-                }}>
-                <User size={14} color="white" />
-              </button>
-            )}
-          </div>
-        </div>
-      </nav>
-
-      {/* ── MOBILE NAV ── */}
-      <div className="sh-mobile"
-        style={{
-          position: "fixed", top: 14, left: "50%", transform: "translateX(-50%)",
-          width: "calc(100% - 28px)", maxWidth: 420,
-          background: "rgba(14, 26, 18, 0.80)",
-          backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          border: "1px solid rgba(255,255,255,0.10)", borderRadius: 20,
-          padding: "9px 12px", alignItems: "center", justifyContent: "space-between",
-          zIndex: 100, boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
-        }}>
-        <button onClick={() => navigate("/")}
-          style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0 }}>
-          <img src="src/assets/logo.png" alt="SehatHub" style={{ height: 36, objectFit: "contain" }} />
-        </button>
-
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {/* Emergency */}
           <a href="tel:1122" style={{
             display: "flex", alignItems: "center", gap: 6,
             background: "#e03030", color: "white", padding: "7px 14px", borderRadius: 20,
             fontSize: 13, fontWeight: 700, textDecoration: "none",
-            boxShadow: "0 2px 10px rgba(224,48,48,0.5)",
+            boxShadow: "0 2px 10px rgba(224,48,48,0.5)", flexShrink: 0,
           }}>
             <span className="sh-emergency-dot" />
-            Emergency
+            {t("emergency")}
           </a>
 
+          {/* Login — desktop only, when logged out */}
+          {!isMobile && !isLoggedIn && (
+            <button className="sh-icon-btn" onClick={openLogin}
+              style={{
+                background: "rgba(255,255,255,0.08)", color: "white",
+                padding: "7px 14px", borderRadius: 20, fontSize: 13,
+                cursor: "pointer", border: "1px solid transparent", flexShrink: 0,
+              }}>
+              {t("auth.loginSignup")}
+            </button>
+          )}
+
+          {/* Mic */}
           <button onClick={onToggleVoice} className={voiceModeOn ? "sh-mic-active" : ""}
             style={{
               width: 36, height: 36, borderRadius: "50%",
@@ -371,6 +349,7 @@ const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setFo
             <Mic size={16} color={voiceModeOn ? "#22c55e" : "rgba(255,255,255,0.7)"} />
           </button>
 
+          {/* Profile — when logged in */}
           {isLoggedIn && (
             <button onClick={() => navigate("/profile")}
               style={{
@@ -383,19 +362,23 @@ const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setFo
             </button>
           )}
 
-          <button onClick={() => setDrawerOpen(true)}
-            style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: "rgba(255,255,255,0.06)", border: "1.5px solid transparent",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", flexShrink: 0,
-            }}>
-            <Menu size={18} color="rgba(255,255,255,0.85)" />
-          </button>
+          {/* Hamburger menu — mobile only */}
+          {isMobile && (
+            <button onClick={() => setDrawerOpen(true)}
+              style={{
+                width: 36, height: 36, borderRadius: 10,
+                background: "rgba(255,255,255,0.06)", border: "1.5px solid transparent",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer", flexShrink: 0,
+              }}>
+              <Menu size={18} color="rgba(255,255,255,0.85)" />
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="sh-mobile" style={{ height: 80, flexShrink: 0, pointerEvents: "none" }} />
+      {/* Spacer so content doesn't hide under pill */}
+      <div style={{ height: 14, flexShrink: 0, pointerEvents: "none" }} />
 
       <div className={`sh-overlay${drawerOpen ? " open" : ""}`} onMouseDown={closeDrawer} onTouchStart={closeDrawer} />
 
@@ -416,14 +399,15 @@ const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setFo
           </button>
         </div>
 
-        <button className="sh-drawer-link" onClick={() => navigate("/tts")}>Talk Bot</button>
-        <button className="sh-drawer-link" onClick={() => navigate("/interview")}>Health Interview</button>
+        {/* ── CHANGED: hardcoded strings → t() ── */}
+        <button className="sh-drawer-link" onClick={() => navigate("/tts")}>{t("links.talkBot")}</button>
+        <button className="sh-drawer-link" onClick={() => navigate("/interview")}>{t("links.healthInterview")}</button>
         <SymptomAccordion navigate={navigate} closeDrawer={closeDrawer} />
-        <button className="sh-drawer-link" onClick={() => navigate("/doctor")}>Find Doctor</button>
+        <button className="sh-drawer-link" onClick={() => navigate("/doctor")}>{t("links.findDoctor")}</button>
 
         {isLoggedIn && (
           <button className="sh-drawer-link" onClick={() => navigate("/profile")}>
-            <User size={16} /> My Profile
+            <User size={16} /> {t("auth.myProfile")} {/* ── CHANGED ── */}
           </button>
         )}
 
@@ -456,7 +440,7 @@ const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setFo
               fontSize: 13, fontWeight: 700, textDecoration: "none",
               boxShadow: "0 2px 10px rgba(224,48,48,0.4)",
             }}>
-              Emergency
+              {t("emergency")} {/* ── CHANGED ── */}
             </a>
 
             {!isLoggedIn ? (
@@ -467,7 +451,7 @@ const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setFo
                   padding: "9px 0", borderRadius: 20,
                   fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                 }}>
-                Login / Sign up
+                {t("auth.loginSignup")} {/* ── CHANGED ── */}
               </button>
             ) : (
               <button onClick={() => { navigate("/profile"); closeDrawer(); }}
@@ -477,7 +461,7 @@ const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setFo
                   padding: "9px 0", borderRadius: 20,
                   fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                 }}>
-                My Profile
+                {t("auth.myProfile")} {/* ── CHANGED ── */}
               </button>
             )}
           </div>
@@ -485,7 +469,7 @@ const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setFo
       </div>
 
       {/* ── MODALS ── */}
-<LoginModal
+      <LoginModal
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
         onSwitchToRegister={openRegister}

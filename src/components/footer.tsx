@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FaGooglePlay, FaApple, FaInstagram, FaFacebook, FaYoutube, FaLinkedin, FaTwitter } from "react-icons/fa";
 import { IoMdArrowUp } from "react-icons/io";
 import { ChevronDown } from "lucide-react";
@@ -60,7 +61,7 @@ const FooterLink: React.FC<{ label: string }> = ({ label }) => (
       transition: "color 0.15s",
       listStyle: "none",
       textAlign: "left",
-      width: "100%", // ✅ alignment fix
+      width: "100%",
     }}
     onMouseEnter={(e) => (e.currentTarget.style.color = "white")}
     onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.65)")}
@@ -70,6 +71,12 @@ const FooterLink: React.FC<{ label: string }> = ({ label }) => (
 );
 
 const Footer: React.FC = () => {
+  const { t } = useTranslation("footer");
+
+  const whatWeOfferLinks = ["talkBot", "healthInterview", "symptomChecker", "healthTriage", "findDoctor", "healthTimeline"] as const;
+  const quickLinks = ["diseaseLibrary", "doctorLogin", "chatSupport", "contributeWithUs"] as const;
+  const aboutUsLinks = ["contactUs", "downloads", "privacyPolicy", "returnPolicy", "disclaimer", "cookiePolicy", "acceptableUsePolicy"] as const;
+
   return (
     <>
       <style>{`
@@ -82,39 +89,43 @@ const Footer: React.FC = () => {
         }
       `}</style>
 
-      {/* ════ DESKTOP FOOTER (FIXED) ════ */}
-      <footer className="sh-footer-desktop w-screen relative left-1/2 right-1/2 bg-[#021a14] text-white"
-        style={{ marginLeft: "calc(-50vw)", marginRight: "calc(-50vw)", width: "100vw" }}>
-
+      {/* ════ DESKTOP FOOTER ════ */}
+      <footer
+        className="sh-footer-desktop w-screen relative left-1/2 right-1/2 bg-[#021a14] text-white"
+        style={{ marginLeft: "calc(-50vw)", marginRight: "calc(-50vw)", width: "100vw" }}
+      >
         <div style={{ padding: "40px 80px 0" }}>
-          
+
           {/* Top Bar */}
           <div style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             borderBottom: "1px solid rgba(255,255,255,0.1)",
-            paddingBottom: 24
+            paddingBottom: 24,
           }}>
-            <img src="src/assets/logo.png" alt="logo" style={{ height: 64 }} />
+            <img src="src/assets/logo.png" alt={t("logo.alt")} style={{ height: 64 }} />
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              {/* Google Play */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid rgba(255,255,255,0.3)", padding: "8px 16px", borderRadius: 8, cursor: "pointer" }}>
                 <FaGooglePlay size={20} />
                 <div>
-                  <p style={{ fontSize: 10, color: "rgba(255,255,255,0.6)" }}>ANDROID APP ON</p>
-                  <p style={{ fontSize: 14, fontWeight: 600 }}>Google Play</p>
+                  <p style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", margin: 0 }}>{t("appStore.android.label")}</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{t("appStore.android.store")}</p>
                 </div>
               </div>
 
+              {/* App Store */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid rgba(255,255,255,0.3)", padding: "8px 16px", borderRadius: 8, cursor: "pointer" }}>
                 <FaApple size={18} />
                 <div>
-                  <p style={{ fontSize: 10, color: "rgba(255,255,255,0.6)" }}>Available on the</p>
-                  <p style={{ fontSize: 14, fontWeight: 600 }}>App Store</p>
+                  <p style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", margin: 0 }}>{t("appStore.ios.label")}</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{t("appStore.ios.store")}</p>
                 </div>
               </div>
 
+              {/* Back to top */}
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                 style={{
@@ -127,7 +138,7 @@ const Footer: React.FC = () => {
                   justifyContent: "center",
                   background: "transparent",
                   cursor: "pointer",
-                  color: "white"
+                  color: "white",
                 }}
               >
                 <IoMdArrowUp size={18} />
@@ -136,62 +147,70 @@ const Footer: React.FC = () => {
           </div>
 
           {/* GRID */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.3fr 1fr 1fr 1fr",
-              gap: 40,
-              padding: "40px 0",
-              alignItems: "flex-start", // ✅ fix
-            }}
-          >
-            {/* COLUMN 1 */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "1.3fr 1fr 1fr 1fr",
+            gap: 40,
+            padding: "40px 0",
+            alignItems: "flex-start",
+          }}>
+
+            {/* COLUMN 1 — Tagline */}
             <div style={{ textAlign: "left" }}>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.8)", lineHeight: 1.7 }}>
-                <strong style={{ color: "white" }}>SehatHub</strong> — Everything health under one roof. SehatHub blends voice technology and intelligent care to help you understand, track, and improve your well-being effortlessly.
+                <strong style={{ color: "white" }}>SehatHub</strong> — {t("tagline")}
               </p>
               <p style={{ marginTop: 16, fontSize: 14, color: "rgba(255,255,255,0.7)" }}>
-                UAN: 021-111-xxx-xxx<br />
-                Email: help@sehathub.pk
+                {t("contact.uan")}<br />
+                {t("contact.email")}
               </p>
             </div>
 
-            {/* COLUMN 2 */}
+            {/* COLUMN 2 — What We Offer */}
             <div>
-              <h4 style={{ fontWeight: 600, marginBottom: 14, textAlign: "left" }}>What We Offer</h4>
+              <h4 style={{ fontWeight: 600, marginBottom: 14, textAlign: "left" }}>
+                {t("sections.whatWeOffer.title")}
+              </h4>
               <ul style={{ padding: 0, margin: 0 }}>
-                {["Talk Bot","Health Interview","Symptom Checker","Health Triage","Find Doctor","Health Timeline"]
-                  .map(l => <FooterLink key={l} label={l} />)}
+                {whatWeOfferLinks.map((key) => (
+                  <FooterLink key={key} label={t(`sections.whatWeOffer.links.${key}`)} />
+                ))}
               </ul>
             </div>
 
-            {/* COLUMN 3 */}
+            {/* COLUMN 3 — Quick Links */}
             <div>
-              <h4 style={{ fontWeight: 600, marginBottom: 14, textAlign: "left" }}>Quick Links</h4>
+              <h4 style={{ fontWeight: 600, marginBottom: 14, textAlign: "left" }}>
+                {t("sections.quickLinks.title")}
+              </h4>
               <ul style={{ padding: 0, margin: 0 }}>
-                {["Disease Library","Doctor Login","Chat Support","Contribute with Us"]
-                  .map(l => <FooterLink key={l} label={l} />)}
+                {quickLinks.map((key) => (
+                  <FooterLink key={key} label={t(`sections.quickLinks.links.${key}`)} />
+                ))}
               </ul>
             </div>
 
-            {/* COLUMN 4 */}
+            {/* COLUMN 4 — About Us */}
             <div>
-              <h4 style={{ fontWeight: 600, marginBottom: 14, textAlign: "left" }}>About Us</h4>
+              <h4 style={{ fontWeight: 600, marginBottom: 14, textAlign: "left" }}>
+                {t("sections.aboutUs.title")}
+              </h4>
               <ul style={{ padding: 0, margin: 0 }}>
-                {["Contact Us","Downloads","Privacy Policy","Return Policy","Disclaimer","Cookie Policy","Acceptable Use Policy"]
-                  .map(l => <FooterLink key={l} label={l} />)}
+                {aboutUsLinks.map((key) => (
+                  <FooterLink key={key} label={t(`sections.aboutUs.links.${key}`)} />
+                ))}
               </ul>
             </div>
           </div>
         </div>
 
-        {/* Bottom */}
+        {/* Bottom Bar */}
         <div style={{
           background: "#031f18",
           padding: "16px 80px",
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center"
+          alignItems: "center",
         }}>
           <div style={{ display: "flex", gap: 16 }}>
             {[FaInstagram, FaFacebook, FaYoutube, FaLinkedin].map((Icon, i) => (
@@ -200,7 +219,10 @@ const Footer: React.FC = () => {
           </div>
 
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.7)" }}>
-            © 2026 SehatHub. All Rights Reserved to PawDev.
+            {t("bottom.copyright")}{" "}
+            <span style={{ textDecoration: "underline", cursor: "pointer" }}>
+              {t("bottom.company")}
+            </span>.
           </p>
         </div>
       </footer>
@@ -220,24 +242,24 @@ const Footer: React.FC = () => {
         }}
       >
         {/* Top row: Logo + Back to Top */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "20px 20px 16px",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-          }}
-        >
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "20px 20px 16px",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+        }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <img src="src/assets/logo.png" alt="SehatHub" style={{ height: 36, objectFit: "contain" }} />
+            <img src="src/assets/logo.png" alt={t("logo.alt")} style={{ height: 36, objectFit: "contain" }} />
             <span style={{ fontSize: 18, fontWeight: 700, color: "white" }}>SehatHub</span>
           </div>
 
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             style={{
-              display: "flex", alignItems: "center", gap: 6,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
               border: "1px solid rgba(255,255,255,0.25)",
               background: "transparent",
               color: "white",
@@ -248,40 +270,44 @@ const Footer: React.FC = () => {
               fontFamily: "inherit",
             }}
           >
-            Back to Top <IoMdArrowUp size={14} />
+            {t("backToTop")} <IoMdArrowUp size={14} />
           </button>
         </div>
 
         {/* Description + contact */}
         <div style={{ padding: "20px 20px 4px" }}>
           <p style={{ fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.65 }}>
-            <strong style={{ color: "white" }}>SehatHub</strong> — Everything health under one roof.
-            SehatHub blends voice technology and intelligent care to help you understand,
-            track, and improve your well-being effortlessly.
+            <strong style={{ color: "white" }}>SehatHub</strong> — {t("tagline")}
           </p>
           <p style={{ marginTop: 14, fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.7 }}>
-            UAN: 021-111-xxx-xxx<br />
-            Email: help@sehathub.pk
+            {t("contact.uan")}<br />
+            {t("contact.email")}
           </p>
         </div>
 
         {/* Accordion sections */}
         <div style={{ padding: "0 20px" }}>
-          <AccordionSection title="What We Offer">
+          <AccordionSection title={t("sections.whatWeOffer.title")}>
             <ul style={{ padding: 0 }}>
-              {["Talk Bot","Health Interview","Symptom Checker","Health Triage","Find Doctor","Health Timeline"].map(l => <FooterLink key={l} label={l} />)}
+              {whatWeOfferLinks.map((key) => (
+                <FooterLink key={key} label={t(`sections.whatWeOffer.links.${key}`)} />
+              ))}
             </ul>
           </AccordionSection>
 
-          <AccordionSection title="Quick Links">
+          <AccordionSection title={t("sections.quickLinks.title")}>
             <ul style={{ padding: 0 }}>
-              {["Disease Library","Doctor Login","Chat Support","Contribute with Us"].map(l => <FooterLink key={l} label={l} />)}
+              {quickLinks.map((key) => (
+                <FooterLink key={key} label={t(`sections.quickLinks.links.${key}`)} />
+              ))}
             </ul>
           </AccordionSection>
 
-          <AccordionSection title="About Us">
+          <AccordionSection title={t("sections.aboutUs.title")}>
             <ul style={{ padding: 0 }}>
-              {["Contact Us","Downloads","Privacy Policy","Return Policy","Disclaimer","Cookie Policy","Acceptable Use Policy"].map(l => <FooterLink key={l} label={l} />)}
+              {aboutUsLinks.map((key) => (
+                <FooterLink key={key} label={t(`sections.aboutUs.links.${key}`)} />
+              ))}
             </ul>
           </AccordionSection>
         </div>
@@ -291,30 +317,28 @@ const Footer: React.FC = () => {
           <div style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid rgba(255,255,255,0.2)", padding: "8px 14px", borderRadius: 8, cursor: "pointer", flex: 1, justifyContent: "center" }}>
             <FaGooglePlay size={18} />
             <div>
-              <p style={{ fontSize: 9, color: "rgba(255,255,255,0.55)", margin: 0 }}>ANDROID APP ON</p>
-              <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>Google Play</p>
+              <p style={{ fontSize: 9, color: "rgba(255,255,255,0.55)", margin: 0 }}>{t("appStore.android.label")}</p>
+              <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>{t("appStore.android.store")}</p>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid rgba(255,255,255,0.2)", padding: "8px 14px", borderRadius: 8, cursor: "pointer", flex: 1, justifyContent: "center" }}>
             <FaApple size={18} />
             <div>
-              <p style={{ fontSize: 9, color: "rgba(255,255,255,0.55)", margin: 0 }}>Available on the</p>
-              <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>App Store</p>
+              <p style={{ fontSize: 9, color: "rgba(255,255,255,0.55)", margin: 0 }}>{t("appStore.ios.label")}</p>
+              <p style={{ fontSize: 13, fontWeight: 600, margin: 0 }}>{t("appStore.ios.store")}</p>
             </div>
           </div>
         </div>
 
         {/* Bottom bar: socials + copyright */}
-        <div
-          style={{
-            background: "#031f18",
-            marginTop: 24,
-            padding: "16px 20px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-          }}
-        >
+        <div style={{
+          background: "#031f18",
+          marginTop: 24,
+          padding: "16px 20px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+        }}>
           <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
             <FaInstagram size={20} style={{ cursor: "pointer" }} />
             <FaFacebook  size={20} style={{ cursor: "pointer" }} />
@@ -323,8 +347,10 @@ const Footer: React.FC = () => {
             <FaTwitter   size={20} style={{ cursor: "pointer" }} />
           </div>
           <p style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", margin: 0 }}>
-            © 2026 SehatHub. All Rights Reserved to{" "}
-            <span style={{ textDecoration: "underline", cursor: "pointer" }}>PawDev</span>.
+            {t("bottom.copyright")}{" "}
+            <span style={{ textDecoration: "underline", cursor: "pointer" }}>
+              {t("bottom.company")}
+            </span>.
           </p>
         </div>
       </footer>

@@ -1,30 +1,59 @@
 {
-  "brand": {
-    "tagline": "Your Virtual Health"
+  "logo": {
+    "alt": "SehatHub Logo"
   },
+  "tagline": "SehatHub — Everything health under one roof. SehatHub blends voice technology and intelligent care to help you understand, track, and improve your well-being effortlessly.",
+  "contact": {
+    "uan": "UAN: 021-111-xxx-xxx",
+    "email": "Email: help@sehathub.pk"
+  },
+  "appStore": {
+    "android": {
+      "label": "ANDROID APP ON",
+      "store": "Google Play"
+    },
+    "ios": {
+      "label": "Available on the",
+      "store": "App Store"
+    }
+  },
+  "backToTop": "Back to Top",
   "sections": {
-    "quickLinks": "Quick Links",
-    "resources": "Resources",
-    "support": "Support"
-  },
-  "quickLinks": {
-    "dashboard": "Dashboard",
-    "manageUsers": "Manage Users",
-    "manageDoctors": "Manage Doctors",
-    "manageAppointments": "Manage Appointments"
-  },
-  "resources": {
-    "articles": "Articles",
-    "faq": "FAQ",
-    "terms": "Terms of Service",
-    "privacy": "Privacy Policy"
-  },
-  "support": {
-    "contact": "Contact Us",
-    "helpCenter": "Help Center",
-    "feedback": "Feedback"
+    "whatWeOffer": {
+      "title": "What We Offer",
+      "links": {
+        "talkBot": "Talk Bot",
+        "healthInterview": "Health Interview",
+        "symptomChecker": "Symptom Checker",
+        "healthTriage": "Health Triage",
+        "findDoctor": "Find Doctor",
+        "healthTimeline": "Health Timeline"
+      }
+    },
+    "quickLinks": {
+      "title": "Quick Links",
+      "links": {
+        "diseaseLibrary": "Disease Library",
+        "doctorLogin": "Doctor Login",
+        "chatSupport": "Chat Support",
+        "contributeWithUs": "Contribute with Us"
+      }
+    },
+    "aboutUs": {
+      "title": "About Us",
+      "links": {
+        "contactUs": "Contact Us",
+        "downloads": "Downloads",
+        "privacyPolicy": "Privacy Policy",
+        "returnPolicy": "Return Policy",
+        "disclaimer": "Disclaimer",
+        "cookiePolicy": "Cookie Policy",
+        "acceptableUsePolicy": "Acceptable Use Policy"
+      }
+    }
   },
   "bottom": {
-    "copyright": ". All rights reserved."
+    "copyright": "© 2026 SehatHub. All Rights Reserved to",
+    "company": "PawDev"
   }
 }

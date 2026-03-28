@@ -1,38 +1,18 @@
 {
-  "brand": {
-    "name": "SehatHub",
-    "tagline": "Voice-First Health"
+  "emergency": "Emergency",
+  "links": {
+    "talkBot": "Talk Bot",
+    "healthInterview": "Health Interview",
+    "symptomChecker": "Symptom Checker",
+    "findDoctor": "Find Doctor"
   },
-  "emergency": {
-    "desktop": "1122",
-    "mobile": "Emergency 1122"
-  },
-  "languageToggle": {
-    "desktop": "اردو",
-    "desktopAlt": "En",
-    "mobile": "🌐 Switch to Urdu",
-    "mobileAlt": "🌐 Switch to English",
-    "titleToUrdu": "Switch to Urdu",
-    "titleToEnglish": "Switch to English"
-  },
-  "profile": {
-    "label": "Profile",
-    "title": "Profile"
-  },
-  "mobileMenu": {
-    "helperText": "Select any feature above to navigate",
-    "ariaLabel": "Toggle menu"
-  },
-  "modules": {
-    "tts":            "Voice Assistant",
-    "interview":      "Health Interview",
-    "symptom":        "Symptom Checker",
-    "triage":         "AI Triage",
-    "doctor":         "Find Doctor",
-    "timeline":       "Health Timeline",
-    "findDoctor":     "Find Doctor",
+  "symptomCheckerItems": {
+    "healthTriage": "Health Triage",
     "healthTimeline": "Health Timeline",
-    "doctors":        "Doctors",
-    "profile":        "Profile"
+    "diseaseLibrary": "Disease Library"
+  },
+  "auth": {
+    "loginSignup": "Login / Sign up",
+    "myProfile": "My Profile"
   }
 }

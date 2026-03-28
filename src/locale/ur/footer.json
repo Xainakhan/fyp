@@ -1,30 +1,59 @@
 {
-  "brand": {
-    "tagline": "آپ کی ورچوئل صحت"
+  "logo": {
+    "alt": "سیہت ہب لوگو"
   },
+  "tagline": "سیہت ہب — صحت کی ہر ضرورت ایک چھت تلے۔ سیہت ہب آواز کی ٹیکنالوجی اور ذہین نگہداشت کو یکجا کرتا ہے تاکہ آپ اپنی صحت کو آسانی سے سمجھ سکیں، ٹریک کر سکیں اور بہتر بنا سکیں۔",
+  "contact": {
+    "uan": "یو اے این: 021-111-xxx-xxx",
+    "email": "ای میل: help@sehathub.pk"
+  },
+  "appStore": {
+    "android": {
+      "label": "اینڈرائیڈ ایپ",
+      "store": "گوگل پلے"
+    },
+    "ios": {
+      "label": "دستیاب ہے",
+      "store": "ایپ اسٹور"
+    }
+  },
+  "backToTop": "اوپر جائیں",
   "sections": {
-    "quickLinks": "فوری لنکس",
-    "resources": "وسائل",
-    "support": "سہارا"
-  },
-  "quickLinks": {
-    "dashboard": "ڈیش بورڈ",
-    "manageUsers": "صارفین کا انتظام",
-    "manageDoctors": "ڈاکٹرز کا انتظام",
-    "manageAppointments": "ملاقاتوں کا انتظام"
-  },
-  "resources": {
-    "articles": "مضامین",
-    "faq": "اکثر پوچھے گئے سوالات",
-    "terms": "سروس کی شرائط",
-    "privacy": "رازداری کی پالیسی"
-  },
-  "support": {
-    "contact": "ہم سے رابطہ کریں",
-    "helpCenter": "مدد مرکز",
-    "feedback": "رائے"
+    "whatWeOffer": {
+      "title": "ہماری خدمات",
+      "links": {
+        "talkBot": "ٹاک بوٹ",
+        "healthInterview": "صحت انٹرویو",
+        "symptomChecker": "علامات چیکر",
+        "healthTriage": "ہیلتھ ٹریاج",
+        "findDoctor": "ڈاکٹر تلاش کریں",
+        "healthTimeline": "صحت ٹائم لائن"
+      }
+    },
+    "quickLinks": {
+      "title": "فوری روابط",
+      "links": {
+        "diseaseLibrary": "بیماریوں کی لائبریری",
+        "doctorLogin": "ڈاکٹر لاگ ان",
+        "chatSupport": "چیٹ سپورٹ",
+        "contributeWithUs": "ہمارے ساتھ تعاون کریں"
+      }
+    },
+    "aboutUs": {
+      "title": "ہمارے بارے میں",
+      "links": {
+        "contactUs": "ہم سے رابطہ کریں",
+        "downloads": "ڈاؤن لوڈز",
+        "privacyPolicy": "پرائیویسی پالیسی",
+        "returnPolicy": "واپسی کی پالیسی",
+        "disclaimer": "اعلانِ دستبرداری",
+        "cookiePolicy": "کوکی پالیسی",
+        "acceptableUsePolicy": "قابلِ قبول استعمال کی پالیسی"
+      }
+    }
   },
   "bottom": {
-    "copyright": "۔ تمام حقوق محفوظ ہیں۔"
+    "copyright": "© 2026 سیہت ہب۔ تمام حقوق محفوظ ہیں",
+    "company": "پاؤ ڈیو"
   }
 }
