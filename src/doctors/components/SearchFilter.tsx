@@ -198,7 +198,7 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({
             </label>
 
             <div className="flex flex-col gap-2 text-sm text-white/80">
-              {[t("filters.onlineOnly"), t("filters.verifiedOnly"), t("filters.availableToday")].map((lbl, i) => (
+              {[t("filters.onlineOnly"), t("filters.availableToday")].map((lbl, i) => (
                 <label key={i} className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" className="accent-green-500" />
                   {lbl}

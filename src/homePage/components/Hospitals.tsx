@@ -23,13 +23,17 @@ const HospitalSection: React.FC = () => {
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+
     let animationFrame: number;
 
     const scroll = () => {
       if (!isHovered.current) {
-        el.scrollLeft += 0.6;
-        if (el.scrollLeft >= el.scrollWidth / 2) {
-          el.scrollLeft = 0;
+        // ✅ LEFT → RIGHT movement
+        el.scrollLeft -= 0.6;
+
+        // ✅ seamless loop
+        if (el.scrollLeft <= 0) {
+          el.scrollLeft = el.scrollWidth / 2;
         }
       }
       animationFrame = requestAnimationFrame(scroll);
@@ -43,7 +47,11 @@ const HospitalSection: React.FC = () => {
     <div className="w-full px-4 md:px-8 py-6">
       <div className="bg-[#c7d5ec] rounded-2xl p-6 shadow-xl">
 
-        <h2 className={`text-2xl md:text-3xl font-semibold text-black mb-6 ${isRTL ? "text-right" : "text-left"}`}>
+        <h2
+          className={`text-2xl md:text-3xl font-semibold text-black mb-6 ${
+            isRTL ? "text-right" : "text-left"
+          }`}
+        >
           {t("hospitalSection.title")}
         </h2>
 
@@ -58,9 +66,9 @@ const HospitalSection: React.FC = () => {
               key={i}
               className="min-w-[300px] max-w-[300px] bg-white rounded-xl p-4 shadow-md hover:scale-[1.03] transition flex items-center"
             >
-              {/* In Urdu: image on LEFT, text on RIGHT (matching the screenshot) */}
               {isRTL ? (
                 <>
+                  {/* IMAGE LEFT (Urdu) */}
                   <img
                     src="src/assets/hospital.png"
                     alt="doctor"
@@ -77,6 +85,7 @@ const HospitalSection: React.FC = () => {
                 </>
               ) : (
                 <>
+                  {/* TEXT LEFT (English) */}
                   <div className="flex-1 text-left">
                     <h3 className="font-semibold text-sm text-black leading-tight">
                       {h.name}
