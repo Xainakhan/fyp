@@ -46,6 +46,7 @@ export type DoctorDatabase = Record<string, SpecialtyData>;
 export type DoctorWithMeta = DoctorBase & {
   specialty: SpecialtyName;
   specialtyKey: string;
+  specialtyName: string; 
 };
 
 export type SortBy =

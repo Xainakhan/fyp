@@ -1,7 +1,7 @@
 // healthInterview/components/MedicalHistoryStep.tsx
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { CHRONIC_OPTIONS } from "./Constants";
+import { CHRONIC_OPTIONS } from "./constants";
 import type { FormData } from "./types";
 
 interface Props {

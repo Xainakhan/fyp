@@ -1,11 +1,16 @@
-// healthInterview/healthInterview.tsx  ← main entry point
-import React, { useState, useEffect } from "react";
+// healthInterview/healthInterview.tsx
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
 
 import type { FormData, TriageResponse } from "./components/types";
 import { STEPS, API_BASE } from "./components/constants";
-import { buildSymptomsArray, buildMedicalHistoryText, buildLifestyleText, parseDurationToDays } from "./components/Helpers";
+import {
+  buildSymptomsArray,
+  buildMedicalHistoryText,
+  buildLifestyleText,
+  parseDurationToDays,
+} from "./components/Helpers";
 
 import StepIndicator from "./components/StepIndicator";
 import BasicInfoStep from "./components/BasicInfoStep";
@@ -22,7 +27,8 @@ const INITIAL_FORM: FormData = {
 };
 
 const HealthInterviewPage: React.FC = () => {
-  const { t } = useTranslation("healthInterview");
+  const { t, i18n } = useTranslation("healthInterview");
+  const isRTL = i18n.dir() === "rtl";
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
@@ -51,8 +57,18 @@ const HealthInterviewPage: React.FC = () => {
     }
 
     const payload = {
-      basic_info: { full_name: form.fullName, age: form.age ? Number(form.age) : null, gender: form.gender, city: form.city, phone: form.phone },
-      current_issue: { symptoms: symptomsArray, duration_days: parseDurationToDays(form.symptomDuration), description: form.mainConcern },
+      basic_info: {
+        full_name: form.fullName,
+        age: form.age ? Number(form.age) : null,
+        gender: form.gender,
+        city: form.city,
+        phone: form.phone,
+      },
+      current_issue: {
+        symptoms: symptomsArray,
+        duration_days: parseDurationToDays(form.symptomDuration),
+        description: form.mainConcern,
+      },
       medical_history: buildMedicalHistoryText(form),
       lifestyle: buildLifestyleText(form),
     };
@@ -74,38 +90,13 @@ const HealthInterviewPage: React.FC = () => {
     }
   };
 
-  /** Build a JSON report and trigger a .json download */
   const handleDownload = () => {
     const report = {
       generated_at: new Date().toISOString(),
-      basic_info: {
-        full_name: form.fullName,
-        age: form.age,
-        gender: form.gender,
-        city: form.city,
-        phone: form.phone,
-      },
-      current_problem: {
-        main_concern: form.mainConcern,
-        duration: form.symptomDuration,
-        pattern: form.symptomPattern,
-        worse_when: form.symptomWorseWhen,
-        associated_symptoms: form.associatedSymptoms,
-      },
-      medical_history: {
-        chronic_conditions: form.chronicConditions,
-        other_conditions: form.otherConditions,
-        current_medicines: form.currentMedicines,
-        allergies: form.allergies,
-      },
-      lifestyle: {
-        smoking: form.smokingStatus,
-        alcohol: form.alcoholUse,
-        exercise: form.exercise,
-        sleep_hours: form.sleepHours,
-        stress_level: form.stressLevel,
-        mood_notes: form.moodNotes,
-      },
+      basic_info: { full_name: form.fullName, age: form.age, gender: form.gender, city: form.city, phone: form.phone },
+      current_problem: { main_concern: form.mainConcern, duration: form.symptomDuration, pattern: form.symptomPattern, worse_when: form.symptomWorseWhen, associated_symptoms: form.associatedSymptoms },
+      medical_history: { chronic_conditions: form.chronicConditions, other_conditions: form.otherConditions, current_medicines: form.currentMedicines, allergies: form.allergies },
+      lifestyle: { smoking: form.smokingStatus, alcohol: form.alcoholUse, exercise: form.exercise, sleep_hours: form.sleepHours, stress_level: form.stressLevel, mood_notes: form.moodNotes },
       triage_result: triageResult ?? null,
     };
 
@@ -119,15 +110,30 @@ const HealthInterviewPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
+    <div className="w-full max-w-5xl mx-auto px-4 py-1">
+
       {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-          <ClipboardList className="text-green-600" size={28} />
+      <div
+        dir={isRTL ? "rtl" : "ltr"}
+        className="flex items-center gap-3 mb-4 rounded-2xl bg-black/20 border border-white/10 backdrop-blur-md w-full overflow-hidden"
+        style={{ padding: "10px 15px", minHeight: "64px" }}
+      >
+        {/* Icon — shrink-0 keeps it from being squeezed */}
+        <div className="w-11 h-11 rounded-full bg-green-500/20 border border-green-400/30 flex items-center justify-center shrink-0">
+          <ClipboardList className="text-green-400" size={22} />
         </div>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">{t("header.title")}</h1>
-          <p className="text-sm text-gray-600 max-w-xl">{t("header.subtitle")}</p>
+
+        {/* Text — flex-1 + min-w-0 makes it take remaining space and wrap properly */}
+        <div className="flex-1 min-w-0">
+          <h1
+            className="font-bold text-white leading-snug break-words"
+            style={{ fontSize: "clamp(1.1rem, 3vw, 1.75rem)" }}
+          >
+            {t("header.title")}
+          </h1>
+          <p className="text-m text-white break-words leading-snug mt-0.5">
+            {t("header.subtitle")}
+          </p>
         </div>
       </div>
 
@@ -158,17 +164,31 @@ const HealthInterviewPage: React.FC = () => {
 
         {/* Navigation */}
         <div className="mt-6 flex justify-between">
-          <button type="button" onClick={goPrev} disabled={currentStepIndex === 0}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm border ${
-              currentStepIndex === 0 ? "border-gray-200 text-gray-300 cursor-default" : "border-gray-300 text-gray-700 hover:bg-gray-100"
-            }`}>
-            <ChevronLeft size={16} />{t("nav.back")}
+          <button
+            type="button"
+            onClick={goPrev}
+            disabled={currentStepIndex === 0}
+            className={`flex items-center gap-2 px-4 py-1 rounded-lg text-sm border ${
+              currentStepIndex === 0
+                ? "border-gray-200 text-gray-300 cursor-default"
+                : "border-gray-300 text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            <ChevronLeft size={16} />
+            {t("nav.back")}
           </button>
-          <button type="button" onClick={goNext} disabled={currentStepIndex === STEPS.length - 1}
+          <button
+            type="button"
+            onClick={goNext}
+            disabled={currentStepIndex === STEPS.length - 1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm ${
-              currentStepIndex === STEPS.length - 1 ? "bg-gray-200 text-gray-400 cursor-default" : "bg-green-600 text-white hover:bg-green-700"
-            }`}>
-            {t("nav.next")}<ChevronRight size={16} />
+              currentStepIndex === STEPS.length - 1
+                ? "bg-gray-200 text-gray-400 cursor-default"
+                : "bg-green-600 text-white hover:bg-green-700"
+            }`}
+          >
+            {t("nav.next")}
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
