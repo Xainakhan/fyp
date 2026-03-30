@@ -29,6 +29,7 @@ const INITIAL_FORM: FormData = {
 const HealthInterviewPage: React.FC = () => {
   const { t, i18n } = useTranslation("healthInterview");
   const isRTL = i18n.dir() === "rtl";
+  const isUrdu = i18n.language === "ur";
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [form, setForm] = useState<FormData>(INITIAL_FORM);
@@ -118,12 +119,12 @@ const HealthInterviewPage: React.FC = () => {
         className="flex items-center gap-3 mb-4 rounded-2xl bg-black/20 border border-white/10 backdrop-blur-md w-full overflow-hidden"
         style={{ padding: "10px 15px", minHeight: "64px" }}
       >
-        {/* Icon — shrink-0 keeps it from being squeezed */}
-        <div className="w-11 h-11 rounded-full bg-green-500/20 border border-green-400/30 flex items-center justify-center shrink-0">
-          <ClipboardList className="text-green-400" size={22} />
+        {/* Icon */}
+        <div className="w-11 h-11 rounded-full bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
+          <ClipboardList className="text-white" size={22} />
         </div>
 
-        {/* Text — flex-1 + min-w-0 makes it take remaining space and wrap properly */}
+        {/* Text */}
         <div className="flex-1 min-w-0">
           <h1
             className="font-bold text-white leading-snug break-words"
@@ -164,6 +165,8 @@ const HealthInterviewPage: React.FC = () => {
 
         {/* Navigation */}
         <div className="mt-6 flex justify-between">
+
+          {/* Back button */}
           <button
             type="button"
             onClick={goPrev}
@@ -177,6 +180,8 @@ const HealthInterviewPage: React.FC = () => {
             <ChevronLeft size={16} />
             {t("nav.back")}
           </button>
+
+          {/* Next button */}
           <button
             type="button"
             onClick={goNext}
@@ -187,9 +192,10 @@ const HealthInterviewPage: React.FC = () => {
                 : "bg-green-600 text-white hover:bg-green-700"
             }`}
           >
-            {t("nav.next")}
-            <ChevronRight size={16} />
+            {isUrdu ? "آگے چلیں" : t("nav.next")}
+            {isUrdu ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </button>
+
         </div>
       </div>
     </div>
