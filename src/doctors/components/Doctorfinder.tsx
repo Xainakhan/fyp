@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { Filter } from "lucide-react";
 import { doctorDatabase } from "./DoctorData";
 import DoctorCard from "./DoctorCard";
-import SearchFilters from "./SearchFilters";
+import SearchFilters from "./SearchFilter";
 import type { DoctorWithMeta, SortBy, PriceRange } from "./types";
 
 const DoctorFinder: React.FC = () => {

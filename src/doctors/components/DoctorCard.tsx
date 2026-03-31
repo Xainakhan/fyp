@@ -15,11 +15,13 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
   onViewProfile,
   onGetDirections,
 }) => {
-  const { i18n } = useTranslation("doctors");
+  const { t, i18n } = useTranslation("doctors");
   const lang = i18n.language as "en" | "ur";
+  const isRTL = lang === "ur";
 
   return (
     <div
+      dir={isRTL ? "rtl" : "ltr"}
       style={{
         background: "#ffffff",
         borderRadius: 14,
@@ -29,6 +31,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
         flexDirection: "column",
         boxSizing: "border-box" as const,
         height: "100%",
+        textAlign: isRTL ? "right" : "left",
       }}
     >
       {/* Avatar */}
@@ -43,6 +46,8 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
           justifyContent: "center",
           marginBottom: 10,
           flexShrink: 0,
+          // In RTL align avatar to the right (reading-start side)
+          alignSelf: isRTL ? "flex-end" : "flex-start",
         }}
       >
         <User size={30} color="#9ca3af" strokeWidth={1.5} />
@@ -76,14 +81,21 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
 
       {/* Experience + Reviews */}
       <p style={{ fontSize: 11, color: "#6b7280", margin: "0 0 12px" }}>
-        {doctor.experience} Experience &nbsp; {doctor.reviews} ({doctor.reviews} Reviews)
+        {doctor.experience} {t("card.experience")} &nbsp;
+        {doctor.reviews} ({doctor.reviews} {t("card.reviews")})
       </p>
 
       {/* Spacer */}
       <div style={{ flex: 1 }} />
 
       {/* View Profile + Directions */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+      <div style={{
+        display: "flex",
+        gap: 8,
+        marginBottom: 8,
+        // In RTL: profile button stays dominant (inline-start), arrow at inline-end
+        flexDirection: isRTL ? "row-reverse" : "row",
+      }}>
         <button
           onClick={() => onViewProfile(doctor)}
           style={{
@@ -105,7 +117,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
             ((e.currentTarget as HTMLButtonElement).style.borderColor = "#d1d5db")
           }
         >
-          View Profile
+          {t("card.viewProfile")}
         </button>
 
         <button
@@ -129,7 +141,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
           onMouseLeave={(e) =>
             ((e.currentTarget as HTMLButtonElement).style.background = "#111827")
           }
-          title="Get Directions"
+          title={t("card.getDirections")}
         >
           <Navigation size={13} color="#fff" />
         </button>
@@ -157,7 +169,7 @@ const DoctorCard: React.FC<DoctorCardProps> = ({
           ((e.currentTarget as HTMLButtonElement).style.opacity = "1")
         }
       >
-        Book Appointment
+        {t("card.bookAppointment")}
       </button>
     </div>
   );

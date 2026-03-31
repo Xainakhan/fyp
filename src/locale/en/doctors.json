@@ -3,12 +3,40 @@
     "title": "Find Healthcare Specialists",
     "subtitle": "Connect with qualified doctors across Pakistan"
   },
+  "hero": {
+    "title": "Find the best doctors",
+    "titleLine2": "in Pakistan",
+    "description": "Track your heart rate, blood pressure, and more with just your phone's front camera — anytime, anywhere.",
+    "searchPlaceholder": "Search by doctor, hospital, or disease...",
+    "allCities": "All Cities",
+    "specialities": "Specialities",
+    "priceRange": "Price Range",
+    "moreFilters": "More Filters",
+    "clearAll": "Clear all",
+    "consultationFeePKR": "Consultation Fee (PKR)",
+    "clearPriceRange": "Clear price range",
+    "onlineConsultationOnly": "Online Consultation Only",
+    "availableToday": "Available Today",
+    "priceFrom": "0",
+    "priceInfinity": "∞",
+    "sortBy": {
+      "highestRated": "Highest Rated",
+      "mostExperienced": "Most Experienced",
+      "priceLow": "Price: Low to High",
+      "priceHigh": "Price: High to Low",
+      "mostReviewed": "Most Reviewed"
+    }
+  },
   "filters": {
     "title": "Search & Filter Doctors",
+    "applyFilters": "Apply Filters",
+    "findAgain": "Find Again",
     "filters": "Filters",
     "searchPlaceholder": "Search by doctor name, hospital, or specialization...",
     "specialty": "Medical Specialty",
+    "specialities": "Specialities",
     "allSpecialties": "All Specialties",
+    "allSpecialities": "All Specialities",
     "location": "Location/City",
     "allCities": "All Cities",
     "sortBy": "Sort By",
@@ -22,10 +50,22 @@
     },
     "feeRange": "Consultation Fee Range",
     "to": "to",
+    "min": "Min",
+    "max": "Max",
     "additionalFilters": "Additional Filters",
-    "onlineOnly": "Online Consultation Available",
-    "verifiedOnly": "Verified Doctors Only",
-    "availableToday": "Available Today"
+    "onlineOnly": "Online Consultation",
+    "verifiedOnly": "Verified Only",
+    "availableToday": "Available Today",
+    "priceRange": "Price Range",
+    "availability": "Availability"
+  },
+  "results": {
+    "title": "Search Results",
+    "doctorsListed": "Doctors listed in",
+    "allSpecialities": "All Specialities",
+    "noResults": "No doctors found",
+    "noResultsDetail": "No doctors found matching your filters.",
+    "noResultsHint": "Try adjusting your search criteria or filters"
   },
   "location": {
     "findNearest": "Find Nearest Doctors",
@@ -50,7 +90,7 @@
     "verified": "Verified",
     "reviews": "reviews",
     "onlineAvailable": "Online Available",
-    "experience": "experience",
+    "experience": "Experience",
     "kmAway": "km away",
     "consultation": "consultation",
     "specializations": "Specializations",
@@ -61,12 +101,35 @@
     "bookAppointment": "Book Appointment",
     "onlineConsult": "Online Consult",
     "getDirections": "Get Directions",
-    "view": "View"
+    "view": "View",
+    "showLess": "Show Less",
+"viewMore": "View More Doctors"
   },
-  "results": {
-    "title": "Search Results",
-    "noResults": "No doctors found",
-    "noResultsHint": "Try adjusting your search criteria or filters"
+  "modal": {
+    "title": "Doctor Profile",
+    "qualification": "Qualification",
+    "experience": "Experience",
+    "hospital": "Hospital",
+    "location": "Location",
+    "fee": "Fee",
+    "consultationFee": "Consultation Fee",
+    "phone": "Phone",
+    "online": "Online",
+    "address": "Address",
+    "available": "Available",
+    "notAvailable": "Not Available",
+    "verified": "Verified",
+    "onlineConsultation": "Online Consultation",
+    "specialty": "Specialty",
+    "distance": "Distance",
+    "availableDays": "Available Days",
+    "timeSlots": "Time Slots",
+    "languages": "Languages",
+    "specializations": "Specializations",
+    "kmAway": "km away",
+    "callNow": "Call Now",
+    "directions": "Directions",
+    "bookAppointment": "Book Appointment"
   },
   "specialty": {
     "browseTitle": "Browse by Medical Specialty",
@@ -82,18 +145,5 @@
     "medTransport": "Medical Transport",
     "police": "Police",
     "emergencyPolice": "Emergency Police"
-  },
-  "modal": {
-    "title": "Doctor Profile",
-    "qualification": "Qualification",
-    "experience": "Experience",
-    "hospital": "Hospital",
-    "location": "Location",
-    "fee": "Fee",
-    "phone": "Phone",
-    "online": "Online",
-    "address": "Address",
-    "available": "Available",
-    "notAvailable": "Not Available"
   }
 }

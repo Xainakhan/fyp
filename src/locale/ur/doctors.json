@@ -3,12 +3,40 @@
     "title": "ہیلتھ کیئر ماہرین تلاش کریں",
     "subtitle": "پاکستان بھر میں قابل ڈاکٹرز سے رابطہ کریں"
   },
+  "hero": {
+    "title": "پاکستان کے بہترین ڈاکٹر",
+    "titleLine2": "تلاش کریں",
+    "description": "صرف اپنے فون کے فرنٹ کیمرے سے دل کی دھڑکن، بلڈ پریشر اور مزید ٹریک کریں — کہیں بھی، کبھی بھی۔",
+    "searchPlaceholder": "ڈاکٹر، ہسپتال، یا بیماری سے تلاش کریں...",
+    "allCities": "تمام شہر",
+    "specialities": "تخصصات",
+    "priceRange": "فیس کی حد",
+    "moreFilters": "مزید فلٹرز",
+    "clearAll": "سب صاف کریں",
+    "consultationFeePKR": "مشاورتی فیس (روپے)",
+    "clearPriceRange": "قیمت کی حد صاف کریں",
+    "onlineConsultationOnly": "صرف آن لائن مشاورہ",
+    "availableToday": "آج دستیاب",
+    "priceFrom": "0",
+    "priceInfinity": "∞",
+    "sortBy": {
+      "highestRated": "سب سے زیادہ ریٹنگ",
+      "mostExperienced": "سب سے زیادہ تجربہ کار",
+      "priceLow": "قیمت: کم سے زیادہ",
+      "priceHigh": "قیمت: زیادہ سے کم",
+      "mostReviewed": "سب سے زیادہ جائزے"
+    }
+  },
   "filters": {
     "title": "ڈاکٹرز کو سرچ اور فلٹر کریں",
+    "applyFilters": "فلٹرز لگائیں",
+    "findAgain": "دوبارہ تلاش کریں",
     "filters": "فلٹرز",
     "searchPlaceholder": "ڈاکٹر کے نام، ہسپتال، یا تخصص کے ذریعے تلاش کریں...",
     "specialty": "طبی تخصص",
+    "specialities": "تخصصات",
     "allSpecialties": "تمام تخصصات",
+    "allSpecialities": "تمام تخصصات",
     "location": "مقام/شہر",
     "allCities": "تمام شہر",
     "sortBy": "ترتیب دیں",
@@ -22,10 +50,22 @@
     },
     "feeRange": "مشاورے کی فیس کی حد",
     "to": "سے",
+    "min": "کم از کم",
+    "max": "زیادہ سے زیادہ",
     "additionalFilters": "اضافی فلٹرز",
-    "onlineOnly": "آن لائن مشاورہ دستیاب",
-    "verifiedOnly": "صرف تصدیق شدہ ڈاکٹرز",
-    "availableToday": "آج دستیاب"
+    "onlineOnly": "آن لائن مشاورہ",
+    "verifiedOnly": "صرف تصدیق شدہ",
+    "availableToday": "آج دستیاب",
+    "priceRange": "فیس کی حد",
+    "availability": "دستیابی"
+  },
+  "results": {
+    "title": "تلاش کے نتائج",
+    "doctorsListed": "ڈاکٹرز درج ہیں",
+    "allSpecialities": "تمام تخصصات",
+    "noResults": "کوئی ڈاکٹر نہیں ملا",
+    "noResultsDetail": "آپ کے فلٹرز سے کوئی ڈاکٹر نہیں ملا۔",
+    "noResultsHint": "اپنے تلاش کے معیار یا فلٹرز کو تبدیل کرنے کی کوشش کریں"
   },
   "location": {
     "findNearest": "قریب ترین ڈاکٹرز تلاش کریں",
@@ -61,12 +101,35 @@
     "bookAppointment": "ملاقات بک کریں",
     "onlineConsult": "آن لائن مشاورہ",
     "getDirections": "سمت حاصل کریں",
-    "view": "دیکھیں"
+    "view": "دیکھیں",
+    "showLess": "کم دکھائیں",
+"viewMore": "مزید ڈاکٹرز دیکھیں"
   },
-  "results": {
-    "title": "تلاش کے نتائج",
-    "noResults": "کوئی ڈاکٹر نہیں ملا",
-    "noResultsHint": "اپنے تلاش کے معیار یا فلٹرز کو تبدیل کرنے کی کوشش کریں"
+  "modal": {
+    "title": "ڈاکٹر پروفائل",
+    "qualification": "قابلیت",
+    "experience": "تجربہ",
+    "hospital": "ہسپتال",
+    "location": "مقام",
+    "fee": "فیس",
+    "consultationFee": "مشاورتی فیس",
+    "phone": "فون",
+    "online": "آن لائن",
+    "address": "پتہ",
+    "available": "دستیاب",
+    "notAvailable": "دستیاب نہیں",
+    "verified": "تصدیق شدہ",
+    "onlineConsultation": "آن لائن مشاورہ",
+    "specialty": "تخصص",
+    "distance": "فاصلہ",
+    "availableDays": "دستیاب دن",
+    "timeSlots": "وقت کے سلاٹ",
+    "languages": "زبانیں",
+    "specializations": "تخصصات",
+    "kmAway": "کلومیٹر دور",
+    "callNow": "ابھی کال کریں",
+    "directions": "سمت",
+    "bookAppointment": "ملاقات بک کریں"
   },
   "specialty": {
     "browseTitle": "طبی تخصص کے ذریعے براؤز کریں",
@@ -82,18 +145,5 @@
     "medTransport": "طبی نقل و حمل",
     "police": "پولیس",
     "emergencyPolice": "ایمرجنسی پولیس"
-  },
-  "modal": {
-    "title": "ڈاکٹر پروفائل",
-    "qualification": "قابلیت",
-    "experience": "تجربہ",
-    "hospital": "ہسپتال",
-    "location": "مقام",
-    "fee": "فیس",
-    "phone": "فون",
-    "online": "آن لائن",
-    "address": "پتہ",
-    "available": "دستیاب",
-    "notAvailable": "دستیاب نہیں"
   }
 }

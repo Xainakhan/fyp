@@ -3,19 +3,14 @@ import { useTranslation } from "react-i18next";
 import { Stethoscope, ChevronUp, ChevronDown, Filter } from "lucide-react";
 
 import { doctorDatabase } from "./components/DoctorData";
-import type {
-  DoctorWithMeta,
-  Coordinates,
-  SortBy,
-  PriceRange,
-} from "./components/types";
+import type { DoctorWithMeta, Coordinates, SortBy, PriceRange } from "./components/types";
 
-import HeroSection from "./components/DoctorHero";
-import DoctorCard from "./components/DoctorCard";
-import DoctorFilters from "./components/SearchFilter";
-import DoctorProfileModal from "./components/DoctorProfileModal";
+import HeroSection        from "./components/DoctorHero";
+import DoctorCard         from "./components/DoctorCard";
+import DoctorFilters      from "./components/SearchFilter";
+import DoctorProfileModal from "./components/DoctorProfilemodal";
 
-import LeadingExperts from "../homePage/components/LeadingExperts";
+import LeadingExperts     from "../homePage/components/LeadingExperts";
 import TestimonialSection from "../homePage/components/Testinomials";
 
 const INITIAL_SHOW = 8;
@@ -33,27 +28,25 @@ function haversineDistance(a: Coordinates, b: Coordinates): number {
 }
 
 const DoctorsPage: React.FC = () => {
-  const { i18n } = useTranslation("doctors");
+  const { t, i18n } = useTranslation("doctors");
   const lang = i18n.language as "en" | "ur";
+  const isRTL = lang === "ur";
 
-  // Hero / search state
-  const [heroCity, setHeroCity]           = useState("Islamabad");
-  const [heroSpecialty, setHeroSpecialty] = useState("");
-  const [heroQuery, setHeroQuery]         = useState("");
+  const [heroCity,       setHeroCity]       = useState("Islamabad");
+  const [heroSpecialty,  setHeroSpecialty]  = useState("");
+  const [heroQuery,      setHeroQuery]      = useState("");
 
-  // All sidebar filters — applied INSTANTLY on change (no pending/commit split)
   const [filterSpecialty, setFilterSpecialty] = useState("");
-  const [filterLocation, setFilterLocation]   = useState("");
-  const [sortBy, setSortBy]                   = useState<SortBy>("rating");
-  const [priceRange, setPriceRange]           = useState<PriceRange>({ min: "", max: "" });
-  const [filterOnline, setFilterOnline]       = useState(false);
-  const [filterVerified, setFilterVerified]   = useState(false);
+  const [filterLocation,  setFilterLocation]  = useState("");
+  const [sortBy,          setSortBy]          = useState<SortBy>("rating");
+  const [priceRange,      setPriceRange]      = useState<PriceRange>({ min: "", max: "" });
+  const [filterOnline,    setFilterOnline]    = useState(false);
+  const [filterVerified,  setFilterVerified]  = useState(false);
 
-  const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
-  const [selectedDoctor, setSelectedDoctor] = useState<DoctorWithMeta | null>(null);
-  const [showAll, setShowAll]               = useState(false);
+  const [userLocation,    setUserLocation]    = useState<Coordinates | null>(null);
+  const [selectedDoctor,  setSelectedDoctor]  = useState<DoctorWithMeta | null>(null);
+  const [showAll,         setShowAll]         = useState(false);
 
-  // Build flat doctor list
   const allDoctors: DoctorWithMeta[] = Object.entries(doctorDatabase).flatMap(
     ([key, cat]) =>
       cat.doctors.map((d) => ({
@@ -67,7 +60,6 @@ const DoctorsPage: React.FC = () => {
       }))
   );
 
-  // Combined filter: hero search + sidebar filters
   const filtered = allDoctors
     .filter((d) => {
       const q = heroQuery.toLowerCase();
@@ -81,15 +73,14 @@ const DoctorsPage: React.FC = () => {
       if (heroSpecialty && d.specialtyKey !== heroSpecialty) return false;
 
       const city = heroCity.toLowerCase();
-      if (city && city !== "islamabad" && !d.location.toLowerCase().includes(city))
-        return false;
+      if (city && city !== "islamabad" && !d.location.toLowerCase().includes(city)) return false;
 
       if (filterSpecialty && d.specialtyKey !== filterSpecialty) return false;
-      if (filterLocation && !d.location.toLowerCase().includes(filterLocation)) return false;
-      if (priceRange.min && d.consultationFee < Number(priceRange.min)) return false;
-      if (priceRange.max && d.consultationFee > Number(priceRange.max)) return false;
-      if (filterOnline && !d.onlineConsultation) return false;
-      if (filterVerified && !d.verified) return false;
+      if (filterLocation  && !d.location.toLowerCase().includes(filterLocation)) return false;
+      if (priceRange.min  && d.consultationFee < Number(priceRange.min)) return false;
+      if (priceRange.max  && d.consultationFee > Number(priceRange.max)) return false;
+      if (filterOnline    && !d.onlineConsultation) return false;
+      if (filterVerified  && !d.verified) return false;
 
       return true;
     })
@@ -116,7 +107,6 @@ const DoctorsPage: React.FC = () => {
     );
   };
 
-  // "Find Again" resets all sidebar filters
   const handleResetFilters = () => {
     setFilterSpecialty("");
     setFilterLocation("");
@@ -134,11 +124,121 @@ const DoctorsPage: React.FC = () => {
       ? doctorDatabase[filterSpecialty]?.name[lang]
       : heroSpecialty
         ? doctorDatabase[heroSpecialty]?.name[lang]
-        : "All Specialties";
+        : t("results.allSpecialities");
+
+  // Sidebar
+  const sidebar = (
+    <div style={{
+      width: 190,
+      minWidth: 190,
+      flexShrink: 0,
+      background: "rgba(255,255,255,0.95)",
+      borderRadius: 14,
+      padding: "16px 14px",
+      boxShadow: "0 2px 16px rgba(0,0,0,0.10)",
+    }}>
+      <DoctorFilters
+        selectedSpecialty={filterSpecialty}
+        setSelectedSpecialty={(v) => { setFilterSpecialty(v); setShowAll(false); }}
+        selectedLocation={filterLocation}
+        setSelectedLocation={(v) => { setFilterLocation(v); setShowAll(false); }}
+        sortBy={sortBy}
+        setSortBy={(v) => { setSortBy(v); setShowAll(false); }}
+        priceRange={priceRange}
+        setPriceRange={setPriceRange}
+        onlineOnly={filterOnline}
+        setOnlineOnly={(v) => { setFilterOnline(v); setShowAll(false); }}
+        verifiedOnly={filterVerified}
+        setVerifiedOnly={(v) => { setFilterVerified(v); setShowAll(false); }}
+        onApply={handleResetFilters}
+        lang={lang}
+      />
+    </div>
+  );
+
+  // Cards grid
+  const cards = (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      {filtered.length === 0 ? (
+        <div style={{
+          textAlign: "center",
+          padding: "60px 20px",
+          background: "rgba(255,255,255,0.08)",
+          borderRadius: 14,
+          border: "1px solid rgba(255,255,255,0.15)",
+        }}>
+          <Stethoscope size={48} color="#9ca3af" style={{ marginBottom: 16 }} />
+          <p style={{ fontSize: 18, fontWeight: 600, color: "#1f2937", margin: "0 0 6px" }}>
+            {t("results.noResults")}
+          </p>
+          <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>
+            {t("results.noResultsHint")}
+          </p>
+        </div>
+      ) : (
+        <>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(195px, 1fr))",
+            gap: 14,
+            marginBottom: 24,
+            alignItems: "stretch",
+          }}>
+            {displayed.map((doc) => (
+              <DoctorCard
+                key={doc.id}
+                doctor={doc}
+                onViewProfile={(doc) => setSelectedDoctor(doc)}
+                onGetDirections={handleGetDirections}
+              />
+            ))}
+          </div>
+
+          {filtered.length > INITIAL_SHOW && (
+            <div style={{ textAlign: "center" }}>
+              <button
+                onClick={() => setShowAll((v) => !v)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: "white",
+                  border: "2px solid #16a34a",
+                  color: "#16a34a",
+                  borderRadius: 50,
+                  padding: "12px 32px",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                  boxShadow: "0 2px 12px rgba(22,163,74,0.12)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "#16a34a";
+                  (e.currentTarget as HTMLButtonElement).style.color = "white";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = "white";
+                  (e.currentTarget as HTMLButtonElement).style.color = "#16a34a";
+                }}
+              >
+                {showAll
+                  ? <><ChevronUp size={17} /> {t("card.showLess")}</>
+                  : <><ChevronDown size={17} /> {t("card.viewMore")} ({filtered.length - INITIAL_SHOW})</>
+                }
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
 
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}>
-
+    <div
+      dir={isRTL ? "rtl" : "ltr"}
+      style={{ fontFamily: "'Inter', sans-serif", minHeight: "100vh" }}
+    >
       {/* HERO */}
       <HeroSection
         heroCity={heroCity}
@@ -161,77 +261,52 @@ const DoctorsPage: React.FC = () => {
         {/* Results banner */}
         <div
           id="results-section"
-          style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20, flexWrap: "wrap" }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 20,
+            flexWrap: "wrap",
+            // Let dir="rtl" on outer div handle banner direction naturally
+          }}
         >
           <Filter size={16} color="#9ca3af" />
           <span style={{ fontSize: 22, fontWeight: 800, color: "white" }}>{filtered.length}</span>
-          <span style={{ fontSize: 17, fontWeight: 600, color: "white" }}>Doctors listed in |</span>
-          <span style={{ fontSize: 17, fontWeight: 700, color: "#16a34a", borderBottom: "2.5px solid #16a34a", paddingBottom: 1 }}>
+          <span style={{ fontSize: 17, fontWeight: 600, color: "white" }}>
+            {t("results.doctorsListed")} |
+          </span>
+          <span style={{
+            fontSize: 17,
+            fontWeight: 700,
+            color: "#16a34a",
+            borderBottom: "2.5px solid #16a34a",
+            paddingBottom: 1,
+          }}>
             {specialtyLabel}
           </span>
         </div>
 
-        {/* GLASS WRAPPER */}
-        <div className="glass-card" style={{ display: "flex", alignItems: "flex-start", padding: "20px", gap: 20 }}>
-
-          {/* LEFT: Filter sidebar — white panel */}
-          <div style={{ width: 190, minWidth: 190, flexShrink: 0, background: "rgba(255,255,255,0.95)", borderRadius: 14, padding: "16px 14px", boxShadow: "0 2px 16px rgba(0,0,0,0.10)" }}>
-            <DoctorFilters
-              selectedSpecialty={filterSpecialty}
-              setSelectedSpecialty={(v) => { setFilterSpecialty(v); setShowAll(false); }}
-              selectedLocation={filterLocation}
-              setSelectedLocation={(v) => { setFilterLocation(v); setShowAll(false); }}
-              sortBy={sortBy}
-              setSortBy={(v) => { setSortBy(v); setShowAll(false); }}
-              priceRange={priceRange}
-              setPriceRange={setPriceRange}
-              onlineOnly={filterOnline}
-              setOnlineOnly={(v) => { setFilterOnline(v); setShowAll(false); }}
-              verifiedOnly={filterVerified}
-              setVerifiedOnly={(v) => { setFilterVerified(v); setShowAll(false); }}
-              onApply={handleResetFilters}
-              lang={lang}
-            />
-          </div>
-
-          {/* RIGHT: Cards */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {filtered.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "60px 20px", background: "rgba(255,255,255,0.08)", borderRadius: 14, border: "1px solid rgba(255,255,255,0.15)" }}>
-                <Stethoscope size={48} color="#9ca3af" style={{ marginBottom: 16 }} />
-                <p style={{ fontSize: 18, fontWeight: 600, color: "#1f2937", margin: "0 0 6px" }}>No doctors found</p>
-                <p style={{ fontSize: 14, color: "#6b7280", margin: 0 }}>Try adjusting your search or filters</p>
-              </div>
-            ) : (
-              <>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(195px, 1fr))", gap: 14, marginBottom: 24, alignItems: "stretch" }}>
-                  {displayed.map((doc) => (
-                    <DoctorCard
-                      key={doc.id}
-                      doctor={doc}
-                      onViewProfile={setSelectedDoctor}
-                      onGetDirections={handleGetDirections}
-                    />
-                  ))}
-                </div>
-
-                {filtered.length > INITIAL_SHOW && (
-                  <div style={{ textAlign: "center" }}>
-                    <button
-                      onClick={() => setShowAll((v) => !v)}
-                      style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "white", border: "2px solid #16a34a", color: "#16a34a", borderRadius: 50, padding: "12px 32px", fontSize: 14, fontWeight: 700, cursor: "pointer", transition: "all 0.2s", boxShadow: "0 2px 12px rgba(22,163,74,0.12)" }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#16a34a"; (e.currentTarget as HTMLButtonElement).style.color = "white"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "white"; (e.currentTarget as HTMLButtonElement).style.color = "#16a34a"; }}
-                    >
-                      {showAll
-                        ? <><ChevronUp size={17} /> Show Less</>
-                        : <><ChevronDown size={17} /> View More Doctors ({filtered.length - INITIAL_SHOW} more)</>}
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+        {/*
+          GLASS WRAPPER
+          ─────────────
+          The outer <div dir="rtl"> already sets the RTL context for the
+          whole page. A plain flex row here will have its children laid out
+          right-to-left automatically:
+            • sidebar  → first child in DOM → rendered on the RIGHT  ✓
+            • cards    → second child in DOM → rendered on the LEFT   ✓
+          No flexDirection override needed — that was causing the conflict.
+        */}
+        <div
+          className="glass-card"
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            padding: "20px",
+            gap: 20,
+          }}
+        >
+          {sidebar}
+          {cards}
         </div>
 
         <LeadingExperts />
