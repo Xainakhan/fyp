@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Mic, MicOff, ChevronDown, User, Menu, X } from "lucide-react";
+import { Mic, ChevronDown, User, Menu, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useVoiceControl } from "../context/VoiceControlContext";
 import LoginModal from "../auth/Login";
 import RegisterModal from "../auth/Register";
 import ForgotPassword from "../auth/ForgotPassword";
@@ -10,12 +11,9 @@ import ResetPassword from "../auth/ResetPassword";
 interface NavbarProps {
   userLanguage: string;
   setUserLanguage: (l: string) => void;
-  voiceModeOn: boolean;
-  onToggleVoice: () => void;
 }
 
-// ── Moved INSIDE components so t() works and re-renders on language change ──
-
+// ── NavLink ──────────────────────────────────────────────────────────────────
 const NavLink: React.FC<{ label: string; onClick: () => void; active?: boolean }> = ({
   label, onClick, active,
 }) => (
@@ -41,15 +39,15 @@ const NavLink: React.FC<{ label: string; onClick: () => void; active?: boolean }
   </button>
 );
 
+// ── SymptomCheckerDropdown ────────────────────────────────────────────────────
 const SymptomCheckerDropdown: React.FC<{ navigate: (path: string) => void }> = ({ navigate }) => {
-  const { t } = useTranslation("navbar"); // ── ADDED
+  const { t } = useTranslation("navbar");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const location = useLocation();
   const active = ["/triage", "/timeline"].includes(location.pathname);
 
-  // ── Moved here so t() re-renders on language change ──
-  const SYMPTOM_CHECKER_ITEMS = [
+  const ITEMS = [
     { label: t("symptomCheckerItems.healthTriage"),   path: "/triage" },
     { label: t("symptomCheckerItems.healthTimeline"), path: "/timeline" },
     { label: t("symptomCheckerItems.diseaseLibrary"), path: "/triage" },
@@ -85,7 +83,7 @@ const SymptomCheckerDropdown: React.FC<{ navigate: (path: string) => void }> = (
           e.currentTarget.style.border = open || active ? "1px solid rgba(255,255,255,0.25)" : "1px solid transparent";
         }}
       >
-        {t("links.symptomChecker")} {/* ── CHANGED ── */}
+        {t("links.symptomChecker")}
         <ChevronDown size={13} style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "0.2s" }} />
       </button>
       {open && (
@@ -94,12 +92,12 @@ const SymptomCheckerDropdown: React.FC<{ navigate: (path: string) => void }> = (
           minWidth: 180, background: "white", borderRadius: 10,
           boxShadow: "0 10px 30px rgba(0,0,0,0.2)", overflow: "hidden", zIndex: 200,
         }}>
-          {SYMPTOM_CHECKER_ITEMS.map((item, i) => (
+          {ITEMS.map((item, i) => (
             <button key={i} onClick={() => { navigate(item.path); setOpen(false); }}
               style={{
                 width: "100%", textAlign: "left", padding: "10px 16px",
                 border: "none", background: "white", fontSize: 14, cursor: "pointer",
-                borderBottom: i !== SYMPTOM_CHECKER_ITEMS.length - 1 ? "1px solid #eee" : "none",
+                borderBottom: i !== ITEMS.length - 1 ? "1px solid #eee" : "none",
               }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "#f3f4f6")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
@@ -113,14 +111,14 @@ const SymptomCheckerDropdown: React.FC<{ navigate: (path: string) => void }> = (
   );
 };
 
+// ── SymptomAccordion (mobile drawer) ─────────────────────────────────────────
 const SymptomAccordion: React.FC<{ navigate: (path: string) => void; closeDrawer: () => void }> = ({
   navigate, closeDrawer,
 }) => {
-  const { t } = useTranslation("navbar"); // ── ADDED
+  const { t } = useTranslation("navbar");
   const [open, setOpen] = useState(false);
 
-  // ── Moved here so t() re-renders on language change ──
-  const SYMPTOM_CHECKER_ITEMS = [
+  const ITEMS = [
     { label: t("symptomCheckerItems.healthTriage"),   path: "/triage" },
     { label: t("symptomCheckerItems.healthTimeline"), path: "/timeline" },
     { label: t("symptomCheckerItems.diseaseLibrary"), path: "/triage" },
@@ -140,12 +138,12 @@ const SymptomAccordion: React.FC<{ navigate: (path: string) => void; closeDrawer
         onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
         onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
       >
-        {t("links.symptomChecker")} {/* ── CHANGED ── */}
+        {t("links.symptomChecker")}
         <ChevronDown size={16} color="rgba(255,255,255,0.45)"
           style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.25s ease", flexShrink: 0 }} />
       </button>
       <div style={{ maxHeight: open ? 200 : 0, overflow: "hidden", transition: "max-height 0.3s ease" }}>
-        {SYMPTOM_CHECKER_ITEMS.map((item, i) => (
+        {ITEMS.map((item, i) => (
           <button key={i} onClick={() => { navigate(item.path); closeDrawer(); }}
             style={{
               display: "block", width: "100%", textAlign: "left",
@@ -164,12 +162,15 @@ const SymptomAccordion: React.FC<{ navigate: (path: string) => void; closeDrawer
   );
 };
 
-const Navbar: React.FC<NavbarProps> = ({
-  userLanguage, setUserLanguage, voiceModeOn, onToggleVoice,
-}) => {
+// ── Navbar ────────────────────────────────────────────────────────────────────
+const Navbar: React.FC<NavbarProps> = ({ userLanguage, setUserLanguage }) => {
   const { t, i18n } = useTranslation("navbar");
   const router = useNavigate();
   const location = useLocation();
+
+  // ── Read voice state directly from context — no prop drilling ──
+  const { voiceActive, toggleVoice, isListening } = useVoiceControl();
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
 
@@ -179,13 +180,12 @@ const Navbar: React.FC<NavbarProps> = ({
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [loginOpen, setLoginOpen] = useState(false);
+  const [loginOpen,    setLoginOpen]    = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [forgotOpen, setForgotOpen] = useState(false);
-  const [resetOpen, setResetOpen] = useState(false);
-  const [resetPhone, setResetPhone] = useState("");
+  const [forgotOpen,   setForgotOpen]   = useState(false);
+  const [resetOpen,    setResetOpen]    = useState(false);
+  const [resetPhone,   setResetPhone]   = useState("");
 
-  // ── Auth state — replace with your real auth context ──
   const [isLoggedIn] = useState(false);
 
   const navigate = (path: string) => { router(path); setDrawerOpen(false); };
@@ -195,12 +195,11 @@ const Navbar: React.FC<NavbarProps> = ({
     setUserLanguage(newLang);
     i18n.changeLanguage(newLang);
     document.documentElement.lang = newLang;
-    document.documentElement.dir = newLang === "ur" ? "rtl" : "ltr";
+    document.documentElement.dir  = newLang === "ur" ? "rtl" : "ltr";
     document.body.style.fontFamily = newLang === "ur" ? "'Noto Nastaliq Urdu', serif" : "";
   };
 
-  const closeDrawer = () => setDrawerOpen(false);
-
+  const closeDrawer  = () => setDrawerOpen(false);
   const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setForgotOpen(false); setResetOpen(false); setLoginOpen(true); };
   const openRegister = () => { setDrawerOpen(false); setLoginOpen(false); setForgotOpen(false); setRegisterOpen(true); };
   const openForgot   = () => { setLoginOpen(false); setRegisterOpen(false); setResetOpen(false); setForgotOpen(true); };
@@ -239,12 +238,6 @@ const Navbar: React.FC<NavbarProps> = ({
         }
         .sh-drawer-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
 
-        .sh-icon-btn {
-          border: 1px solid transparent !important;
-          transition: border-color 0.2s, background 0.2s !important;
-        }
-        .sh-icon-btn:hover { border-color: rgba(255,255,255,0.25) !important; }
-
         @keyframes sh-pulse {
           0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.6); }
           50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
@@ -254,14 +247,14 @@ const Navbar: React.FC<NavbarProps> = ({
           background: #fff; animation: sh-pulse 1.4s ease-in-out infinite;
         }
         @keyframes sh-mic-ring {
-          0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
+          0%  { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); }
           70% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
-          100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+          100%{ box-shadow: 0 0 0 0 rgba(34,197,94,0); }
         }
         .sh-mic-active { animation: sh-mic-ring 1.1s ease-out infinite; }
       `}</style>
 
-      {/* ── PILL NAV (all screen sizes) ── */}
+      {/* ── PILL NAV ── */}
       <div style={{
         position: "sticky", top: 14,
         width: "calc(100% - 28px)", maxWidth: isMobile ? 420 : 1100,
@@ -271,8 +264,7 @@ const Navbar: React.FC<NavbarProps> = ({
         border: "1px solid rgba(255,255,255,0.10)", borderRadius: 20,
         padding: "8px 12px", display: "flex", alignItems: "center",
         justifyContent: "space-between",
-        zIndex: 100, boxShadow: "0 4px 24px rgba(0,0,0,0.55)",
-        flexShrink: 0,
+        zIndex: 100, boxShadow: "0 4px 24px rgba(0,0,0,0.55)", flexShrink: 0,
       }}>
         {/* Logo */}
         <button onClick={() => navigate("/")}
@@ -280,19 +272,19 @@ const Navbar: React.FC<NavbarProps> = ({
           <img src="src/assets/logo.png" alt="SehatHub" style={{ height: 36, objectFit: "contain" }} />
         </button>
 
-        {/* Desktop centre nav links — hidden on mobile */}
+        {/* Desktop nav links */}
         {!isMobile && (
           <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <NavLink label={t("links.talkBot")} active={location.pathname === "/tts"} onClick={() => navigate("/tts")} />
+            <NavLink label={t("links.talkBot")}        active={location.pathname === "/tts"}       onClick={() => navigate("/tts")} />
             <NavLink label={t("links.healthInterview")} active={location.pathname === "/interview"} onClick={() => navigate("/interview")} />
             <SymptomCheckerDropdown navigate={navigate} />
-            <NavLink label={t("links.findDoctor")} active={location.pathname === "/doctor"} onClick={() => navigate("/doctor")} />
+            <NavLink label={t("links.findDoctor")}     active={location.pathname === "/doctor"}    onClick={() => navigate("/doctor")} />
           </div>
         )}
 
         {/* Right-side actions */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-          {/* Language toggle — desktop only */}
+          {/* Language toggle — desktop */}
           {!isMobile && (
             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <div onClick={handleLanguageToggle}
@@ -325,9 +317,9 @@ const Navbar: React.FC<NavbarProps> = ({
             {t("emergency")}
           </a>
 
-          {/* Login — desktop only, when logged out */}
+          {/* Login — desktop, logged out */}
           {!isMobile && !isLoggedIn && (
-            <button className="sh-icon-btn" onClick={openLogin}
+            <button onClick={openLogin}
               style={{
                 background: "rgba(255,255,255,0.08)", color: "white",
                 padding: "7px 14px", borderRadius: 20, fontSize: 13,
@@ -337,16 +329,21 @@ const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Mic */}
-          <button onClick={onToggleVoice} className={voiceModeOn ? "sh-mic-active" : ""}
+          {/* ── Mic button — calls context toggleVoice directly ── */}
+          <button
+            onClick={toggleVoice}
+            className={voiceActive ? "sh-mic-active" : ""}
+            title={voiceActive ? "Stop voice control" : "Start voice control"}
             style={{
               width: 36, height: 36, borderRadius: "50%",
-              background: voiceModeOn ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.06)",
-              border: voiceModeOn ? "1.5px solid #22c55e" : "1.5px solid transparent",
+              background: voiceActive
+                ? isListening ? "rgba(34,197,94,0.3)" : "rgba(34,197,94,0.2)"
+                : "rgba(255,255,255,0.06)",
+              border: voiceActive ? "1.5px solid #22c55e" : "1.5px solid transparent",
               display: "flex", alignItems: "center", justifyContent: "center",
               cursor: "pointer", transition: "all 0.2s", flexShrink: 0,
             }}>
-            <Mic size={16} color={voiceModeOn ? "#22c55e" : "rgba(255,255,255,0.7)"} />
+            <Mic size={16} color={voiceActive ? "#22c55e" : "rgba(255,255,255,0.7)"} />
           </button>
 
           {/* Profile — when logged in */}
@@ -362,7 +359,7 @@ const Navbar: React.FC<NavbarProps> = ({
             </button>
           )}
 
-          {/* Hamburger menu — mobile only */}
+          {/* Hamburger — mobile */}
           {isMobile && (
             <button onClick={() => setDrawerOpen(true)}
               style={{
@@ -377,10 +374,10 @@ const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Spacer so content doesn't hide under pill */}
       <div style={{ height: 14, flexShrink: 0, pointerEvents: "none" }} />
 
-      <div className={`sh-overlay${drawerOpen ? " open" : ""}`} onMouseDown={closeDrawer} onTouchStart={closeDrawer} />
+      <div className={`sh-overlay${drawerOpen ? " open" : ""}`}
+        onMouseDown={closeDrawer} onTouchStart={closeDrawer} />
 
       {/* ── DRAWER ── */}
       <div className={`sh-drawer${drawerOpen ? " open" : ""}`}>
@@ -399,7 +396,6 @@ const Navbar: React.FC<NavbarProps> = ({
           </button>
         </div>
 
-        {/* ── CHANGED: hardcoded strings → t() ── */}
         <button className="sh-drawer-link" onClick={() => navigate("/tts")}>{t("links.talkBot")}</button>
         <button className="sh-drawer-link" onClick={() => navigate("/interview")}>{t("links.healthInterview")}</button>
         <SymptomAccordion navigate={navigate} closeDrawer={closeDrawer} />
@@ -407,7 +403,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
         {isLoggedIn && (
           <button className="sh-drawer-link" onClick={() => navigate("/profile")}>
-            <User size={16} /> {t("auth.myProfile")} {/* ── CHANGED ── */}
+            <User size={16} /> {t("auth.myProfile")}
           </button>
         )}
 
@@ -440,7 +436,7 @@ const Navbar: React.FC<NavbarProps> = ({
               fontSize: 13, fontWeight: 700, textDecoration: "none",
               boxShadow: "0 2px 10px rgba(224,48,48,0.4)",
             }}>
-              {t("emergency")} {/* ── CHANGED ── */}
+              {t("emergency")}
             </a>
 
             {!isLoggedIn ? (
@@ -451,7 +447,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   padding: "9px 0", borderRadius: 20,
                   fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                 }}>
-                {t("auth.loginSignup")} {/* ── CHANGED ── */}
+                {t("auth.loginSignup")}
               </button>
             ) : (
               <button onClick={() => { navigate("/profile"); closeDrawer(); }}
@@ -461,7 +457,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   padding: "9px 0", borderRadius: 20,
                   fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit",
                 }}>
-                {t("auth.myProfile")} {/* ── CHANGED ── */}
+                {t("auth.myProfile")}
               </button>
             )}
           </div>

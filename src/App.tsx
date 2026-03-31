@@ -7,6 +7,9 @@ import {
   useLocation,
 } from "react-router-dom";
 
+import { VoiceControlProvider } from "./context/VoiceControlContext";
+import VoiceOverlay from "./components/VoiceOverlay";
+
 import Navbar from "./components/navBar";
 import Footer from "./components/footer";
 import HomePage from "./homePage/homePage";
@@ -20,16 +23,13 @@ import BackgroundWrapper from "./components/wrapperbg";
 import NotFound from "./homePage/NotFound";
 import GlobalChatbot from "./components/GlobalChatbot";
 
-// Auth imports
 import { Login, Register, ForgotPassword, ResetPassword } from "./auth/authExports";
 
 function AppContent() {
   const [userLanguage, setUserLanguage] = useState<"en" | "ur">("en");
-  const [voiceModeOn, setVoiceModeOn] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Detect auth pages
   const isAuthPage =
     location.pathname === "/login" ||
     location.pathname === "/register" ||
@@ -37,16 +37,18 @@ function AppContent() {
     location.pathname === "/reset-password";
 
   return (
-    <>
-      {/* Auth pages should NOT use app layout */}
+    // ── VoiceControlProvider wraps everything so all pages + Navbar share the same voice state ──
+    <VoiceControlProvider userLanguage={userLanguage}>
       {!isAuthPage ? (
         <BackgroundWrapper>
+          {/* Navbar reads voiceActive/toggleVoice directly from context — no prop drilling */}
           <Navbar
             userLanguage={userLanguage}
             setUserLanguage={setUserLanguage}
-            voiceModeOn={voiceModeOn}
-            onToggleVoice={() => setVoiceModeOn((v) => !v)}
           />
+
+          {/* Voice overlay shown when mic is active */}
+          <VoiceOverlay />
 
           <main style={{ minHeight: "100vh", paddingTop: "80px" }}>
             <Routes>
@@ -75,17 +77,15 @@ function AppContent() {
                   />
                 }
               />
-              <Route path="/doctor" element={<Doc />} />
-              <Route path="/timeline" element={<HealthTimeline />} />
-              <Route path="/profile" element={<PatientProfile />} />
-
-              {/* Auth routes (handled here too for direct URL access) */}
+              <Route path="/doctor"    element={<Doc />} />
+              <Route path="/timeline"  element={<HealthTimeline />} />
+              <Route path="/profile"   element={<PatientProfile />} />
               <Route
                 path="/login"
                 element={
                   <Login
                     onNavigate={(page) => {
-                      if (page === "register") navigate("/register");
+                      if (page === "register")        navigate("/register");
                       if (page === "forgot-password") navigate("/forgot-password");
                     }}
                   />
@@ -112,8 +112,6 @@ function AppContent() {
                 }
               />
               <Route path="/reset-password" element={<ResetPassword />} />
-
-              {/* 404 — replaces the old <Navigate to="/" /> */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
@@ -121,14 +119,13 @@ function AppContent() {
           <Footer userLanguage={userLanguage} />
         </BackgroundWrapper>
       ) : (
-        // Auth pages only (no Navbar / Footer / BackgroundWrapper)
         <Routes>
           <Route
             path="/login"
             element={
               <Login
                 onNavigate={(page) => {
-                  if (page === "register") navigate("/register");
+                  if (page === "register")        navigate("/register");
                   if (page === "forgot-password") navigate("/forgot-password");
                 }}
               />
@@ -157,8 +154,8 @@ function AppContent() {
           <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       )}
-      <GlobalChatbot />  
-    </>
+      <GlobalChatbot />
+    </VoiceControlProvider>
   );
 }
 
