@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useVoiceForm } from "../context/useVoiceForm";
 
 interface LoginModalProps {
   open: boolean;
@@ -8,18 +9,61 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitchToForgot }: LoginModalProps) {
-  const [phone, setPhone] = useState("");
-  const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(false);
+  const [phone,        setPhone]        = useState("");
+  const [password,     setPassword]     = useState("");
+  const [remember,     setRemember]     = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading,      setLoading]      = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Reset fields every time the modal opens
+  useEffect(() => {
+    if (open) {
+      setPhone("");
+      setPassword("");
+      setRemember(false);
+      setShowPassword(false);
+    }
+  }, [open]);
+
+  // ── Refs so voice can focus the right field ──
+  const phoneRef    = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setLoading(true);
     await new Promise((r) => setTimeout(r, 1500));
     setLoading(false);
   };
+
+  // ── Register this form with VoiceControlProvider ──
+  // Voice commands that now work:
+  //   EN: "phone is 03001234567"  |  "password is mypass123"
+  //   UR: "phone number 03001234567"  |  "password mypass123"
+  //   "next field" / "agla field"  →  moves focus phone → password
+  //   "submit" / "bhejo" / "haan"  →  calls handleSubmit()
+  useVoiceForm({
+    formId: "login-form",
+    fields: [
+      {
+        id:           "phone",
+        label:        "Phone Number",
+        keywords:     ["phone", "number", "mobile", "phone number"],
+        urduKeywords: ["phone", "nambur", "mobile nambur", "phone number"],
+        setValue:     setPhone,
+        ref:          phoneRef,
+      },
+      {
+        id:           "password",
+        label:        "Password",
+        keywords:     ["password", "pass", "my password"],
+        urduKeywords: ["password", "pass word", "pasword"],
+        setValue:     setPassword,
+        ref:          passwordRef,
+      },
+    ],
+    onSubmit: handleSubmit,
+  });
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -46,18 +90,14 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
         }
 
         .lm-backdrop {
-          position: fixed;
-          inset: 0;
-          z-index: 9998;
-          background: rgba(0, 0, 0, 0.08);
-          backdrop-filter: blur(2px);
-          -webkit-backdrop-filter: blur(2px);
+          position: fixed; inset: 0; z-index: 9998;
+          background: rgba(0,0,0,0.08);
+          backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
         }
         @media (min-width: 481px) {
           .lm-backdrop {
-            background: rgba(0, 0, 0, 0.22);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            background: rgba(0,0,0,0.22);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
           }
         }
 
@@ -67,85 +107,60 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
         }
 
         .lm-card {
-          position: fixed;
-          top: 68px;
-          right: 20px;
-          width: 420px;
-          min-height: 520px;
-          z-index: 9999;
-          background: rgba(14, 26, 18, 0.45);
-          backdrop-filter: blur(32px);
-          -webkit-backdrop-filter: blur(32px);
-          border: 0.5px solid rgba(255, 255, 255, 0.12);
-          border-radius: 18px;
+          position: fixed; top: 68px; right: 20px;
+          width: 420px; min-height: 520px; z-index: 9999;
+          background: rgba(14,26,18,0.45);
+          backdrop-filter: blur(32px); -webkit-backdrop-filter: blur(32px);
+          border: 0.5px solid rgba(255,255,255,0.12); border-radius: 18px;
           padding: 48px 36px 40px;
-          box-shadow:
-            -4px 4px 4px 0px rgba(0, 0, 0, 0.15),
-            0 24px 60px rgba(0, 0, 0, 0.35);
-          animation: lmSlideDown 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+          box-shadow: -4px 4px 4px 0px rgba(0,0,0,0.15), 0 24px 60px rgba(0,0,0,0.35);
+          animation: lmSlideDown 0.28s cubic-bezier(0.22,1,0.36,1) forwards;
         }
 
         .lm-close {
-          position: absolute;
-          top: 14px; right: 14px;
-          width: 26px; height: 26px;
-          border-radius: 6px;
+          position: absolute; top: 14px; right: 14px;
+          width: 26px; height: 26px; border-radius: 6px;
           background: rgba(255,255,255,0.08);
           border: 0.5px solid rgba(255,255,255,0.13);
           display: flex; align-items: center; justify-content: center;
-          cursor: pointer;
-          color: rgba(255,255,255,0.50);
+          cursor: pointer; color: rgba(255,255,255,0.50);
           transition: background 0.15s, color 0.15s;
         }
         .lm-close:hover { background: rgba(255,255,255,0.14); color: white; }
 
         .lm-label {
-          color: rgba(255,255,255,0.80);
-          font-size: 11.5px;
-          font-weight: 600;
-          letter-spacing: 0.07em;
-          text-transform: uppercase;
-          margin-bottom: 2px;
+          color: rgba(255,255,255,0.80); font-size: 11.5px;
+          font-weight: 600; letter-spacing: 0.07em;
+          text-transform: uppercase; margin-bottom: 2px;
         }
 
         .lm-input {
-          width: 100%;
-          background: transparent;
-          border: none;
+          width: 100%; background: transparent; border: none;
           border-bottom: 1px solid rgba(255,255,255,0.22);
-          padding: 10px 0;
-          color: white;
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.2s;
+          padding: 10px 0; color: white; font-size: 14px;
+          outline: none; transition: border-color 0.2s;
           font-family: 'Instrument Sans', sans-serif !important;
-          -webkit-text-fill-color: white;
-          caret-color: white;
+          -webkit-text-fill-color: white; caret-color: white;
         }
         .lm-input:-webkit-autofill,
         .lm-input:-webkit-autofill:focus {
           -webkit-box-shadow: 0 0 0 1000px transparent inset;
-          -webkit-text-fill-color: white;
-          transition: background-color 9999s ease;
+          -webkit-text-fill-color: white; transition: background-color 9999s ease;
         }
         .lm-input::placeholder { color: rgba(255,255,255,0.25); }
         .lm-input:focus { border-bottom-color: rgba(255,255,255,0.55); }
 
+        /* voice-active highlight — green glow on the field being filled */
+        .lm-input:focus { border-bottom-color: #22c55e; }
+
         .lm-btn {
-          width: 100%;
-          background: #0a0a0a;
-          border: none;
-          color: white;
-          font-weight: 600;
-          font-size: 15px;
-          padding: 16px 0;
-          border-radius: 50px;
-          cursor: pointer;
+          width: 100%; background: #0a0a0a; border: none;
+          color: white; font-weight: 600; font-size: 15px;
+          padding: 16px 0; border-radius: 50px; cursor: pointer;
           transition: background 0.2s, transform 0.15s;
           display: flex; align-items: center; justify-content: center; gap: 8px;
           font-family: 'Instrument Sans', sans-serif !important;
-          letter-spacing: 0.01em;
-          margin-top: 8px;
+          letter-spacing: 0.01em; margin-top: 8px;
         }
         .lm-btn:hover:not(:disabled) { background: #1c1c1c; transform: translateY(-1px); }
         .lm-btn:disabled { background: #2a2a2a; cursor: not-allowed; }
@@ -168,10 +183,8 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
         }
       `}</style>
 
-      <div
-        className="lm-backdrop"
-        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      />
+      <div className="lm-backdrop"
+        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} />
 
       <div className="lm-card lm-root">
 
@@ -181,44 +194,42 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
           </svg>
         </button>
 
-        <h2 style={{
-          color: "white", fontSize: 26, fontWeight: 700,
-          margin: "0 0 8px", textAlign: "center", letterSpacing: "-0.01em",
-        }}>
+        <h2 style={{ color: "white", fontSize: 26, fontWeight: 700, margin: "0 0 8px", textAlign: "center", letterSpacing: "-0.01em" }}>
           Welcome Back
         </h2>
-        <p style={{
-          color: "rgba(255,255,255,0.45)", fontSize: 13.5,
-          margin: "0 0 36px", textAlign: "center",
-        }}>
+        <p style={{ color: "rgba(255,255,255,0.45)", fontSize: 13.5, margin: "0 0 36px", textAlign: "center" }}>
           Please enter your details.
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
 
+          {/* Phone */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label className="lm-label">Phone No</label>
             <input
+              ref={phoneRef}
               type="tel"
               className="lm-input"
               placeholder="Enter your registered mobile number"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              autoComplete="tel"
+              autoComplete="off"
             />
           </div>
 
+          {/* Password */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label className="lm-label">Password</label>
             <div style={{ position: "relative" }}>
               <input
+                ref={passwordRef}
                 type={showPassword ? "text" : "password"}
                 className="lm-input"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={{ paddingRight: 32 }}
-                autoComplete="current-password"
+                autoComplete="off"
               />
               <button type="button" className="lm-eye"
                 onClick={() => setShowPassword(!showPassword)}
@@ -239,19 +250,18 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
             </div>
           </div>
 
+          {/* Remember / Forgot */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
               <input
-                type="checkbox"
-                checked={remember}
+                type="checkbox" checked={remember}
                 onChange={(e) => setRemember(e.target.checked)}
                 style={{ width: 15, height: 15, accentColor: "#22c55e", cursor: "pointer" }}
               />
               <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>Remember Me</span>
             </label>
-            <button
-              type="button"
-onClick={() => { onClose(); onSwitchToForgot(); }}
+            <button type="button"
+              onClick={() => { onClose(); onSwitchToForgot(); }}
               style={{
                 background: "none", border: "none",
                 color: "rgba(255,255,255,0.55)", fontSize: 13,
@@ -280,25 +290,20 @@ onClick={() => { onClose(); onSwitchToForgot(); }}
 
         <div style={{ minHeight: 24 }} />
 
-        <p style={{
-          textAlign: "center", color: "rgba(255,255,255,0.35)",
-          fontSize: 12.5, marginTop: 28,
-        }}>
+        <p style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 12.5, marginTop: 28 }}>
           Don't Have an Account?{" "}
-          {/* ← closes login, opens register modal */}
           <button
             onClick={() => { onClose(); onSwitchToRegister(); }}
             style={{
-              background: "none", border: "none",
-              color: "white", fontWeight: 600, fontSize: 12.5,
-              cursor: "pointer", fontFamily: "'Instrument Sans', sans-serif",
+              background: "none", border: "none", color: "white",
+              fontWeight: 600, fontSize: 12.5, cursor: "pointer",
+              fontFamily: "'Instrument Sans', sans-serif",
               textDecoration: "underline", textUnderlineOffset: 2,
             }}
           >
             Register Here.
           </button>
         </p>
-
       </div>
     </>
   );

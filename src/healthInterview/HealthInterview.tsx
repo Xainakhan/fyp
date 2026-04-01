@@ -1,7 +1,14 @@
 // healthInterview/healthInterview.tsx
-import React, { useState } from "react";
+//
+// CHANGE from original: removed the useVoiceForm({ formId:"interview-navigation", fields:[] })
+// call because it pushed an empty-field form onto the stack and blocked guided fill.
+// Step navigation ("next step" / "back") is now handled via useEffect + useVoiceControl
+// so it works alongside guided fill without interfering with field registration.
+
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
+import { useVoiceControl } from "../context/VoiceControlContext";
 
 import type { FormData, TriageResponse } from "./components/types";
 import { STEPS, API_BASE } from "./components/constants";
@@ -12,12 +19,12 @@ import {
   parseDurationToDays,
 } from "./components/Helpers";
 
-import StepIndicator from "./components/StepIndicator";
-import BasicInfoStep from "./components/BasicInfoStep";
+import StepIndicator      from "./components/StepIndicator";
+import BasicInfoStep      from "./components/BasicInfoStep";
 import CurrentProblemStep from "./components/CurrentProblemStep";
 import MedicalHistoryStep from "./components/MedicalHistroyStep";
-import LifestyleStep from "./components/lifestyleStep";
-import SummaryStep from "./components/SummaryStep";
+import LifestyleStep      from "./components/lifestyleStep";
+import SummaryStep        from "./components/SummaryStep";
 
 const INITIAL_FORM: FormData = {
   fullName: "", age: "", gender: "", city: "", phone: "",
@@ -28,17 +35,17 @@ const INITIAL_FORM: FormData = {
 
 const HealthInterviewPage: React.FC = () => {
   const { t, i18n } = useTranslation("healthInterview");
-  const isRTL = i18n.dir() === "rtl";
+  const isRTL  = i18n.dir() === "rtl";
   const isUrdu = i18n.language === "ur";
 
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [form, setForm] = useState<FormData>(INITIAL_FORM);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const [triageResult, setTriageResult] = useState<TriageResponse | null>(null);
+  const [form,             setForm]             = useState<FormData>(INITIAL_FORM);
+  const [submitting,       setSubmitting]       = useState(false);
+  const [submitError,      setSubmitError]      = useState<string | null>(null);
+  const [triageResult,     setTriageResult]     = useState<TriageResponse | null>(null);
 
   const currentStep = STEPS[currentStepIndex];
-  const StepIcon = currentStep.icon;
+  const StepIcon    = currentStep.icon;
 
   const goNext = () => setCurrentStepIndex((p) => Math.min(p + 1, STEPS.length - 1));
   const goPrev = () => setCurrentStepIndex((p) => Math.max(p - 1, 0));
@@ -47,36 +54,28 @@ const HealthInterviewPage: React.FC = () => {
     setSubmitError(null);
     setTriageResult(null);
 
-    if (!form.fullName.trim()) {
-      setSubmitError(t("errors.noName"));
-      return;
-    }
+    if (!form.fullName.trim()) { setSubmitError(t("errors.noName")); return; }
     const symptomsArray = buildSymptomsArray(form.associatedSymptoms, form.mainConcern);
-    if (symptomsArray.length === 0) {
-      setSubmitError(t("errors.noSymptoms"));
-      return;
-    }
+    if (symptomsArray.length === 0) { setSubmitError(t("errors.noSymptoms")); return; }
 
     const payload = {
       basic_info: {
         full_name: form.fullName,
-        age: form.age ? Number(form.age) : null,
-        gender: form.gender,
-        city: form.city,
-        phone: form.phone,
+        age:    form.age ? Number(form.age) : null,
+        gender: form.gender, city: form.city, phone: form.phone,
       },
       current_issue: {
-        symptoms: symptomsArray,
+        symptoms:      symptomsArray,
         duration_days: parseDurationToDays(form.symptomDuration),
-        description: form.mainConcern,
+        description:   form.mainConcern,
       },
       medical_history: buildMedicalHistoryText(form),
-      lifestyle: buildLifestyleText(form),
+      lifestyle:       buildLifestyleText(form),
     };
 
     try {
       setSubmitting(true);
-      const res = await fetch(`${API_BASE}/api/interview/submit`, {
+      const res  = await fetch(`${API_BASE}/api/interview/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -91,6 +90,23 @@ const HealthInterviewPage: React.FC = () => {
     }
   };
 
+  // ── Voice step-navigation via lastCommand (no form registration needed) ──
+  // This listens to commands like "next step", "back", "peeche" without
+  // polluting the form registry with an empty-fields entry.
+  const { lastCommand, guidedFillActive } = useVoiceControl();
+
+  useEffect(() => {
+    if (guidedFillActive) return; // guided fill owns the mic right now
+    const tl = lastCommand.toLowerCase();
+
+    if (/\b(next step|agla step|next page|aage|next)\b/.test(tl)) {
+      goNext();
+    } else if (/\b(back|peeche|previous|previous step|pichla)\b/.test(tl)) {
+      goPrev();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastCommand]);
+
   const handleDownload = () => {
     const report = {
       generated_at: new Date().toISOString(),
@@ -102,9 +118,9 @@ const HealthInterviewPage: React.FC = () => {
     };
 
     const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
     a.download = `health-interview-${form.fullName.replace(/\s+/g, "_") || "report"}.json`;
     a.click();
     URL.revokeObjectURL(url);
@@ -119,17 +135,11 @@ const HealthInterviewPage: React.FC = () => {
         className="flex items-center gap-3 mb-4 rounded-2xl bg-black/20 border border-white/10 backdrop-blur-md w-full overflow-hidden"
         style={{ padding: "10px 15px", minHeight: "64px" }}
       >
-        {/* Icon */}
         <div className="w-11 h-11 rounded-full bg-white/10 border border-white/20 flex items-center justify-center shrink-0">
           <ClipboardList className="text-white" size={22} />
         </div>
-
-        {/* Text */}
         <div className="flex-1 min-w-0">
-          <h1
-            className="font-bold text-white leading-snug break-words"
-            style={{ fontSize: "clamp(1.1rem, 3vw, 1.75rem)" }}
-          >
+          <h1 className="font-bold text-white leading-snug break-words" style={{ fontSize: "clamp(1.1rem, 3vw, 1.75rem)" }}>
             {t("header.title")}
           </h1>
           <p className="text-m text-white break-words leading-snug mt-0.5">
@@ -138,7 +148,6 @@ const HealthInterviewPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Step indicator */}
       <StepIndicator currentStepIndex={currentStepIndex} />
 
       {/* Card */}
@@ -148,28 +157,22 @@ const HealthInterviewPage: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-800">{t(`steps.${currentStep.id}`)}</h2>
         </div>
 
-        {currentStep.id === "basic"     && <BasicInfoStep form={form} setForm={setForm} />}
+        {currentStep.id === "basic"     && <BasicInfoStep      form={form} setForm={setForm} />}
         {currentStep.id === "current"   && <CurrentProblemStep form={form} setForm={setForm} />}
         {currentStep.id === "history"   && <MedicalHistoryStep form={form} setForm={setForm} />}
-        {currentStep.id === "lifestyle" && <LifestyleStep form={form} setForm={setForm} />}
+        {currentStep.id === "lifestyle" && <LifestyleStep      form={form} setForm={setForm} />}
         {currentStep.id === "summary"   && (
           <SummaryStep
-            form={form}
-            triageResult={triageResult}
-            submitError={submitError}
-            submitting={submitting}
-            onSubmit={handleSubmitInterview}
-            onDownload={handleDownload}
+            form={form} triageResult={triageResult}
+            submitError={submitError} submitting={submitting}
+            onSubmit={handleSubmitInterview} onDownload={handleDownload}
           />
         )}
 
         {/* Navigation */}
         <div className="mt-6 flex justify-between">
-
-          {/* Back button */}
           <button
-            type="button"
-            onClick={goPrev}
+            type="button" onClick={goPrev}
             disabled={currentStepIndex === 0}
             className={`flex items-center gap-2 px-4 py-1 rounded-lg text-sm border ${
               currentStepIndex === 0
@@ -181,10 +184,8 @@ const HealthInterviewPage: React.FC = () => {
             {t("nav.back")}
           </button>
 
-          {/* Next button */}
           <button
-            type="button"
-            onClick={goNext}
+            type="button" onClick={goNext}
             disabled={currentStepIndex === STEPS.length - 1}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm ${
               currentStepIndex === STEPS.length - 1
@@ -195,7 +196,6 @@ const HealthInterviewPage: React.FC = () => {
             {isUrdu ? "آگے چلیں" : t("nav.next")}
             {isUrdu ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
           </button>
-
         </div>
       </div>
     </div>
