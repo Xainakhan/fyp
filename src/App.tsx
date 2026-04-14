@@ -190,7 +190,7 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
+    <Router basename="/fyp">
       <AppContent />
     </Router>
   );
