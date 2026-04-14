@@ -7,7 +7,7 @@ import LoginModal from "../auth/Login";
 import RegisterModal from "../auth/Register";
 import ForgotPassword from "../auth/ForgotPassword";
 import ResetPassword from "../auth/ResetPassword";
-
+import logoImg from "../assets/logo.png";
 interface NavbarProps {
   userLanguage: "ur" | "en";
   setUserLanguage: (lang: "ur" | "en") => void;
@@ -269,7 +269,7 @@ const Navbar: React.FC<NavbarProps> = ({ userLanguage, setUserLanguage }) => {
         {/* Logo */}
         <button onClick={() => navigate("/")}
           style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}>
-          <img src="src/assets/logo.png" alt="SehatHub" style={{ height: 36, objectFit: "contain" }} />
+          <img src={logoImg} alt="SehatHub" style={{ height: 36, objectFit: "contain" }} />
         </button>
 
         {/* Desktop nav links */}
