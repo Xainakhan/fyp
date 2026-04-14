@@ -1,13 +1,14 @@
-// healthInterview/types.ts
-
 export type Lang = "en" | "ur";
-
 export type StepId = "basic" | "current" | "history" | "lifestyle" | "summary";
 
 export interface TriageResponse {
   primary_prediction: {
     disease: string;
     confidence: number;
+    possible_condition?: string;
+    risk_level?: string;
+    recommendation?: string;
+    precautions?: string;
     info?: {
       precautions?: string[];
     };
@@ -19,27 +20,29 @@ export interface TriageResponse {
   };
   input_symptoms?: string[];
   duration_days?: number;
+  
+  // Add these for SummaryStep direct access
+  possible_condition?: string;
+  risk_level?: string;
+  recommendation?: string;
+  precautions?: string;
 }
 
 export interface FormData {
-  // Step 1
   fullName: string;
   age: string;
   gender: string;
   city: string;
   phone: string;
-  // Step 2
   mainConcern: string;
   symptomDuration: string;
   symptomPattern: string;
   symptomWorseWhen: string;
   associatedSymptoms: string;
-  // Step 3
   chronicConditions: string[];
   otherConditions: string;
   currentMedicines: string;
   allergies: string;
-  // Step 4
   smokingStatus: string;
   alcoholUse: string;
   exercise: string;

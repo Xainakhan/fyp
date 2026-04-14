@@ -152,14 +152,14 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
           </div>
 
           {/* Recommendations */}
-          {diagnosis.precautions?.length > 0 && (
+          {diagnosis.precautions && diagnosis.precautions.length > 0 && (
             <div>
               <h3 className="font-semibold text-white/80 mb-3 flex items-center gap-2 text-sm">
                 <CheckCircle className="w-4 h-4 text-emerald-400" />
                 {t("modal.recommendations", "Recommendations")}
               </h3>
               <ul className="space-y-2">
-                {diagnosis.precautions.map((p, i) => (
+                {diagnosis.precautions && diagnosis.precautions.map((p, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm">
                     <span
                       className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold text-emerald-300 mt-0.5"

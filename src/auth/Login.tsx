@@ -4,16 +4,16 @@ import { useVoiceForm } from "../context/useVoiceForm";
 interface LoginModalProps {
   open: boolean;
   onClose: () => void;
-  onSwitchToRegister: () => void;
-  onSwitchToForgot: () => void;
+  onNavigate?: (page: string) => void;  // Change this to match App.tsx
+  userLanguage?: string;
 }
 
-export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitchToForgot }: LoginModalProps) {
-  const [phone,        setPhone]        = useState("");
-  const [password,     setPassword]     = useState("");
-  const [remember,     setRemember]     = useState(false);
+export default function LoginModal({ open, onClose, onNavigate, userLanguage :_userLanguage}: LoginModalProps) {
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [loading,      setLoading]      = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Reset fields every time the modal opens
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
   }, [open]);
 
   // ── Refs so voice can focus the right field ──
-  const phoneRef    = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -37,36 +37,33 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
   };
 
   // ── Register this form with VoiceControlProvider ──
-  // Voice commands that now work:
-  //   EN: "phone is 03001234567"  |  "password is mypass123"
-  //   UR: "phone number 03001234567"  |  "password mypass123"
-  //   "next field" / "agla field"  →  moves focus phone → password
-  //   "submit" / "bhejo" / "haan"  →  calls handleSubmit()
   useVoiceForm({
     formId: "login-form",
     fields: [
       {
-        id:           "phone",
-        label:        "Phone Number",
-        keywords:     ["phone", "number", "mobile", "phone number"],
+        id: "phone",
+        label: "Phone Number",
+        keywords: ["phone", "number", "mobile", "phone number"],
         urduKeywords: ["phone", "nambur", "mobile nambur", "phone number"],
-        setValue:     setPhone,
-        ref:          phoneRef,
+        setValue: setPhone,
+        ref: phoneRef,
       },
       {
-        id:           "password",
-        label:        "Password",
-        keywords:     ["password", "pass", "my password"],
+        id: "password",
+        label: "Password",
+        keywords: ["password", "pass", "my password"],
         urduKeywords: ["password", "pass word", "pasword"],
-        setValue:     setPassword,
-        ref:          passwordRef,
+        setValue: setPassword,
+        ref: passwordRef,
       },
     ],
     onSubmit: handleSubmit,
   });
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     if (open) document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -74,10 +71,20 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   if (!open) return null;
+
+  // Helper function to handle navigation
+  const handleNavigate = (page: string) => {
+    onClose();
+    if (onNavigate) {
+      onNavigate(page);
+    }
+  };
 
   return (
     <>
@@ -150,7 +157,6 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
         .lm-input::placeholder { color: rgba(255,255,255,0.25); }
         .lm-input:focus { border-bottom-color: rgba(255,255,255,0.55); }
 
-        /* voice-active highlight — green glow on the field being filled */
         .lm-input:focus { border-bottom-color: #22c55e; }
 
         .lm-btn {
@@ -184,10 +190,11 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
       `}</style>
 
       <div className="lm-backdrop"
-        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} />
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }} />
 
       <div className="lm-card lm-root">
-
         <button className="lm-close" onClick={onClose} aria-label="Close">
           <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 6L6 18M6 6l12 12" />
@@ -202,7 +209,6 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 26 }}>
-
           {/* Phone */}
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
             <label className="lm-label">Phone No</label>
@@ -261,7 +267,7 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
               <span style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>Remember Me</span>
             </label>
             <button type="button"
-              onClick={() => { onClose(); onSwitchToForgot(); }}
+              onClick={() => handleNavigate("forgot-password")}  // Changed here
               style={{
                 background: "none", border: "none",
                 color: "rgba(255,255,255,0.55)", fontSize: 13,
@@ -293,7 +299,7 @@ export default function LoginModal({ open, onClose, onSwitchToRegister, onSwitch
         <p style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 12.5, marginTop: 28 }}>
           Don't Have an Account?{" "}
           <button
-            onClick={() => { onClose(); onSwitchToRegister(); }}
+            onClick={() => handleNavigate("register")}  // Changed here
             style={{
               background: "none", border: "none", color: "white",
               fontWeight: 600, fontSize: 12.5, cursor: "pointer",

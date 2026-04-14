@@ -15,9 +15,9 @@ const BasicInfoStep: React.FC<Props> = ({ form, setForm }) => {
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
 
-  // ── Refs for voice focus ──
   const nameRef   = useRef<HTMLInputElement>(null);
   const ageRef    = useRef<HTMLInputElement>(null);
+  const genderRef = useRef<HTMLSelectElement>(null);
   const cityRef   = useRef<HTMLInputElement>(null);
   const phoneRef  = useRef<HTMLInputElement>(null);
 
@@ -39,15 +39,28 @@ const BasicInfoStep: React.FC<Props> = ({ form, setForm }) => {
         ref: ageRef,
       },
       {
+        id: "gender", label: "Gender",
+        keywords:     ["gender", "sex", "i am", "i'm"],
+        urduKeywords: ["jins", "mard", "aurat", "khawateen"],
+        // options let the voice system announce choices AND fuzzy-match spoken word
+        options: [
+          { value: "male",   label: "Male",   urduLabel: "مرد",   aliases: ["man", "boy", "mard", "larka"] },
+          { value: "female", label: "Female", urduLabel: "عورت",  aliases: ["woman", "girl", "aurat", "larki", "khawateen"] },
+          { value: "other",  label: "Other",  urduLabel: "دیگر",  aliases: ["prefer not", "non binary", "deegar"] },
+        ],
+        setValue: (v) => setForm((p) => ({ ...p, gender: v })),
+        ref: genderRef,
+      },
+      {
         id: "city", label: "City",
         keywords:     ["city", "my city", "location", "from"],
-        urduKeywords: ["shehar", "mera shehar", "city"],
+        urduKeywords: ["shehar", "mera shehar"],
         setValue: (v) => setForm((p) => ({ ...p, city: v })),
         ref: cityRef,
       },
       {
         id: "phone", label: "Phone Number",
-        keywords:     ["phone", "mobile", "number", "phone number"],
+        keywords:     ["phone", "mobile", "number", "phone number", "contact"],
         urduKeywords: ["phone", "nambur", "mobile nambur"],
         setValue: (v) => setForm((p) => ({ ...p, phone: v })),
         ref: phoneRef,
@@ -81,8 +94,8 @@ const BasicInfoStep: React.FC<Props> = ({ form, setForm }) => {
       <div className="grid md:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-semibold text-gray-600 mb-1">{t("basic.gender")}</label>
-          {/* gender is a select — voice sets it directly via setValue */}
           <select
+            ref={genderRef}
             value={form.gender} onChange={set("gender")}
             className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
           >

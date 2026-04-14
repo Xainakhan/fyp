@@ -4,7 +4,7 @@ import OverviewTab from "./components/overviewTab";
 import AppointmentsTab from "./components/appointmentTab";
 import HealthRecordsTab from "./components/healthrecordTab";
 import SettingsTab from "./components/settingTab";
-
+import PrescriptionsTab from "./components/PrescriptionsTab";
 interface ProfilePageProps {
   userLanguage?: string;
 }

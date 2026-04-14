@@ -1,11 +1,16 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Filter } from "lucide-react";
 import { doctorDatabase } from "./DoctorData";
 import DoctorCard from "./DoctorCard";
 import SearchFilters from "./SearchFilter";
 import type { DoctorWithMeta, SortBy, PriceRange } from "./types";
 
-const DoctorFinder: React.FC = () => {
+// ✅ MOVE INTERFACE TO THE TOP (before it's used)
+interface DoctorfinderProps {
+  userLanguage?: "en" | "ur";
+}
+
+const Doctorfinder = ({ userLanguage = "en" }: DoctorfinderProps) => {
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("rating");
@@ -122,7 +127,7 @@ const DoctorFinder: React.FC = () => {
         fontFamily: "'Segoe UI', system-ui, sans-serif",
       }}
     >
-      {/* Sidebar Filters */}
+      {/* Sidebar Filters - ADD lang prop here */}
       <SearchFilters
         selectedSpecialty={selectedSpecialty}
         setSelectedSpecialty={setSelectedSpecialty}
@@ -137,6 +142,7 @@ const DoctorFinder: React.FC = () => {
         verifiedOnly={verifiedOnly}
         setVerifiedOnly={setVerifiedOnly}
         onApply={handleApply}
+        lang={userLanguage}  // ✅ ADD THIS LINE
       />
 
       {/* Main Content */}
@@ -198,4 +204,4 @@ const DoctorFinder: React.FC = () => {
   );
 };
 
-export default DoctorFinder;
+export default Doctorfinder;

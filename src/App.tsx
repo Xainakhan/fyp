@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -37,17 +37,14 @@ function AppContent() {
     location.pathname === "/reset-password";
 
   return (
-    // ── VoiceControlProvider wraps everything so all pages + Navbar share the same voice state ──
     <VoiceControlProvider userLanguage={userLanguage}>
       {!isAuthPage ? (
         <BackgroundWrapper>
-          {/* Navbar reads voiceActive/toggleVoice directly from context — no prop drilling */}
           <Navbar
             userLanguage={userLanguage}
             setUserLanguage={setUserLanguage}
           />
 
-          {/* Voice overlay shown when mic is active */}
           <VoiceOverlay />
 
           <main style={{ minHeight: "100vh", paddingTop: "80px" }}>
@@ -84,8 +81,10 @@ function AppContent() {
                 path="/login"
                 element={
                   <Login
+                    open={true}
+                    onClose={() => navigate("/")}
                     onNavigate={(page) => {
-                      if (page === "register")        navigate("/register");
+                      if (page === "register") navigate("/register");
                       if (page === "forgot-password") navigate("/forgot-password");
                     }}
                   />
@@ -95,6 +94,8 @@ function AppContent() {
                 path="/register"
                 element={
                   <Register
+                    open={true}
+                    onClose={() => navigate("/")}
                     onNavigate={(page) => {
                       if (page === "login") navigate("/login");
                     }}
@@ -105,13 +106,25 @@ function AppContent() {
                 path="/forgot-password"
                 element={
                   <ForgotPassword
+                    open={true}
+                    onClose={() => navigate("/")}
                     onNavigate={(page) => {
                       if (page === "login") navigate("/login");
+                      if (page === "reset-password") navigate("/reset-password");
                     }}
                   />
                 }
               />
-              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route 
+                path="/reset-password" 
+                element={
+                  <ResetPassword
+                    open={true}
+                    onClose={() => navigate("/")}
+                    onSwitchToLogin={() => navigate("/login")}
+                  />
+                } 
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
@@ -124,8 +137,10 @@ function AppContent() {
             path="/login"
             element={
               <Login
+                open={true}
+                onClose={() => navigate("/")}
                 onNavigate={(page) => {
-                  if (page === "register")        navigate("/register");
+                  if (page === "register") navigate("/register");
                   if (page === "forgot-password") navigate("/forgot-password");
                 }}
               />
@@ -135,6 +150,8 @@ function AppContent() {
             path="/register"
             element={
               <Register
+                open={true}
+                onClose={() => navigate("/")}
                 onNavigate={(page) => {
                   if (page === "login") navigate("/login");
                 }}
@@ -145,13 +162,25 @@ function AppContent() {
             path="/forgot-password"
             element={
               <ForgotPassword
+                open={true}
+                onClose={() => navigate("/")}
                 onNavigate={(page) => {
                   if (page === "login") navigate("/login");
+                  if (page === "reset-password") navigate("/reset-password");
                 }}
               />
             }
           />
-          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route 
+            path="/reset-password" 
+            element={
+              <ResetPassword
+                open={true}
+                onClose={() => navigate("/")}
+                onSwitchToLogin={() => navigate("/login")}
+              />
+            } 
+          />
         </Routes>
       )}
       <GlobalChatbot />

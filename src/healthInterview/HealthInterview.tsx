@@ -1,10 +1,3 @@
-// healthInterview/healthInterview.tsx
-//
-// CHANGE from original: removed the useVoiceForm({ formId:"interview-navigation", fields:[] })
-// call because it pushed an empty-field form onto the stack and blocked guided fill.
-// Step navigation ("next step" / "back") is now handled via useEffect + useVoiceControl
-// so it works alongside guided fill without interfering with field registration.
-
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
@@ -25,7 +18,9 @@ import CurrentProblemStep from "./components/CurrentProblemStep";
 import MedicalHistoryStep from "./components/MedicalHistroyStep";
 import LifestyleStep      from "./components/lifestyleStep";
 import SummaryStep        from "./components/SummaryStep";
-
+interface HealthInterviewPageProps {
+  userLanguage?: "en" | "ur"; 
+}
 const INITIAL_FORM: FormData = {
   fullName: "", age: "", gender: "", city: "", phone: "",
   mainConcern: "", symptomDuration: "", symptomPattern: "", symptomWorseWhen: "", associatedSymptoms: "",
@@ -33,7 +28,7 @@ const INITIAL_FORM: FormData = {
   smokingStatus: "", alcoholUse: "", exercise: "", sleepHours: "", stressLevel: "", moodNotes: "",
 };
 
-const HealthInterviewPage: React.FC = () => {
+const HealthInterviewPage: React.FC<HealthInterviewPageProps> = ({ userLanguage: _userLanguage }) => {
   const { t, i18n } = useTranslation("healthInterview");
   const isRTL  = i18n.dir() === "rtl";
   const isUrdu = i18n.language === "ur";

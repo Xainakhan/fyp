@@ -15,7 +15,7 @@ interface ChatTopBarProps {
 }
 
 export const ChatTopBar: React.FC<ChatTopBarProps> = ({
-  sidebarOpen,
+  sidebarOpen:_sidebarOpen,
   onToggleSidebar,
   diagnosis,
   onViewReport,

@@ -9,8 +9,8 @@ import ForgotPassword from "../auth/ForgotPassword";
 import ResetPassword from "../auth/ResetPassword";
 
 interface NavbarProps {
-  userLanguage: string;
-  setUserLanguage: (l: string) => void;
+  userLanguage: "ur" | "en";
+  setUserLanguage: (lang: "ur" | "en") => void;
 }
 
 // ── NavLink ──────────────────────────────────────────────────────────────────
@@ -184,7 +184,7 @@ const Navbar: React.FC<NavbarProps> = ({ userLanguage, setUserLanguage }) => {
   const [registerOpen, setRegisterOpen] = useState(false);
   const [forgotOpen,   setForgotOpen]   = useState(false);
   const [resetOpen,    setResetOpen]    = useState(false);
-  const [resetPhone,   setResetPhone]   = useState("");
+  const [resetPhone,   _setResetPhone]   = useState("");
 
   const [isLoggedIn] = useState(false);
 
@@ -203,7 +203,7 @@ const Navbar: React.FC<NavbarProps> = ({ userLanguage, setUserLanguage }) => {
   const openLogin    = () => { setDrawerOpen(false); setRegisterOpen(false); setForgotOpen(false); setResetOpen(false); setLoginOpen(true); };
   const openRegister = () => { setDrawerOpen(false); setLoginOpen(false); setForgotOpen(false); setRegisterOpen(true); };
   const openForgot   = () => { setLoginOpen(false); setRegisterOpen(false); setResetOpen(false); setForgotOpen(true); };
-  const openReset    = (phone: string) => { setForgotOpen(false); setResetPhone(phone); setResetOpen(true); };
+  // const _openReset    = (phone: string) => { setForgotOpen(false); setResetPhone(phone); setResetOpen(true); };
 
   return (
     <>
@@ -464,23 +464,32 @@ const Navbar: React.FC<NavbarProps> = ({ userLanguage, setUserLanguage }) => {
         </div>
       </div>
 
-      {/* ── MODALS ── */}
+      {/* ── MODALS - UPDATED TO USE onNavigate ── */}
       <LoginModal
         open={loginOpen}
         onClose={() => setLoginOpen(false)}
-        onSwitchToRegister={openRegister}
-        onSwitchToForgot={openForgot}
+        onNavigate={(page) => {
+          if (page === "register") openRegister();
+          if (page === "forgot-password") openForgot();
+        }}
       />
       <RegisterModal
         open={registerOpen}
         onClose={() => setRegisterOpen(false)}
-        onSwitchToLogin={openLogin}
+        onNavigate={(page) => {
+          if (page === "login") openLogin();
+        }}
       />
       <ForgotPassword
         open={forgotOpen}
         onClose={() => setForgotOpen(false)}
-        onSwitchToLogin={openLogin}
-        onSwitchToReset={(phone) => openReset(phone)}
+        onNavigate={(page) => {
+          if (page === "login") openLogin();
+          if (page === "reset-password") {
+            setForgotOpen(false);
+            setResetOpen(true);
+          }
+        }}
       />
       <ResetPassword
         open={resetOpen}
@@ -493,3 +502,4 @@ const Navbar: React.FC<NavbarProps> = ({ userLanguage, setUserLanguage }) => {
 };
 
 export default Navbar;
+export {};

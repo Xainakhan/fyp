@@ -39,7 +39,7 @@ export const useChatbot = () => {
   const [symptoms, setSymptoms] = useState<string[]>([]);
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
-  const [availableSymptoms, setAvailableSymptoms] = useState<string[]>(mockSymptoms);
+const [_availableSymptoms, setAvailableSymptoms] = useState<string[]>(mockSymptoms);
   const [backendConnected, setBackendConnected] = useState<boolean>(false);
   const [showAnalysis, setShowAnalysis] = useState<boolean>(false);
 

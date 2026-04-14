@@ -63,7 +63,7 @@ const DropdownItem: React.FC<{
 // PortalDropdown
 // ─────────────────────────────────────────────
 interface PortalDropdownProps {
-  anchorRef: React.RefObject<HTMLElement>;
+  anchorRef: React.RefObject<HTMLElement | null>;
   open: boolean;
   onClose: () => void;
   minWidth?: number;

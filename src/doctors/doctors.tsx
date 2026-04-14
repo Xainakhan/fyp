@@ -43,7 +43,7 @@ const DoctorsPage: React.FC = () => {
   const [filterOnline,    setFilterOnline]    = useState(false);
   const [filterVerified,  setFilterVerified]  = useState(false);
 
-  const [userLocation,    setUserLocation]    = useState<Coordinates | null>(null);
+  const [userLocation]    = useState<Coordinates | null>(null);
   const [selectedDoctor,  setSelectedDoctor]  = useState<DoctorWithMeta | null>(null);
   const [showAll,         setShowAll]         = useState(false);
 

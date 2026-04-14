@@ -18,7 +18,7 @@ const mockSymptoms: SymptomEntrySlice[] = [
 ];
 
 const HealthTimeline = () => {
-  const { t } = useTranslation();
+  const { t:_t } = useTranslation();
 
   return (
     <div className="px-4">  {/* px-4 = 16px, change to px-6 (24px) or px-8 (32px) as needed */}

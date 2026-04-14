@@ -13,12 +13,9 @@ import {
   Bot,
   User,
   AlertTriangle,
-  Phone,
-  Clock,
   CheckCircle,
   MessageSquare,
   Stethoscope,
-  RotateCcw,
   Wifi,
   WifiOff,
   Download,
@@ -27,9 +24,7 @@ import {
   UserRound,
   Menu,
   Plus,
-  History,
   Settings,
-  LogOut,
 } from "lucide-react";
 
 // Types
@@ -79,6 +74,7 @@ interface HealthResponse {
 
 interface RoboDocChatbotProps {
   onNavigateToDoctor?: () => void;
+  userLanguage?: "en" | "ur";  // Add this prop
 }
 
 const cleanMarkdown = (text: string): string => {
@@ -218,22 +214,6 @@ const processInput = (input: string): { token: string } => {
   return { token: lower };
 };
 
-const detectSymptom = (input: string, available: string[]): string | null => {
-  const lower = input.toLowerCase();
-  if (available.includes(lower)) return lower;
-  for (const sym of available) {
-    if (lower.includes(sym.replace("_", " "))) {
-      return sym;
-    }
-  }
-  if (lower.includes("neck")) return "neck_pain";
-  if (lower.includes("back")) return "back_pain";
-  if (lower.includes("throat")) return "sore_throat";
-  if (lower.includes("stomach") || lower.includes("belly"))
-    return "abdominal_pain";
-  return null;
-};
-
 const predictDiseaseLocal = (symptoms: string[]): string => {
   const set = new Set(symptoms);
   if (set.has("fever") && set.has("cough") && set.has("shortness_of_breath")) {
@@ -278,6 +258,7 @@ const predictDiseaseLocal = (symptoms: string[]): string => {
 
 const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
   onNavigateToDoctor,
+  userLanguage: _userLanguage, // Add with underscore since not used yet
 }) => {
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, sender: "bot", text: i18n.en.initial1, timestamp: new Date() },
@@ -291,8 +272,8 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
   const [diagnosis, setDiagnosis] = useState<Diagnosis | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
 
-  const [availableSymptoms, setAvailableSymptoms] =
-    useState<string[]>(mockSymptoms);
+  // FIXED: Changed from availableSymptom to availableSymptoms with setter
+  const [_availableSymptoms, _setAvailableSymptoms] = useState<string[]>(mockSymptoms);
   const [backendConnected, setBackendConnected] = useState<boolean>(false);
   const [, setSymptomWeights] = useState<Record<string, any>>({});
   const [showAnalysis, setShowAnalysis] = useState<boolean>(false);
@@ -309,7 +290,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
           setBackendConnected(true);
           const symptomsData = await getAllSymptoms();
           const weights = await getSymptomWeights();
-          setAvailableSymptoms(
+          _setAvailableSymptoms(
             symptomsData.length > 0 ? symptomsData : mockSymptoms
           );
           setSymptomWeights(weights);
@@ -753,64 +734,39 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
 
   return (
     <div className="flex h-screen bg-white overflow-hidden">
-
-      {/* ============================================================
-          SIDEBAR — sky/cloud gradient (matches screenshot)
-          ============================================================ */}
+      {/* Sidebar */}
       <div
         className={`${
           sidebarOpen ? "w-64" : "w-0"
         } flex-shrink-0 transition-all duration-300 overflow-hidden flex flex-col`}
         style={{
-          /* Sky-to-sea gradient matching the screenshot */
           background: "linear-gradient(180deg, #b8d4e8 0%, #9ec4d8 25%, #82b4c8 55%, #8dbfaa 100%)",
         }}
       >
-        {/* Sidebar Header */}
+        {/* Sidebar content */}
         <div className="p-4 border-b border-white/30">
           <button
             onClick={resetChat}
             className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg transition-colors text-sm font-medium text-white"
             style={{ background: "rgba(59, 100, 150, 0.75)" }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(40, 80, 130, 0.85)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "rgba(59, 100, 150, 0.75)")}
           >
             <Plus className="w-4 h-4" />
             <span>New chat</span>
           </button>
         </div>
 
-        {/* Chat History */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2">
-          {/* "Recent" label */}
           <div className="text-xs px-3 py-2 font-semibold text-blue-900/60">
             Recent
           </div>
-
-          {/* Active item — highlighted in semi-transparent blue (like "Symptom Analysis" in screenshot) */}
           <button className="w-full text-left px-3 py-2.5 rounded-lg transition-colors text-sm flex items-center space-x-2 text-white font-medium"
             style={{ background: "rgba(59, 100, 160, 0.65)" }}
           >
             <MessageSquare className="w-4 h-4 text-white/80" />
             <span className="flex-1 truncate">Symptom Analysis</span>
           </button>
-
-          {/* Inactive items */}
-          <button
-            className="w-full text-left px-3 py-2.5 rounded-lg transition-colors text-sm flex items-center space-x-2 text-blue-950/80 hover:bg-white/25"
-          >
-            <MessageSquare className="w-4 h-4 text-blue-900/50" />
-            <span className="flex-1 truncate">Medical Consultation</span>
-          </button>
-          <button
-            className="w-full text-left px-3 py-2.5 rounded-lg transition-colors text-sm flex items-center space-x-2 text-blue-950/80 hover:bg-white/25"
-          >
-            <MessageSquare className="w-4 h-4 text-blue-900/50" />
-            <span className="flex-1 truncate">Health Checkup</span>
-          </button>
         </div>
 
-        {/* Sidebar Footer */}
         <div className="border-t border-white/30 p-3 space-y-1">
           <button
             onClick={onNavigateToDoctor}
@@ -838,9 +794,8 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
           </div>
         </div>
       </div>
-      {/* ============================================================ */}
 
-      {/* Main Chat Area — unchanged */}
+      {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Top Bar */}
         <div className="h-14 border-b border-gray-200 flex items-center justify-between px-4 bg-white">
@@ -986,7 +941,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
         </div>
       </div>
 
-      {/* Analysis Modal — unchanged */}
+      {/* Analysis Modal */}
       {showAnalysis && diagnosis && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -1004,6 +959,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Patient Information */}
               <div className="bg-gray-50 rounded-xl p-4">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
                   <User className="w-5 h-5 mr-2 text-green-500" />
@@ -1027,6 +983,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
                 </div>
               </div>
 
+              {/* Symptoms */}
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
                   <MessageSquare className="w-5 h-5 mr-2 text-green-500" />
@@ -1047,6 +1004,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
                 </p>
               </div>
 
+              {/* Diagnosis */}
               <div>
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
                   <Stethoscope className="w-5 h-5 mr-2 text-indigo-500" />
@@ -1082,6 +1040,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
                 </div>
               </div>
 
+              {/* Recommendations */}
               {diagnosis.precautions && diagnosis.precautions.length > 0 && (
                 <div>
                   <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
@@ -1101,23 +1060,7 @@ const RoboDocChatbot: React.FC<RoboDocChatbotProps> = ({
                 </div>
               )}
 
-              {diagnosis.severity === "high" && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg">
-                  <div className="flex items-start space-x-3">
-                    <AlertTriangle className="w-6 h-6 text-red-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="font-semibold text-red-900 mb-1">
-                        Important Notice
-                      </h4>
-                      <p className="text-sm text-red-700">
-                        This condition requires immediate medical attention. Please
-                        consult a healthcare professional as soon as possible.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
+              {/* Disclaimer */}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800">
                 <strong>Disclaimer:</strong> This is an AI-assisted preliminary
                 analysis and should NOT replace professional medical advice. Always

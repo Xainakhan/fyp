@@ -68,10 +68,10 @@ const AppointmentsTab: React.FC<AppointmentsTabProps> = ({ userLanguage }) => {
       : t("appointments.status.pending");
 
   // resolve type label via i18n
-  const getTypeLabel = (type: string) =>
-    type === "Video Call"
-      ? t("appointments.type.videoCall")
-      : t("appointments.type.inPerson");
+  // const _getTypeLabel = (type: string) =>
+  //   type === "Video Call"
+  //     ? t("appointments.type.videoCall")
+  //     : t("appointments.type.inPerson");
 
   return (
     <div className="p-6 md:p-8">

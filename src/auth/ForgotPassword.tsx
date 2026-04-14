@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 
 interface ForgotPasswordProps {
-  open: boolean;
-  onClose: () => void;
-  onSwitchToLogin: () => void;
- onSwitchToReset: (phone: string) => void;
+  open?: boolean;
+  onClose?: () => void;
+  onNavigate?: (page: string) => void;
+  userLanguage?: string;
 }
 
-export default function ForgotPassword({ open, onClose, onSwitchToLogin, onSwitchToReset }: ForgotPasswordProps) {
+export default function ForgotPassword({ open, onClose, onNavigate, userLanguage: _userLanguage }: ForgotPasswordProps) {
   const [phone, setPhone] = useState("");
   const [step, setStep] = useState<"input" | "sent">("input");
   const [loading, setLoading] = useState(false);
@@ -21,8 +21,19 @@ export default function ForgotPassword({ open, onClose, onSwitchToLogin, onSwitc
     setStep("sent");
   };
 
+  const handleNavigate = (page: string) => {
+    if (onNavigate) {
+      onNavigate(page);
+    }
+    if (onClose) {
+      onClose();
+    }
+  };
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => { 
+      if (e.key === "Escape" && onClose) onClose(); 
+    };
     if (open) document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -160,7 +171,7 @@ export default function ForgotPassword({ open, onClose, onSwitchToLogin, onSwitc
 
       <div
         className="fp-backdrop"
-        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        onMouseDown={(e) => { if (e.target === e.currentTarget && onClose) onClose(); }}
       />
 
       <div className="fp-card fp-root">
@@ -232,7 +243,7 @@ export default function ForgotPassword({ open, onClose, onSwitchToLogin, onSwitc
               <button
                 className="fp-btn"
                 style={{ marginTop: 0 }}
-onClick={() => { onClose(); onSwitchToReset(phone); }}
+                onClick={() => handleNavigate("reset-password")}
               >
                 Enter Reset Code
               </button>
@@ -262,7 +273,7 @@ onClick={() => { onClose(); onSwitchToReset(phone); }}
         }}>
           Remember your password?{" "}
           <button
-            onClick={() => { onClose(); onSwitchToLogin(); }}
+            onClick={() => handleNavigate("login")}
             style={{
               background: "none", border: "none",
               color: "white", fontWeight: 600, fontSize: 12.5,

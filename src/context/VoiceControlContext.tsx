@@ -1,37 +1,22 @@
-/**
- * VoiceControlContext.tsx  (v2 — guided fill mode)
- *
- * Key fix: when user says "let's fill form" / "form bharo" the provider
- * enters GUIDED FILL MODE:
- *   1. Focuses field[0] of the active form and speaks its label.
- *   2. The NEXT utterance — whatever it is — is written directly into that
- *      field (no keyword matching needed).
- *   3. Automatically advances to the next field, speaks its label, waits.
- *   4. "next" / "skip" / "chhordo" skips without writing.
- *   5. "submit" / "done" / "bhejo" exits guided mode and submits.
- *   6. "cancel" / "stop" exits guided mode.
- *
- * Outside guided mode the original keyword-based approach still works:
- *   "name is Ahmed"  |  "phone 03001234567"  |  "go to doctor"  etc.
- *
- * extractValue() is also smarter — it strips leading field keywords so
- * "name Zainab Batool" correctly yields "Zainab Batool".
- */
-
 import React, {
-  createContext,
-  useContext,
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  ReactNode,
+  createContext, useContext, useState, useRef,
+  useCallback, useEffect, 
 } from "react";
+import type { ReactNode } from "react";
+
 import { useNavigate } from "react-router-dom";
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // Types
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+
+export interface SelectOption {
+  value: string;
+  label: string;
+  /** Extra spoken aliases that should map to this value */
+  aliases?: string[];
+  urduLabel?: string;
+}
 
 export interface VoiceFormField {
   id: string;
@@ -39,13 +24,22 @@ export interface VoiceFormField {
   keywords: string[];
   urduKeywords?: string[];
   setValue: (value: string) => void;
-  ref?: React.RefObject<HTMLInputElement | HTMLTextAreaElement | null>;
+  ref?: React.RefObject<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null>;
+  /** Provide for <select> fields so the system can announce & match options */
+  options?: SelectOption[];
 }
 
 export interface VoiceFormHandle {
   formId: string;
   fields: VoiceFormField[];
   onSubmit?: () => void;
+}
+
+export interface VoiceAction {
+  id: string;
+  keywords: string[];
+  urduKeywords?: string[];
+  handler: () => void;
 }
 
 interface VoiceControlContextValue {
@@ -55,97 +49,124 @@ interface VoiceControlContextValue {
   isSpeaking: boolean;
   transcript: string;
   lastCommand: string;
-  /** true while inside guided field-by-field fill */
   guidedFillActive: boolean;
-  registerForm: (handle: VoiceFormHandle) => () => void;
+  currentGuidedField: { label: string; options?: SelectOption[] } | null;
+  registerForm:   (handle: VoiceFormHandle) => () => void;
+  registerAction: (action: VoiceAction)     => () => void;
 }
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // Context
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 
 const VoiceControlContext = createContext<VoiceControlContextValue>({
-  voiceActive: false,
-  toggleVoice: () => {},
-  isListening: false,
-  isSpeaking: false,
-  transcript: "",
-  lastCommand: "",
-  guidedFillActive: false,
+  voiceActive: false, toggleVoice: () => {},
+  isListening: false, isSpeaking: false,
+  transcript: "", lastCommand: "",
+  guidedFillActive: false, currentGuidedField: null,
   registerForm: () => () => {},
+  registerAction: () => () => {},
 });
 
 export const useVoiceControl = () => useContext(VoiceControlContext);
 
-// ─────────────────────────────────────────────
-// Navigation map
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+// Built-in navigation commands
+// ─────────────────────────────────────────────────────────────
 
 const NAV_COMMANDS = [
-  { path: "/",          keywords: ["home", "ghar", "main page", "wapis"],                         label: "Home" },
-  { path: "/tts",       keywords: ["talk bot", "talkbot", "voice bot", "chatbot", "baat karo"],   label: "Talk Bot" },
-  { path: "/interview", keywords: ["health interview", "interview", "interview shuru"],             label: "Health Interview" },
-  { path: "/triage",    keywords: ["triage", "symptom checker", "symptoms", "check symptoms"],    label: "Symptom Checker" },
-  { path: "/timeline",  keywords: ["timeline", "health timeline"],                                  label: "Health Timeline" },
-  { path: "/doctor",    keywords: ["find doctor", "doctor", "doctor dhundho", "physician"],       label: "Find Doctor" },
+  { path: "/",          keywords: ["home", "ghar", "main page", "wapis"],                       label: "Home" },
+  { path: "/tts",       keywords: ["talk bot", "talkbot", "voice bot", "chatbot", "baat karo"], label: "Talk Bot" },
+  { path: "/interview", keywords: ["health interview", "interview", "interview shuru"],           label: "Health Interview" },
+  { path: "/triage",    keywords: ["triage", "symptom checker", "symptoms"],                    label: "Symptom Checker" },
+  { path: "/timeline",  keywords: ["timeline", "health timeline"],                               label: "Health Timeline" },
+  { path: "/doctor",    keywords: ["find doctor", "doctor", "doctor dhundho"],                  label: "Find Doctor" },
 ];
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 // Helpers
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 
 function speak(text: string, lang: string): Promise<void> {
   return new Promise((resolve) => {
     if (!("speechSynthesis" in window)) { resolve(); return; }
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang  = lang === "ur" ? "ur-PK" : "en-US";
-    u.rate  = 0.92;
+    u.lang = lang === "ur" ? "ur-PK" : "en-US";
+    u.rate = 0.92;
     u.onend = () => resolve();
     u.onerror = () => resolve();
     setTimeout(() => window.speechSynthesis.speak(u), 80);
   });
 }
 
-/**
- * Strip leading field keywords from a transcript:
- *   "name Zainab Batool"        →  "Zainab Batool"
- *   "my name is Zainab Batool"  →  "Zainab Batool"
- *   "naam Zainab"               →  "Zainab"
- *   "phone number 03001234567"  →  "03001234567"
- */
+/** Strip field keyword prefix and connector words to extract the bare value */
 function extractValue(transcript: string, fieldKeywords: string[]): string {
   const t = transcript.trim();
 
-  // 1. Connector pattern: "... is/hai/ko/= value"
+  // "... is/hai/ko/= value"
   const connMatch = t.match(/(?:is|are|hai|hain|ko|to|mein|=)\s+(.+)/i);
   if (connMatch) return connMatch[1].trim();
 
-  // 2. Strip a leading keyword (longest match first to avoid partial strips)
-  const lower = t.toLowerCase();
+  // strip longest matching keyword prefix
+  const lower  = t.toLowerCase();
   const sorted = [...fieldKeywords].sort((a, b) => b.length - a.length);
   for (const kw of sorted) {
-    const kwLower = kw.toLowerCase();
-    if (lower.startsWith(kwLower)) {
+    if (lower.startsWith(kw.toLowerCase())) {
       const after = t.slice(kw.length).replace(/^[\s,:-]+/, "");
       if (after.length > 0) return after.trim();
     }
   }
 
-  // 3. "set/fill/enter/type X to value"
+  // "set/fill/enter X to value"
   const cmdMatch = t.match(/^(?:set|fill|enter|type|likho|dalo)\s+\S+\s+(?:to|as|with|mein|se)?\s*(.+)/i);
   if (cmdMatch) return cmdMatch[1].trim();
 
-  // 4. Drop first word if multiple words (first word assumed to be the field name)
+  // drop first word (assumed field name)
   const words = t.split(/\s+/);
   if (words.length >= 2) return words.slice(1).join(" ").trim();
 
   return t;
 }
 
-// ─────────────────────────────────────────────
+/**
+ * For select fields: fuzzy-match spoken text against option labels/aliases.
+ * Returns the option.value if matched, otherwise the raw spoken text.
+ */
+function matchSelectOption(spoken: string, options: SelectOption[]): string {
+  const s = spoken.toLowerCase().trim();
+  // exact value match
+  const exact = options.find((o) => o.value.toLowerCase() === s);
+  if (exact) return exact.value;
+  // label match
+  const byLabel = options.find((o) =>
+    o.label.toLowerCase().includes(s) || s.includes(o.label.toLowerCase())
+  );
+  if (byLabel) return byLabel.value;
+  // urdu label match
+  const byUrdu = options.find((o) =>
+    o.urduLabel && (o.urduLabel.includes(spoken) || spoken.includes(o.urduLabel))
+  );
+  if (byUrdu) return byUrdu.value;
+  // alias match
+  const byAlias = options.find((o) =>
+    o.aliases?.some((a) => a.toLowerCase().includes(s) || s.includes(a.toLowerCase()))
+  );
+  if (byAlias) return byAlias.value;
+  // return raw — the field's own setValue can handle it
+  return spoken;
+}
+
+/** Build the spoken options list string */
+function optionsPrompt(options: SelectOption[], lang: string): string {
+  const labels = options.map((o) => (lang === "ur" && o.urduLabel ? o.urduLabel : o.label));
+  if (lang === "ur") return `اختیارات: ${labels.join("، ")}۔ بولیں۔`;
+  return `Options are: ${labels.join(", ")}. Say your choice.`;
+}
+
+// ─────────────────────────────────────────────────────────────
 // Provider
-// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
 
 export const VoiceControlProvider: React.FC<{
   children: ReactNode;
@@ -153,19 +174,21 @@ export const VoiceControlProvider: React.FC<{
 }> = ({ children, userLanguage = "en" }) => {
   const navigate = useNavigate();
 
-  const [voiceActive,      setVoiceActive]      = useState(false);
-  const [isListening,      setIsListening]       = useState(false);
-  const [isSpeaking,       setIsSpeaking]        = useState(false);
-  const [transcript,       setTranscript]        = useState("");
-  const [lastCommand,      setLastCommand]       = useState("");
-  const [guidedFillActive, setGuidedFillActive]  = useState(false);
+  const [voiceActive,        setVoiceActive]        = useState(false);
+  const [isListening,        setIsListening]         = useState(false);
+  const [isSpeaking,         setIsSpeaking]          = useState(false);
+  const [transcript,         setTranscript]          = useState("");
+  const [lastCommand,        setLastCommand]         = useState("");
+  const [guidedFillActive,   setGuidedFillActive]    = useState(false);
+  const [currentGuidedField, setCurrentGuidedField]  = useState<{ label: string; options?: SelectOption[] } | null>(null);
 
   const recognitionRef  = useRef<any>(null);
   const formsRef        = useRef<VoiceFormHandle[]>([]);
+  const actionsRef      = useRef<VoiceAction[]>([]);
   const guidedRef       = useRef<{ formId: string; fieldIndex: number } | null>(null);
   const lastResponseRef = useRef<string>("");
 
-  // ── registerForm ──
+  // ── Register form ──
   const registerForm = useCallback((handle: VoiceFormHandle) => {
     formsRef.current = [...formsRef.current, handle];
     return () => {
@@ -173,11 +196,20 @@ export const VoiceControlProvider: React.FC<{
       if (guidedRef.current?.formId === handle.formId) {
         guidedRef.current = null;
         setGuidedFillActive(false);
+        setCurrentGuidedField(null);
       }
     };
   }, []);
 
-  // ── TTS wrapper ──
+  // ── Register action ──
+  const registerAction = useCallback((action: VoiceAction) => {
+    actionsRef.current = [...actionsRef.current, action];
+    return () => {
+      actionsRef.current = actionsRef.current.filter((a) => a.id !== action.id);
+    };
+  }, []);
+
+  // ── TTS ──
   const say = useCallback(async (text: string) => {
     lastResponseRef.current = text;
     setIsSpeaking(true);
@@ -185,42 +217,54 @@ export const VoiceControlProvider: React.FC<{
     setIsSpeaking(false);
   }, [userLanguage]);
 
+  // ── Announce a field (used when entering it during guided fill) ──
+  const announceField = useCallback(async (field: VoiceFormField, prefix = "") => {
+    setCurrentGuidedField({ label: field.label, options: field.options });
+    field.ref?.current?.focus();
+
+    if (field.options && field.options.length > 0) {
+      const prompt = userLanguage === "ur"
+        ? `${prefix}${field.label}۔ ${optionsPrompt(field.options, "ur")}`
+        : `${prefix}${field.label}. ${optionsPrompt(field.options, "en")}`;
+      await say(prompt);
+    } else {
+      const prompt = userLanguage === "ur"
+        ? `${prefix}${field.label}۔ بولیں۔`
+        : `${prefix}${field.label}. Please say the value.`;
+      await say(prompt);
+    }
+  }, [say, userLanguage]);
+
   // ── Guided fill: start ──
   const startGuidedFill = useCallback(async () => {
-    const forms = formsRef.current;
-    if (forms.length === 0) {
-      await say(userLanguage === "ur" ? "کوئی فارم نہیں ملا۔" : "No active form found.");
-      return;
-    }
-
-    // Pick the registered form that has the most fields (skip nav-only forms with 0 fields)
-    const form = [...forms]
-      .reverse()
-      .find((f) => f.fields.length > 0);
-
+    // Find the most-recently-mounted form that actually has fields
+    const form = [...formsRef.current].reverse().find((f) => f.fields.length > 0);
     if (!form) {
-      await say(userLanguage === "ur" ? "فارم میں کوئی خانہ نہیں۔" : "No fillable fields found on this page.");
+      await say(userLanguage === "ur" ? "کوئی فارم نہیں ملا۔" : "No fillable form found on this page.");
       return;
     }
     guidedRef.current = { formId: form.formId, fieldIndex: 0 };
     setGuidedFillActive(true);
     const first = form.fields[0];
-    first.ref?.current?.focus();
-    await say(
-      userLanguage === "ur"
-        ? `فارم بھرنا شروع۔ پہلا خانہ: ${first.label}۔ بولیں۔`
-        : `Guided fill started. First field: ${first.label}. Please say the value.`
+    await announceField(
+      first,
+      userLanguage === "ur" ? "فارم شروع۔ پہلا خانہ: " : "Guided fill started. First field: "
     );
-  }, [say, userLanguage]);
+  }, [say, announceField, userLanguage]);
 
   // ── Guided fill: write value and advance ──
-  const guidedFillCurrent = useCallback(async (value: string) => {
+  const guidedFillCurrent = useCallback(async (rawValue: string) => {
     const state = guidedRef.current;
     if (!state) return;
     const form  = formsRef.current.find((f) => f.formId === state.formId);
-    if (!form)  { guidedRef.current = null; setGuidedFillActive(false); return; }
+    if (!form)  { guidedRef.current = null; setGuidedFillActive(false); setCurrentGuidedField(null); return; }
     const field = form.fields[state.fieldIndex];
-    if (!field) { guidedRef.current = null; setGuidedFillActive(false); return; }
+    if (!field) { guidedRef.current = null; setGuidedFillActive(false); setCurrentGuidedField(null); return; }
+
+    // Resolve value — fuzzy match for selects
+    const value = field.options?.length
+      ? matchSelectOption(rawValue, field.options)
+      : rawValue;
 
     field.setValue(value);
     field.ref?.current?.focus();
@@ -229,6 +273,7 @@ export const VoiceControlProvider: React.FC<{
     if (nextIndex >= form.fields.length) {
       guidedRef.current = null;
       setGuidedFillActive(false);
+      setCurrentGuidedField(null);
       await say(
         userLanguage === "ur"
           ? `${field.label} مکمل۔ تمام خانے بھر گئے۔ "submit" کہیں جمع کرنے کے لیے۔`
@@ -237,16 +282,14 @@ export const VoiceControlProvider: React.FC<{
     } else {
       const next = form.fields[nextIndex];
       guidedRef.current = { formId: state.formId, fieldIndex: nextIndex };
-      next.ref?.current?.focus();
-      await say(
-        userLanguage === "ur"
-          ? `${field.label} مکمل۔ اگلا: ${next.label}۔ بولیں۔`
-          : `${field.label} done. Next: ${next.label}. Please say the value.`
+      await announceField(
+        next,
+        userLanguage === "ur" ? `${field.label} مکمل۔ اگلا: ` : `${field.label} done. Next: `
       );
     }
-  }, [say, userLanguage]);
+  }, [say, announceField, userLanguage]);
 
-  // ── Guided fill: skip current field ──
+  // ── Guided fill: skip ──
   const guidedSkipCurrent = useCallback(async () => {
     const state = guidedRef.current;
     if (!state) return;
@@ -257,18 +300,14 @@ export const VoiceControlProvider: React.FC<{
     if (nextIndex >= form.fields.length) {
       guidedRef.current = null;
       setGuidedFillActive(false);
+      setCurrentGuidedField(null);
       await say(userLanguage === "ur" ? "چھوڑ دیا۔ تمام خانے مکمل۔" : "Skipped. All fields done.");
     } else {
       const next = form.fields[nextIndex];
       guidedRef.current = { formId: state.formId, fieldIndex: nextIndex };
-      next.ref?.current?.focus();
-      await say(
-        userLanguage === "ur"
-          ? `چھوڑ دیا۔ اگلا: ${next.label}۔ بولیں۔`
-          : `Skipped. Next field: ${next.label}. Please say the value.`
-      );
+      await announceField(next, userLanguage === "ur" ? "چھوڑ دیا۔ اگلا: " : "Skipped. Next: ");
     }
-  }, [say, userLanguage]);
+  }, [say, announceField, userLanguage]);
 
   // ── Core command handler ──
   const handleCommand = useCallback(async (raw: string) => {
@@ -276,36 +315,50 @@ export const VoiceControlProvider: React.FC<{
     const tl   = text.toLowerCase();
     setLastCommand(text);
 
-    // ── STOP ──
+    // STOP
     if (/\b(stop|ruk jao|bas|quiet|chup)\b/.test(tl)) {
       window.speechSynthesis.cancel();
       setIsSpeaking(false);
       guidedRef.current = null;
       setGuidedFillActive(false);
+      setCurrentGuidedField(null);
       recognitionRef.current?.stop();
       await say(userLanguage === "ur" ? "رک گیا۔" : "Stopped.");
       return;
     }
 
-    // ── REPEAT ──
+    // REPEAT
     if (/\b(repeat|dobara|again|phir se)\b/.test(tl)) {
       if (lastResponseRef.current) await say(lastResponseRef.current);
       return;
     }
 
-    // ── CANCEL — exits guided mode too ──
+    // CANCEL
     if (/\b(cancel|band karo|hatao|clear|exit|bahar)\b/.test(tl)) {
       guidedRef.current = null;
       setGuidedFillActive(false);
+      setCurrentGuidedField(null);
       await say(userLanguage === "ur" ? "منسوخ۔" : "Cancelled.");
       return;
     }
 
-    // ── START GUIDED FILL ──
-    // Fuzzy: catches "fill form", "fil form", "feel form", "phil form",
-    // "fill the form", "form fill", "form bharo", "form shuru" etc.
+    // ── REGISTERED ACTIONS (modals, drawers, buttons) ──
+    for (const action of actionsRef.current) {
+      const allKw = [...action.keywords, ...(action.urduKeywords ?? [])];
+      if (allKw.some((kw) => tl.includes(kw.toLowerCase()))) {
+        action.handler();
+        await say(
+          userLanguage === "ur"
+            ? `${action.id} کھل رہا ہے۔`
+            : `Opening ${action.id.replace(/-/g, " ")}.`
+        );
+        return;
+      }
+    }
+
+    // START GUIDED FILL (fuzzy: fil/fill/feel/phil + form)
     const isGuidedTrigger =
-      /\b(fill|fil|feel|phil)\b.*\bform\b/.test(tl) ||
+      /\b(fill|fil|feel|phil|pheel)\b.*\bform\b/.test(tl) ||
       /\bform\b.*\b(fill|bharo|shuru|start|karo)\b/.test(tl) ||
       /\b(form bharo|form shuru|start form|guided fill|field by field|ek ek field)\b/.test(tl);
     if (isGuidedTrigger) {
@@ -313,21 +366,22 @@ export const VoiceControlProvider: React.FC<{
       return;
     }
 
-    // ─────────────────────────────────────────
+    // ─────────────────────────────────────────────
     // INSIDE GUIDED FILL MODE
-    // ─────────────────────────────────────────
+    // ─────────────────────────────────────────────
     if (guidedRef.current) {
 
-      // Skip this field
+      // Skip
       if (/\b(skip|next|chhordo|agla|aage|pass|chhor)\b/.test(tl)) {
         await guidedSkipCurrent();
         return;
       }
 
-      // Submit while in guided mode
+      // Submit while guided
       if (/\b(submit|bhejo|send|confirm|done|haan|jama karo|finish|mukamal)\b/.test(tl)) {
         guidedRef.current = null;
         setGuidedFillActive(false);
+        setCurrentGuidedField(null);
         const forms = formsRef.current;
         if (forms.length > 0) {
           forms[forms.length - 1].onSubmit?.();
@@ -336,7 +390,7 @@ export const VoiceControlProvider: React.FC<{
         return;
       }
 
-      // Everything else → value for the current field
+      // Anything else → value for current field
       const state = guidedRef.current;
       const form  = formsRef.current.find((f) => f.formId === state.formId);
       if (form) {
@@ -348,9 +402,9 @@ export const VoiceControlProvider: React.FC<{
       }
     }
 
-    // ─────────────────────────────────────────
-    // OUTSIDE GUIDED MODE — keyword-based fill
-    // ─────────────────────────────────────────
+    // ─────────────────────────────────────────────
+    // OUTSIDE GUIDED MODE
+    // ─────────────────────────────────────────────
 
     // Navigation
     for (const cmd of NAV_COMMANDS) {
@@ -363,7 +417,7 @@ export const VoiceControlProvider: React.FC<{
 
     // Submit
     if (/\b(submit|bhejo|send|confirm|haan|jama karo)\b/.test(tl)) {
-      const forms = formsRef.current;
+      const forms = formsRef.current.filter((f) => f.fields.length > 0);
       if (forms.length > 0) {
         forms[forms.length - 1].onSubmit?.();
         await say(userLanguage === "ur" ? "فارم جمع ہو رہا ہے۔" : "Submitting form.");
@@ -375,28 +429,17 @@ export const VoiceControlProvider: React.FC<{
 
     // Next field (manual)
     if (/\b(next field|agla field|next|agla|tab)\b/.test(tl)) {
-      const forms = formsRef.current;
-      if (forms.length === 0) {
-        await say(userLanguage === "ur" ? "کوئی فارم نہیں۔" : "No form is active.");
-        return;
-      }
-      const form = forms[forms.length - 1];
-      const cur  = guidedRef.current;
-      let   idx  = cur?.formId === form.formId ? cur.fieldIndex + 1 : 0;
+      const form = [...formsRef.current].reverse().find((f) => f.fields.length > 0);
+      if (!form) { await say(userLanguage === "ur" ? "کوئی فارم نہیں۔" : "No form active."); return; }
+      const cur = guidedRef.current;
+      let   idx = cur?.formId === form.formId ? cur.fieldIndex + 1 : 0;
       if (idx >= form.fields.length) idx = 0;
       guidedRef.current = { formId: form.formId, fieldIndex: idx };
-      const field = form.fields[idx];
-      field.ref?.current?.focus();
-      await say(
-        userLanguage === "ur"
-          ? `${field.label} درج کریں۔`
-          : `Please say your ${field.label}.`
-      );
+      await announceField(form.fields[idx]);
       return;
     }
 
-    // Keyword-based field fill: "name Zainab" / "phone 0300..."
-    // Search all registered forms that have fields (skip nav-only forms)
+    // Keyword-based field fill (search all forms with fields)
     const formsWithFields = formsRef.current.filter((f) => f.fields.length > 0);
     for (const form of [...formsWithFields].reverse()) {
       for (const field of form.fields) {
@@ -408,7 +451,10 @@ export const VoiceControlProvider: React.FC<{
             tl.includes(`${kw.toLowerCase()} `)
         );
         if (matched) {
-          const value = extractValue(text, allKw);
+          const rawValue = extractValue(text, allKw);
+          const value    = field.options?.length
+            ? matchSelectOption(rawValue, field.options)
+            : rawValue;
           if (value) {
             field.setValue(value);
             field.ref?.current?.focus();
@@ -430,59 +476,42 @@ export const VoiceControlProvider: React.FC<{
         ? "سمجھ نہیں آیا۔ 'form bharo' کہیں فارم شروع کرنے کے لیے۔"
         : `I heard: "${text}". Say "fill form" to start guided fill.`
     );
-  }, [navigate, say, userLanguage, startGuidedFill, guidedFillCurrent, guidedSkipCurrent]);
+  }, [navigate, say, announceField, userLanguage, startGuidedFill, guidedFillCurrent, guidedSkipCurrent]);
 
   // ── SpeechRecognition lifecycle ──
   useEffect(() => {
-    if (!voiceActive) {
-      recognitionRef.current?.stop();
-      return;
-    }
+    if (!voiceActive) { recognitionRef.current?.stop(); return; }
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) { console.warn("SpeechRecognition not supported"); return; }
 
     const rec = new SR();
     recognitionRef.current = rec;
-    rec.continuous     = true;
-    rec.interimResults = true;
-    rec.lang           = userLanguage === "ur" ? "ur-PK" : "en-US";
+    rec.continuous = true; rec.interimResults = true;
+    rec.lang = userLanguage === "ur" ? "ur-PK" : "en-US";
 
     rec.onstart  = () => setIsListening(true);
-    rec.onend    = () => {
-      setIsListening(false);
-      if (voiceActive) { try { rec.start(); } catch (_) {} }
-    };
+    rec.onend    = () => { setIsListening(false); if (voiceActive) { try { rec.start(); } catch (_) {} } };
     rec.onresult = (e: any) => {
       let interim = "", final = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const t = e.results[i][0].transcript;
-        if (e.results[i].isFinal) final += t;
-        else interim += t;
+        if (e.results[i].isFinal) final += t; else interim += t;
       }
       setTranscript(interim || final);
       if (final.trim()) handleCommand(final.trim());
     };
-    rec.onerror  = (e: any) => {
-      if (e.error !== "no-speech") console.error("VoiceControl:", e.error);
-    };
+    rec.onerror = (e: any) => { if (e.error !== "no-speech") console.error("VoiceControl:", e.error); };
 
     try { rec.start(); } catch (_) {}
     say(userLanguage === "ur" ? "آواز کنٹرول فعال۔ حکم دیں۔" : "Voice control active. Say a command.");
 
-    return () => {
-      rec.onend = null;
-      try { rec.stop(); } catch (_) {}
-    };
+    return () => { rec.onend = null; try { rec.stop(); } catch (_) {} };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [voiceActive, userLanguage]);
 
   const toggleVoice = useCallback(() => {
     setVoiceActive((v) => {
-      if (v) {
-        window.speechSynthesis.cancel();
-        guidedRef.current = null;
-        setGuidedFillActive(false);
-      }
+      if (v) { window.speechSynthesis.cancel(); guidedRef.current = null; setGuidedFillActive(false); setCurrentGuidedField(null); }
       return !v;
     });
   }, []);
@@ -490,7 +519,8 @@ export const VoiceControlProvider: React.FC<{
   return (
     <VoiceControlContext.Provider value={{
       voiceActive, toggleVoice, isListening, isSpeaking,
-      transcript, lastCommand, guidedFillActive, registerForm,
+      transcript, lastCommand, guidedFillActive, currentGuidedField,
+      registerForm, registerAction,
     }}>
       {children}
     </VoiceControlContext.Provider>

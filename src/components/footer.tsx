@@ -70,8 +70,19 @@ const FooterLink: React.FC<{ label: string }> = ({ label }) => (
   </li>
 );
 
-const Footer: React.FC = () => {
-  const { t } = useTranslation("footer");
+interface FooterProps {
+  userLanguage?: "en" | "ur";
+}
+
+export default function Footer({ userLanguage: _userLanguage }: FooterProps) {
+  const { t, i18n } = useTranslation("footer");
+  
+  // Change language based on prop if needed
+  React.useEffect(() => {
+    if (_userLanguage && i18n.language !== _userLanguage) {
+      i18n.changeLanguage(_userLanguage);
+    }
+  }, [_userLanguage, i18n]);
 
   const whatWeOfferLinks = ["talkBot", "healthInterview", "symptomChecker", "healthTriage", "findDoctor", "healthTimeline"] as const;
   const quickLinks = ["diseaseLibrary", "doctorLogin", "chatSupport", "contributeWithUs"] as const;
@@ -356,6 +367,4 @@ const Footer: React.FC = () => {
       </footer>
     </>
   );
-};
-
-export default Footer;
+}

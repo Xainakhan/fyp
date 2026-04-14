@@ -4,23 +4,24 @@ import { useVoiceForm } from "../context/useVoiceForm";
 interface RegisterModalProps {
   open: boolean;
   onClose: () => void;
-  onSwitchToLogin: () => void;
+  onNavigate?: (page: string) => void;  // ✅ This is correct
+  userLanguage?: string;
 }
 
-export default function RegisterModal({ open, onClose, onSwitchToLogin }: RegisterModalProps) {
-  const [name,         setName]         = useState("");
-  const [phone,        setPhone]        = useState("");
-  const [password,     setPassword]     = useState("");
-  const [confirm,      setConfirm]      = useState("");
+export default function RegisterModal({ open, onClose, onNavigate, userLanguage: _userLanguage }: RegisterModalProps) {
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm,  setShowConfirm]  = useState(false);
-  const [loading,      setLoading]      = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // ── Refs so voice can focus each field ──
-  const nameRef     = useRef<HTMLInputElement>(null);
-  const phoneRef    = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const phoneRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const confirmRef  = useRef<HTMLInputElement>(null);
+  const confirmRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -29,63 +30,58 @@ export default function RegisterModal({ open, onClose, onSwitchToLogin }: Regist
     setLoading(false);
   };
 
+  // Helper function to handle navigation
+  const handleNavigate = (page: string) => {
+    onClose();
+    if (onNavigate) {
+      onNavigate(page);
+    }
+  };
+
   // ── Register all 4 fields with VoiceControlProvider ──
-  // EN commands:
-  //   "name is Ahmed Khan"
-  //   "phone is 03001234567"
-  //   "password is mypass123"
-  //   "confirm is mypass123"
-  //   "next field" → moves name → phone → password → confirm
-  //   "submit" / "create account" → calls handleSubmit()
-  //
-  // UR commands:
-  //   "naam Ahmed Khan hai"
-  //   "phone number 03001234567"
-  //   "password mypass123"
-  //   "confirm password mypass123"
-  //   "agla field"
-  //   "submit karo" / "bhejo"
   useVoiceForm({
     formId: "register-form",
     fields: [
       {
-        id:           "name",
-        label:        "Full Name",
-        keywords:     ["name", "full name", "my name"],
+        id: "name",
+        label: "Full Name",
+        keywords: ["name", "full name", "my name"],
         urduKeywords: ["naam", "apna naam", "full name"],
-        setValue:     setName,
-        ref:          nameRef,
+        setValue: setName,
+        ref: nameRef,
       },
       {
-        id:           "phone",
-        label:        "Phone Number",
-        keywords:     ["phone", "number", "mobile", "phone number"],
+        id: "phone",
+        label: "Phone Number",
+        keywords: ["phone", "number", "mobile", "phone number"],
         urduKeywords: ["phone", "nambur", "mobile nambur"],
-        setValue:     setPhone,
-        ref:          phoneRef,
+        setValue: setPhone,
+        ref: phoneRef,
       },
       {
-        id:           "password",
-        label:        "Password",
-        keywords:     ["password", "pass"],
+        id: "password",
+        label: "Password",
+        keywords: ["password", "pass"],
         urduKeywords: ["password", "pass word"],
-        setValue:     setPassword,
-        ref:          passwordRef,
+        setValue: setPassword,
+        ref: passwordRef,
       },
       {
-        id:           "confirm",
-        label:        "Confirm Password",
-        keywords:     ["confirm", "confirm password", "repeat password"],
+        id: "confirm",
+        label: "Confirm Password",
+        keywords: ["confirm", "confirm password", "repeat password"],
         urduKeywords: ["confirm", "dobara password", "confirm password"],
-        setValue:     setConfirm,
-        ref:          confirmRef,
+        setValue: setConfirm,
+        ref: confirmRef,
       },
     ],
     onSubmit: handleSubmit,
   });
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
     if (open) document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -93,7 +89,9 @@ export default function RegisterModal({ open, onClose, onSwitchToLogin }: Regist
   useEffect(() => {
     if (open) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [open]);
 
   if (!open) return null;
@@ -202,10 +200,11 @@ export default function RegisterModal({ open, onClose, onSwitchToLogin }: Regist
       `}</style>
 
       <div className="rm-backdrop"
-        onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }} />
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }} />
 
       <div className="rm-card rm-root">
-
         <button className="rm-close" onClick={onClose} aria-label="Close">
           <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18 6L6 18M6 6l12 12" />
@@ -220,7 +219,6 @@ export default function RegisterModal({ open, onClose, onSwitchToLogin }: Regist
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-
           {/* Full Name */}
           <div>
             <label className="rm-label">Full Name</label>
@@ -309,7 +307,7 @@ export default function RegisterModal({ open, onClose, onSwitchToLogin }: Regist
         <p style={{ textAlign: "center", color: "rgba(255,255,255,0.35)", fontSize: 12.5, marginTop: 12 }}>
           Already have an account?{" "}
           <button
-            onClick={() => { onClose(); onSwitchToLogin(); }}
+            onClick={() => handleNavigate("login")}  // ✅ CHANGED THIS LINE
             style={{
               background: "none", border: "none", color: "white",
               fontWeight: 600, fontSize: 12.5, cursor: "pointer",
